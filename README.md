@@ -1,6 +1,6 @@
 # N6 Split5 — Single HTML → Modular Project
 
-This is the modular `n6/` project, split from five single-file dashboards:
+This is the modular `n6/` project, split from five single-file dashboards: 
 `admin.html`, `owner.html`, `headcoach.html`, `coach.html`, `client.html`.
 
 ## Structure
