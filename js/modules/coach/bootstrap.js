@@ -4,6 +4,7 @@
  * Dibuat saat Fase C: pecah dari _synced.js menjadi modul granular.
  */
 //__N6_BODY__
+/*__N6_UNIT__*/  if (window.__n6BootstrapDone) return; window.__n6BootstrapDone = true;
   const navButtons = document.querySelectorAll('[data-panel]');
 /*__N6_UNIT__*/  const panels = document.querySelectorAll('.panel');
 /*__N6_UNIT__*/  const pageTitle = document.getElementById('pageTitle');

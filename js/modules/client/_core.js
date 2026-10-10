@@ -19,11 +19,6 @@ try{document.documentElement.setAttribute('data-client-theme',localStorage.getIt
     try{ await window.storage.set(key, value, true); return true; }
     catch(e){ return false; }
   }
-/*__N6_UNIT__*/  function todayISO(){
-    const d = new Date();
-    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  }
-
 /*__N6_UNIT__*/  let clientId = getClientIdFromUrl();
 /*__N6_UNIT__*/  let clientName = 'Client';
 /*__N6_UNIT__*/  let reports = {};

@@ -1,0 +1,85 @@
+/* N6 shared UI — Sidebar & Header
+ *
+ * Style kanonis untuk komponen N6UI.renderSidebar() dan N6UI.renderHeader()
+ * di js/shared/ui/. Tier yang sudah migrasi ke komponen shared memakai
+ * file ini; style lama di css/<role>/ tetap berlaku sebagai fallback.
+ */
+
+/* --- Sidebar (N6UI.renderSidebar) --- */
+.n6-shared-sidebar .side-brand,
+aside.sidebar .side-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.n6-shared-sidebar .side-nav button,
+aside.sidebar .side-nav button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.n6-shared-sidebar .side-nav button .ic,
+aside.sidebar .side-nav button .ic {
+  flex: 0 0 auto;
+}
+
+/* --- Header / Topbar (N6UI.renderHeader) --- */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+}
+
+.topbar-menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.topbar-title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  flex: 1;
+  min-width: 0;
+}
+
+.topbar-title b {
+  font-size: 15px;
+}
+
+.topbar-title span {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* --- Notification dot (dipakai renderSidebar badge) --- */
+.nav-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e5484d;
+  margin-left: 6px;
+  flex: 0 0 auto;
+}
+
+.nav-dot[hidden] {
+  display: none;
+}

@@ -24,7 +24,7 @@ export const VIEW_OWNER = `
 </button>
 </div>
 <nav class="side-nav" id="sideNav">
-<button class="active" data-panel="beranda">
+<button class="active" data-panel="home">
 <svg class="ic" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M3 12l9-9 9 9"></path><path d="M5 10v10h14V10"></path></svg>
         Beranda
       </button>
@@ -32,11 +32,11 @@ export const VIEW_OWNER = `
 <svg class="ic" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         Klien
       </button>
-<button data-panel="jadwalklien">
+<button data-panel="jadwal-klien">
 <svg class="ic" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><rect height="18" rx="2" width="18" x="3" y="4"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
         Jadwal Klien
       </button>
-<button data-panel="jadwalcoach">
+<button data-panel="jadwal-coach">
 <svg class="ic" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>
         Jadwal Coach
       </button>
@@ -57,7 +57,7 @@ export const VIEW_OWNER = `
         Tiket &amp; Keluhan
         <span class="nav-dot" id="navDotTiket" style="display:none;">0</span>
 </button>
-<button data-panel="pesan">
+<button data-panel="chat">
 <svg class="ic" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M21 12c0 4.4-4 8-9 8-1.2 0-2.3-.2-3.3-.6L3 20l1-4.2C3.4 14.5 3 13.3 3 12c0-4.4 4-8 9-8s9 3.6 9 8z"></path></svg>
         Pesan
         <span class="nav-dot" id="navDotPesan" style="display:none;">0</span>
@@ -103,7 +103,7 @@ export const VIEW_OWNER = `
 <main class="content">
 <div class="content-inner">
 <!-- ===================== PANEL: BERANDA ===================== -->
-<section class="panel active" id="panel-beranda">
+<section class="panel active" id="panel-home">
 <div class="analytics-heading"><div><h1>NUMBER SIX</h1></div><div class="analytics-controls"><select aria-label="Periode grafik" id="analyticsPeriod"><option selected="" value="current">Bulan Ini</option><option value="custom">Custom Waktu</option></select><input aria-label="Tanggal mulai" id="analyticsFrom" style="display:none;max-width:155px;" type="date"/><input aria-label="Tanggal akhir" id="analyticsTo" style="display:none;max-width:155px;" type="date"/><select aria-label="Filter coach" id="analyticsCoach"><option value="">Semua Coach</option></select><button class="btn-sm" id="analyticsExport">Ekspor CSV</button><button class="btn-sm" id="openKpiSettings" type="button">⚙ Batas Indikator</button></div></div><div aria-live="polite" class="health-grid" id="businessHealth"></div><details class="kpi-settings" id="kpiSettings"><summary>Pengaturan batas indikator</summary><div class="kpi-settings-grid"><label>Target pendapatan periode (Rp)<input id="kpiRevenueTarget" min="0" placeholder="Belum ditetapkan" step="100000" type="number"/></label><label>Target klien baru periode<input id="kpiClientsTarget" min="0" placeholder="Belum ditetapkan" step="1" type="number"/></label><label>Batas maksimal komisi (% pendapatan)<input id="kpiCommissionMax" max="100" min="0" placeholder="Belum ditetapkan" step="1" type="number"/></label><label>Batas maksimal tiket terbuka<input id="kpiTicketsMax" min="0" placeholder="Belum ditetapkan" step="1" type="number"/></label><label>Batas maksimal pesan menunggu<input id="kpiMessagesMax" min="0" placeholder="Belum ditetapkan" step="1" type="number"/></label><label>Batas maksimal program akan berakhir<input id="kpiEndingMax" min="0" placeholder="Belum ditetapkan" step="1" type="number"/></label></div><div class="kpi-actions"><button class="btn-primary" id="saveKpiSettings" type="button">Simpan batas</button><button class="btn-sm" id="resetKpiSettings" type="button">Kosongkan batas</button></div><p class="mini-note">Batas disimpan di browser ini saja; bukan sinkronisasi server. Indikator pendapatan/klien mengikuti periode dan filter coach. Tiket dan pesan dihitung keseluruhan.</p></details><div class="data-disclaimer">Grafik dihitung dari data klien, tanggal pendaftaran, program, coach, komisi dan pengeluaran pada dashboard ini. Tidak ada angka pertumbuhan atau target yang direkayasa; data yang belum tersedia ditampilkan apa adanya.</div>
 <div class="analytics-grid" style="margin-bottom:16px"><div class="card"><div class="card-head"><div><h3>Revenue Overview</h3><div class="sub-h">Pendapatan pendaftaran aktif &amp; arsip per bulan • sesuai filter</div></div><span class="badge blue" id="analyticsRevenueTotal">Rp0</span></div><div class="card-body"><div class="analytics-chart-wrap" id="revenueChart"></div></div></div><div class="card"><div class="card-head"><h3>Pertumbuhan Klien</h3><span class="badge green" id="analyticsClientTotal">0 klien</span></div><div class="card-body"><div id="growthChart"></div><p class="mini-note">Jumlah pendaftaran baru per bulan, termasuk riwayat klien yang sudah diarsipkan; bukan jumlah klien aktif kumulatif.</p></div></div></div>
 <div class="analytics-grid" style="margin-bottom:16px"><div class="card"><div class="card-head"><h3>Komposisi Pendapatan Program</h3></div><div class="card-body" id="analyticsPrograms"></div></div><div class="card"><div class="card-head"><h3>Performa Coach</h3><span class="sub-h">Klien ditangani</span></div><div class="card-body" id="analyticsCoaches"></div></div></div>
@@ -130,14 +130,14 @@ export const VIEW_OWNER = `
 <div class="card">
 <div class="card-head">
 <h3>Coach Kosong Hari Ini</h3>
-<button class="btn-sm" onclick="switchPanel('jadwalcoach')">Buka Jadwal Coach</button>
+<button class="btn-sm" onclick="switchPanel('jadwal-coach')">Buka Jadwal Coach</button>
 </div>
 <div class="card-body" id="coachKosongToday"></div>
 </div>
 <div class="card">
 <div class="card-head">
 <h3>Pesan Terbaru</h3>
-<button class="btn-sm" onclick="switchPanel('pesan')">Buka Semua Pesan</button>
+<button class="btn-sm" onclick="switchPanel('chat')">Buka Semua Pesan</button>
 </div>
 <div class="card-body" id="recentMessagesList"></div>
 </div>
@@ -186,7 +186,7 @@ export const VIEW_OWNER = `
 </div>
 </section>
 <!-- ===================== PANEL: JADWAL KLIEN ===================== -->
-<section class="panel" id="panel-jadwalklien">
+<section class="panel" id="panel-jadwal-klien">
 <div class="sync-note">
 <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg>
             Jadwal &amp; paket program tiap klien diatur di sini saat pendaftaran. Coach dan Head Coach hanya bisa memantau, bukan mengubah tanggal atau harga.
@@ -202,7 +202,7 @@ export const VIEW_OWNER = `
 </div>
 </section>
 <!-- ===================== PANEL: JADWAL COACH ===================== -->
-<section class="panel" id="panel-jadwalcoach">
+<section class="panel" id="panel-jadwal-coach">
 <div class="n6-sync-toolbar"><div><strong>Jadwal Coach bersama Admin CS</strong><p id="n6SyncStatus">Membaca roster, pola mingguan, dan tanggal libur dari penyimpanan bersama.</p></div><button class="btn-sm" id="n6SyncRefresh" type="button">↻ Perbarui Jadwal</button></div>
 <div class="sync-note">
 <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg>
@@ -369,7 +369,7 @@ export const VIEW_OWNER = `
 </div>
 </section>
 <!-- ===================== PANEL: PESAN ===================== -->
-<section class="panel" id="panel-pesan">
+<section class="panel" id="panel-chat">
 <div class="card">
 <div class="card-head">
 <h3>Percakapan dengan Klien</h3>
@@ -388,9 +388,9 @@ export const VIEW_OWNER = `
 </main>
 <!-- BOTTOM NAV (mobile) -->
 <nav aria-label="Navigasi utama mobile" class="bottom-nav" id="bottomNav">
-<button aria-label="Beranda" class="active" data-panel="beranda"><svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="m3 11 9-8 9 8"></path><path d="M5 10v11h14V10M9 21v-7h6v7"></path></svg><span>Beranda</span></button>
+<button aria-label="Beranda" class="active" data-panel="home"><svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="m3 11 9-8 9 8"></path><path d="M5 10v11h14V10M9 21v-7h6v7"></path></svg><span>Beranda</span></button>
 <button aria-label="Klien" data-panel="klien"><svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 5"></path></svg><span>Klien</span></button>
-<button aria-label="Jadwal" data-panel="jadwalklien"><svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><rect height="16" rx="2" width="18" x="3" y="5"></rect><path d="M7 3v4M17 3v4M3 10h18M8 15h3"></path></svg><span>Jadwal</span></button>
+<button aria-label="Jadwal" data-panel="jadwal-klien"><svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><rect height="16" rx="2" width="18" x="3" y="5"></rect><path d="M7 3v4M17 3v4M3 10h18M8 15h3"></path></svg><span>Jadwal</span></button>
 <button aria-expanded="false" aria-label="Buka semua menu" id="mobileMoreBtn" type="button"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg><span>Menu</span><span class="nav-dot" id="navDotTiketMobile" style="display:none">0</span><span class="nav-dot" id="navDotPesanMobile" style="display:none">0</span></button>
 <button aria-haspopup="dialog" aria-label="Akun, masuk atau keluar" id="mobileAccountBtn" type="button"><svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg><span>Akun</span></button>
 </nav>

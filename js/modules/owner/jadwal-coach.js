@@ -1,5 +1,5 @@
 /**
- * N6 modules - owner / jadwal-coach
+ * N6 modules - owner / jadwal
  *
  * Dibuat saat Fase C: pecah dari _synced.js menjadi modul granular.
  */

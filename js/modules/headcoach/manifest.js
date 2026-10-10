@@ -5,13 +5,14 @@
  */
 //__N6_MANIFEST__
 export const MANIFEST_HEADCOACH = [
-  ['_core', 33],
-  ['hub', 16],
+  ['_shared', 26],
+  ['_core', 27],
+  ['home', 16],
   ['daftar-coach', 20],
   ['klien', 12],
   ['atlet', 14],
   ['koreksi', 34],
   ['chat', 5],
   ['persetujuan', 5],
-  ['bootstrap', 13],
+  ['bootstrap', 14],
 ];

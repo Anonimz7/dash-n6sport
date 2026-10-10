@@ -9,6 +9,6 @@ modules/pesan.css	1169
 modules/jadwal.css	3901
 components.css	1414
 themes.css	44537
-polish/block-4.css	908
-polish/block-5.css	794
-polish/block-6.css	635
+polish/sidebar-brand.css	908
+polish/coach-requests.css	794
+polish/report-tools.css	635

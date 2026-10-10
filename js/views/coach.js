@@ -301,7 +301,7 @@ export const VIEW_COACH = `
 <section class="panel" id="panel-jadwal">
 <div class="subtabs" data-group="jadwal">
 <button class="subtab-btn" data-sub="absensicoach">Absensi Coach</button>
-<button class="subtab-btn" data-sub="jadwalcoach">Jadwal Coach</button>
+<button class="subtab-btn" data-sub="jadwal">Jadwal Coach</button>
 <button class="subtab-btn active" data-sub="absensi">Absensi</button>
 <button class="subtab-btn" data-sub="reschedule">Reschedule</button>
 <button class="subtab-btn" data-sub="cuti">Cuti Coach</button>
@@ -357,7 +357,7 @@ export const VIEW_COACH = `
 </div>
 </div>
 </div>
-<div class="subpanel" id="jadwal-jadwalcoach">
+<div class="subpanel" id="jadwal-jadwal">
 <div class="card">
 <div class="card-head"><h3>Tandai Waktu Tidak Bisa Mengajar</h3></div>
 <div class="card-body">

@@ -21,42 +21,10 @@
     { id:'c2', name:'Dinda Ayu', phone:'081200000002' },
     { id:'c3', name:'Fajar Nugroho', phone:'081200000003' }
   ];
-/*__N6_UNIT__*/  const DAYS = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
-/*__N6_UNIT__*/  const BLOCKS = [
-    { key:'pagi', label:'Pagi', time:'06:00–09:00' },
-    { key:'siang', label:'Siang', time:'09:00–12:00' },
-    { key:'sore', label:'Sore', time:'15:00–18:00' },
-    { key:'malam', label:'Malam', time:'18:00–21:00' }
-  ];
-
-/*__N6_UNIT__*/  function slugify(name){ return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); }
-/*__N6_UNIT__*/  function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-/*__N6_UNIT__*/  function todayISO(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
-/*__N6_UNIT__*/  function daysBetween(a, b){ return Math.round((new Date(b) - new Date(a)) / 86400000); }
-/*__N6_UNIT__*/  function formatDateID(dateStr){
-    if (!dateStr) return '-';
-    const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-    const [y,m,d] = dateStr.split('-');
-    return parseInt(d,10) + ' ' + bulan[parseInt(m,10)-1] + ' ' + y;
-  }
-/*__N6_UNIT__*/  function formatRupiah(n){ n = Number(n) || 0; return 'Rp' + n.toLocaleString('id-ID'); }
 /*__N6_UNIT__*/  function clientPortalUrl(id){ return 'dashboard-client.html?client=' + encodeURIComponent(id); }
   // Logo N6 putih transparan, dipakai pada header Invoice (PNG) agar konsisten dgn Laporan Keuangan Coach
 /*__N6_UNIT__*/  const LOGO_DATA = "assets/img/logo-report.png";
-/*__N6_UNIT__*/  function todayDayName(){
-    const jsDay = new Date().getDay(); // 0=Minggu
-    const idx = jsDay === 0 ? 6 : jsDay - 1;
-    return DAYS[idx];
-  }
-
-  // Catatan penting: window.storage hanya tersedia di dalam preview Artifact Claude.ai.
-  // Begitu file ini diunduh dan dibuka sebagai halaman biasa (di server sendiri / dibuka langsung
-  // di browser), window.storage tidak ada — sehingga semua data (klien, jadwal, dll) gagal
-  // tersimpan secara diam-diam dan selalu kembali kosong setiap kali halaman dibuka ulang.
-  // Makanya dipindah ke localStorage asli milik browser, yang benar-benar tersimpan permanen
-  // di perangkat/browser tempat dashboard ini dibuka.
 /*__N6_UNIT__*/  const STORE_PREFIX = 'n6csAdmin:';
-/*__N6_UNIT__*/  const N6_API_KEYS = new Set(['clients','tickets','messages']);
 /*__N6_UNIT__*/  async function storeGet(key){
     if (N6_API_KEYS.has(key) && typeof window !== 'undefined' && window.storage) {
       try {
@@ -75,15 +43,6 @@
     catch(e){ showToast('GAGAL menyimpan! Periksa izin penyimpanan browser.'); throw e; }
   }
 
-/*__N6_UNIT__*/  function showToast(msg){
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.classList.add('show');
-    clearTimeout(window._toastTimer);
-    window._toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
-  }
-
-  /* ================= STATE ================= */
 /*__N6_UNIT__*/  let clients = [];
 /*__N6_UNIT__*/  let tickets = [];
 /*__N6_UNIT__*/  let archivedClients = [];
@@ -99,30 +58,6 @@
 /*__N6_UNIT__*/  let pendingArchiveNotice = 0;
 
 /*__N6_UNIT__*/  function catalogById(id){ return programCatalog.find(p => String(p.id) === String(id)); }
-/*__N6_UNIT__*/  function coachById(id){ return coachRoster.find(c => String(c.id) === String(id)); }
-
-  /* ================= LOAD DATA ================= */
-/*__N6_UNIT__*/  async function fetchCoachesFromApi(){
-    try {
-      const token = window.localStorage.getItem('n6:api:token');
-      if (!token) return [];
-      const res = await fetch('https://api.denisbergkam.com/api/n6/v1/accounts?tier=3&limit=200', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      if (!res.ok) return [];
-      const page = await res.json();
-      const items = (page && page.items) || [];
-      return items.map(a => ({
-        id: a.coach_id || a.id,
-        accountId: a.id,
-        name: a.full_name || a.username,
-        username: a.username,
-        phone: a.phone || '',
-        email: a.email || '',
-      }));
-    } catch (e) { return []; }
-  }
-
 /*__N6_UNIT__*/  async function loadAllData(){
     // Preserve the exact existing browser records. No demo data and no automatic archiving.
     const read = async (key, fallback) => {
@@ -153,15 +88,6 @@
     pendingArchiveNotice=0;
   }
 
-/*__N6_UNIT__*/  async function persistClients(){ await storeSet('clients', JSON.stringify(clients)); }
-/*__N6_UNIT__*/  async function persistTickets(){ await storeSet('tickets', JSON.stringify(tickets)); }
-/*__N6_UNIT__*/  async function persistChat(id){ await storeSet('chat:' + id, JSON.stringify(chatCache[id] || [])); }
-/*__N6_UNIT__*/  async function persistProgram(id){ await storeSet('program:' + id, JSON.stringify(programCache[id] || {})); }
-/*__N6_UNIT__*/  async function persistCoachRoster(){ /* dihapus: coachRoster dari API Kelola Anggota */ }
-/*__N6_UNIT__*/  async function persistCoachSchedule(){ await storeSet('coachSchedule', JSON.stringify(coachSchedule)); }
-/*__N6_UNIT__*/  async function persistCoachDayOff(){ await storeSet('coachDayOff', JSON.stringify(coachDayOff)); }
-
-  /* ================= DERIVED HELPERS ================= */
 /*__N6_UNIT__*/  function clientStatus(c){
     const p = programCache[c.id] || {};
     if (!p.endDate) return c.status || 'Aktif';

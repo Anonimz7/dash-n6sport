@@ -24,7 +24,7 @@ export const VIEW_ADMIN = `
 </button>
 </div>
 <nav class="side-nav" id="sideNav">
-<button class="active" data-panel="beranda">
+<button class="active" data-panel="home">
 <svg class="ic" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M3 12l9-9 9 9"></path><path d="M5 10v10h14V10"></path></svg>
         Beranda
       </button>
@@ -32,11 +32,11 @@ export const VIEW_ADMIN = `
 <svg class="ic" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         Klien
       </button>
-<button data-panel="jadwalklien">
+<button data-panel="jadwal-klien">
 <svg class="ic" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><rect height="18" rx="2" width="18" x="3" y="4"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
         Jadwal Klien
       </button>
-<button data-panel="jadwalcoach">
+<button data-panel="jadwal-coach">
 <svg class="ic" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>
         Jadwal Coach
       </button>
@@ -49,7 +49,7 @@ export const VIEW_ADMIN = `
         Tiket &amp; Keluhan
         <span class="nav-dot" id="navDotTiket" style="display:none;">0</span>
 </button>
-<button data-panel="pesan">
+<button data-panel="chat">
 <svg class="ic" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M21 12c0 4.4-4 8-9 8-1.2 0-2.3-.2-3.3-.6L3 20l1-4.2C3.4 14.5 3 13.3 3 12c0-4.4 4-8 9-8s9 3.6 9 8z"></path></svg>
         Pesan
         <span class="nav-dot" id="navDotPesan" style="display:none;">0</span>
@@ -91,7 +91,7 @@ export const VIEW_ADMIN = `
 <main class="content">
 <div class="content-inner">
 <!-- ===================== PANEL: BERANDA ===================== -->
-<section class="panel active" id="panel-beranda">
+<section class="panel active" id="panel-home">
 <div class="n6-tools">
 <div class="n6-heading"><strong>NUMBER SIX</strong><span>Ringkasan operasional Admin CS</span></div>
 <div class="n6-actions"><input accept=".json,application/json" hidden="" id="n6ImportFile" type="file"/></div>
@@ -121,14 +121,14 @@ export const VIEW_ADMIN = `
 <div class="card">
 <div class="card-head">
 <h3>Coach Kosong Hari Ini</h3>
-<button class="btn-sm" onclick="switchPanel('jadwalcoach')">Buka Jadwal Coach</button>
+<button class="btn-sm" onclick="switchPanel('jadwal-coach')">Buka Jadwal Coach</button>
 </div>
 <div class="card-body" id="coachKosongToday"></div>
 </div>
 <div class="card">
 <div class="card-head">
 <h3>Pesan Terbaru</h3>
-<button class="btn-sm" onclick="switchPanel('pesan')">Buka Semua Pesan</button>
+<button class="btn-sm" onclick="switchPanel('chat')">Buka Semua Pesan</button>
 </div>
 <div class="card-body" id="recentMessagesList"></div>
 </div>
@@ -177,7 +177,7 @@ export const VIEW_ADMIN = `
 </div>
 </section>
 <!-- ===================== PANEL: JADWAL KLIEN ===================== -->
-<section class="panel" id="panel-jadwalklien">
+<section class="panel" id="panel-jadwal-klien">
 <div class="sync-note">
 <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg>
             Jadwal &amp; paket program tiap klien diatur di sini saat pendaftaran. Coach dan Head Coach hanya bisa memantau, bukan mengubah tanggal atau harga.
@@ -193,7 +193,7 @@ export const VIEW_ADMIN = `
 </div>
 </section>
 <!-- ===================== PANEL: JADWAL COACH ===================== -->
-<section class="panel" id="panel-jadwalcoach">
+<section class="panel" id="panel-jadwal-coach">
 <div class="n6-sync-toolbar"><div><strong>Jadwal Coach bersama Admin CS</strong><p id="n6SyncStatus">Membaca roster, pola mingguan, dan tanggal libur dari penyimpanan bersama.</p></div><button class="btn-sm" id="n6SyncRefresh" type="button">↻ Perbarui Jadwal</button></div>
 <div class="sync-note">
 <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg>
@@ -304,7 +304,7 @@ export const VIEW_ADMIN = `
 </div>
 </section>
 <!-- ===================== PANEL: PESAN ===================== -->
-<section class="panel" id="panel-pesan">
+<section class="panel" id="panel-chat">
 <div class="card">
 <div class="card-head">
 <h3>Percakapan dengan Klien</h3>
@@ -320,14 +320,14 @@ export const VIEW_ADMIN = `
 </main>
 <!-- BOTTOM NAV (mobile) -->
 <nav aria-label="Navigasi mobile" class="bottom-nav" id="bottomNav">
-<button class="active" data-panel="beranda"><span class="n6-nav-ico">⌂</span><span>Beranda</span></button>
+<button class="active" data-panel="home"><span class="n6-nav-ico">⌂</span><span>Beranda</span></button>
 <button data-panel="klien"><span class="n6-nav-ico">♙</span><span>Klien</span></button>
-<button data-panel="jadwalklien"><span class="n6-nav-ico">▦</span><span>Jadwal</span></button>
+<button data-panel="jadwal-klien"><span class="n6-nav-ico">▦</span><span>Jadwal</span></button>
 <button id="n6MoreBtn" type="button"><span class="n6-nav-ico">☷</span><span>Lainnya</span><span class="nav-dot" id="navDotTiketMobile" style="display:none">0</span><span class="nav-dot" id="navDotPesanMobile" style="display:none">0</span></button>
 <button aria-label="Buka akun dan tema" id="n6MobileTheme" title="Akun" type="button"><span class="n6-nav-ico">♙</span></button>
 </nav>
 <div class="n6-more-menu" hidden="" id="n6MoreMenu">
-<button data-panel="jadwalcoach">Jadwal Coach</button><button data-panel="harga">Daftar Harga</button><button data-panel="tiket">Tiket &amp; Keluhan</button><button data-panel="pesan">Pesan</button>
+<button data-panel="jadwal-coach">Jadwal Coach</button><button data-panel="harga">Daftar Harga</button><button data-panel="tiket">Tiket &amp; Keluhan</button><button data-panel="chat">Pesan</button>
 </div>
 </div>
 </div>

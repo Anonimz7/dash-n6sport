@@ -15,12 +15,9 @@
 
 <!--
   Third-party libraries, deduplicated across the five dashboards.
-
-  jspdf 2.5.1 and 2.5.2 were both present in headcoach.html; 2.5.2 wins once it
-  arrives, so both are kept and the original `defer` is preserved. Order and the
-  defer flag matter for the export/print features, so do not reshuffle these.
+  Single jsPDF version (2.5.2) — deferred load is fine because all PDF
+  usage goes through window.jspdf?.jsPDF guards at interaction time.
 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

@@ -5,12 +5,13 @@
  */
 //__N6_MANIFEST__
 export const MANIFEST_COACH = [
-  ['_core', 18],
+  ['_shared', 26],
+  ['_core', 13],
   ['home', 17],
-  ['jadwal', 37],
+  ['jadwal', 42],
   ['klien', 11],
   ['keuangan', 8],
   ['laporan', 5],
   ['absensi', 15],
-  ['bootstrap', 13],
+  ['bootstrap', 14],
 ];

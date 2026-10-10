@@ -1,5 +1,5 @@
 /**
- * N6 modules - admin / jadwal-coach
+ * N6 modules - admin / jadwal
  *
  * Dibuat saat Fase C: pecah dari _synced.js menjadi modul granular.
  */
@@ -291,7 +291,7 @@
   // Jadwal Coach: owner-equivalent tabs and explanatory guide.
   document.querySelectorAll('[data-coachpage]').forEach(btn=>btn.addEventListener('click',()=>{
     document.querySelectorAll('[data-coachpage]').forEach(b=>b.classList.toggle('active',b===btn));
-    document.querySelectorAll('#panel-jadwalcoach [id^="coachpage-"]').forEach(p=>p.classList.toggle('active',p.id==='coachpage-'+btn.dataset.coachpage));
+    document.querySelectorAll('#panel-jadwal [id^="coachpage-"]').forEach(p=>p.classList.toggle('active',p.id==='coachpage-'+btn.dataset.coachpage));
   }));
   document.getElementById('toggleCoachGuide')?.addEventListener('click',function(){
     const guide=document.getElementById('coachGuide');const visible=guide.style.display!=='none';guide.style.display=visible?'none':'block';this.setAttribute('aria-expanded',String(!visible));this.textContent=visible?'Lihat keterangan':'Tutup keterangan';

@@ -88,6 +88,20 @@ else
 fi
 
 echo ""
+# 5. Validasi bundles.js: semua script & CSS yang direferensikan ada di disk
+echo ""
+echo "[5/5] Validasi bundles.js references"
+missing_refs=0
+for ref in $(grep -o "'[^']*\.\(js\|css\)'" js/core/bundles.js | tr -d "'"); do
+  if [ ! -f "$ref" ]; then
+    fail "bundles.js: $ref tidak ditemukan"
+    missing_refs=$((missing_refs+1))
+  fi
+done
+if [ "$missing_refs" -eq 0 ]; then
+  pass "bundles.js: semua referensi file ada"
+fi
+
 echo "============="
 echo "Hasil: $PASS lolos, $FAIL gagal"
 if [ "$FAIL" -gt 0 ]; then

@@ -231,59 +231,104 @@
   };
 /*__N6_UNIT__*/  window.closeClientForm = function(){ document.getElementById('clientFormModal').classList.remove('show'); };
 
-/*__N6_UNIT__*/  async function saveClientForm(){
-    const name = document.getElementById('fName').value.trim();
+/*__N6_UNIT__*/  function validateClientForm(){
     const errEl = document.getElementById('clientFormError');
-    if (!name){ errEl.textContent = 'Nama klien wajib diisi.'; errEl.style.display = 'block'; return; }
-
-    let id = document.getElementById('fClientId').value;
+    const name = document.getElementById('fName').value.trim();
+    if (!name){
+      errEl.textContent = 'Nama klien wajib diisi.';
+      errEl.style.display = 'block';
+      return { valid: false };
+    }
+    const id = document.getElementById('fClientId').value;
     const isNew = !id;
     const progId = document.getElementById('fProgram').value;
     const isSemi = progId === 'semi-private';
     const name2 = document.getElementById('fName2').value.trim();
-
     if (isSemi && isNew && !name2){
       errEl.textContent = 'Nama Klien 2 wajib diisi untuk program Semi Private.';
       errEl.style.display = 'block';
-      return;
+      return { valid: false };
     }
     errEl.style.display = 'none';
+    return { valid: true, name, id, isNew, progId, isSemi, name2 };
+  }
 
-    if (isNew){
-      let base = slugify(name) || 'klien';
-      id = base; let n = 2;
-      while (clients.some(c => String(c.id) === String(id))){ id = base + '-' + n; n++; }
-    }
-
+/*__N6_UNIT__*/  function computePackagePrice(progId){
     const program = catalogById(progId);
     let packageMeta = {}, price = 0, priceLabel = '-', programLabel = program ? program.label : '';
-    if (program){
-      if (program.mode === 'fixed'){
-        packageMeta = { mode:'fixed' };
-        price = program.price;
-        priceLabel = formatRupiah(price) + ' / ' + program.unit;
-      } else if (program.mode === 'configurable'){
-        const meetings = parseInt(document.getElementById('fMeetings').value, 10) || 1;
-        const weeks = parseInt(document.getElementById('fWeeks').value, 10) || 1;
-        const { totalSessions, total } = computeConfigPrice(program, meetings, weeks);
-        packageMeta = { mode:'configurable', meetings, weeks, totalSessions };
-        price = total;
-        priceLabel = formatRupiah(price) + ' / ' + totalSessions + 'x pertemuan';
-      } else if (program.mode === 'custom'){
-        const partnerName = document.getElementById('fCustomName').value.trim();
-        const count = document.getElementById('fCustomCount').value;
-        const note = document.getElementById('fCustomNote').value.trim();
-        price = parseInt(document.getElementById('fCustomValue').value, 10) || 0;
-        packageMeta = { mode:'custom', partnerName, count, note };
-        priceLabel = (price ? formatRupiah(price) : 'Nego') + (partnerName ? ' — ' + partnerName : '');
-      }
+    if (!program) return { packageMeta, price, priceLabel, programLabel };
+    if (program.mode === 'fixed'){
+      packageMeta = { mode:'fixed' };
+      price = program.price;
+      priceLabel = formatRupiah(price) + ' / ' + program.unit;
+    } else if (program.mode === 'configurable'){
+      const meetings = parseInt(document.getElementById('fMeetings').value, 10) || 1;
+      const weeks = parseInt(document.getElementById('fWeeks').value, 10) || 1;
+      const { totalSessions, total } = computeConfigPrice(program, meetings, weeks);
+      packageMeta = { mode:'configurable', meetings, weeks, totalSessions };
+      price = total;
+      priceLabel = formatRupiah(price) + ' / ' + totalSessions + 'x pertemuan';
+    } else if (program.mode === 'custom'){
+      const partnerName = document.getElementById('fCustomName').value.trim();
+      const count = document.getElementById('fCustomCount').value;
+      const note = document.getElementById('fCustomNote').value.trim();
+      price = parseInt(document.getElementById('fCustomValue').value, 10) || 0;
+      packageMeta = { mode:'custom', partnerName, count, note };
+      priceLabel = (price ? formatRupiah(price) : 'Nego') + (partnerName ? ' \u2014 ' + partnerName : '');
     }
+    return { packageMeta, price, priceLabel, programLabel };
+  }
 
-    const phone = document.getElementById('fPhone').value.trim();
-    const coach = document.getElementById('fCoach').value;
-    const paymentStatus = document.getElementById('fPaymentStatus').value;
-    const amountPaid = parseInt(document.getElementById('fAmountPaid').value, 10) || 0;
-    const notes = document.getElementById('fNotes').value.trim();
+/*__N6_UNIT__*/  function buildClientData(clientId, clientName, meta, ctx){
+    const { progId, programLabel, price, priceLabel, isNew, paymentStatus, amountPaid, notes, phone, coach } = ctx;
+    return {
+      id: clientId, name: clientName,
+      phone, coach,
+      programId: progId, programLabel, packageMeta: meta, price, priceLabel,
+      status: 'Aktif',
+      joinDate: isNew ? todayISO() : (clients.find(c=>c.id===clientId)||{}).joinDate || todayISO(),
+      paymentStatus, amountPaid,
+      invoiceNumber: (clients.find(c=>c.id===clientId)||{}).invoiceNumber || '',
+      notes
+    };
+  }
+
+/*__N6_UNIT__*/  async function finalizeClient(clientId, programEntry, isNew){
+    programCache[clientId] = { ...programEntry };
+    if (!chatCache[clientId]) chatCache[clientId] = [];
+    if (!reportsCache[clientId]) reportsCache[clientId] = {};
+    await persistProgram(clientId);
+    if (isNew){
+      await storeSet('chat:' + clientId, JSON.stringify(chatCache[clientId]));
+      await storeSet('reports:' + clientId, JSON.stringify(reportsCache[clientId]));
+    }
+  }
+
+/*__N6_UNIT__*/  function generateUniqueId(base){
+    let id = base, n = 2;
+    while (clients.some(c => String(c.id) === String(id))){ id = base + '-' + n; n++; }
+    return id;
+  }
+
+/*__N6_UNIT__*/  async function saveClientForm(){
+    const v = validateClientForm();
+    if (!v.valid) return;
+    const { name, isNew, progId, isSemi, name2 } = v;
+    let id = v.id;
+    if (isNew) id = generateUniqueId(slugify(name) || 'klien');
+
+    const pkg = computePackagePrice(progId);
+    let { packageMeta } = pkg;
+    const { price, priceLabel, programLabel } = pkg;
+
+    const ctx = {
+      progId, programLabel, price, priceLabel, isNew,
+      phone: document.getElementById('fPhone').value.trim(),
+      coach: document.getElementById('fCoach').value,
+      paymentStatus: document.getElementById('fPaymentStatus').value,
+      amountPaid: parseInt(document.getElementById('fAmountPaid').value, 10) || 0,
+      notes: document.getElementById('fNotes').value.trim(),
+    };
     const programEntry = {
       pbStart: document.getElementById('fPbStart').value.trim(),
       pbEnd: document.getElementById('fPbEnd').value.trim(),
@@ -291,72 +336,44 @@
       endDate: document.getElementById('fEnd').value
     };
 
-    function buildClientData(clientId, clientName, meta){
-      return {
-        id: clientId, name: clientName,
-        phone,
-        coach,
-        programId: progId, programLabel, packageMeta: meta, price, priceLabel,
-        status: 'Aktif',
-        joinDate: isNew ? todayISO() : (clients.find(c=>c.id===clientId)||{}).joinDate || todayISO(),
-        paymentStatus, amountPaid,
-        invoiceNumber: (clients.find(c=>c.id===clientId)||{}).invoiceNumber || '',
-        notes
-      };
-    }
-    async function finalizeClient(clientId){
-      programCache[clientId] = { ...programEntry };
-      if (!chatCache[clientId]) chatCache[clientId] = [];
-      if (!reportsCache[clientId]) reportsCache[clientId] = {};
-      await persistProgram(clientId);
-      if (isNew){ await storeSet('chat:' + clientId, JSON.stringify(chatCache[clientId])); await storeSet('reports:' + clientId, JSON.stringify(reportsCache[clientId])); }
-    }
-
-    // ===== Program Semi Private (baru) — buat 2 klien terpisah, masing-masing dgn ID & link dashboard sendiri =====
+    // Semi Private baru: buat 2 klien terpisah
     if (isSemi && isNew && name2){
-      let base2 = slugify(name2) || 'klien';
-      let id2 = base2; let n2 = 2;
-      while (clients.some(c => String(c.id) === String(id2)) || id2 === id){ id2 = base2 + '-' + n2; n2++; }
-
-      const data1 = buildClientData(id, name, { ...packageMeta, pairWith: id2, pairLabel: name2 });
-      const data2 = buildClientData(id2, name2, { ...packageMeta, pairWith: id, pairLabel: name });
-      clients.push(data1);
-      clients.push(data2);
-
+      const id2 = generateUniqueId(slugify(name2) || 'klien');
+      // pastikan id2 != id
+      const finalId2 = id2 === id ? generateUniqueId(id2 + '-') : id2;
+      clients.push(buildClientData(id, name, { ...packageMeta, pairWith: finalId2, pairLabel: name2 }, ctx));
+      clients.push(buildClientData(finalId2, name2, { ...packageMeta, pairWith: id, pairLabel: name }, ctx));
       await persistClients();
-      await finalizeClient(id);
-      await finalizeClient(id2);
-
+      await finalizeClient(id, programEntry, true);
+      await finalizeClient(finalId2, programEntry, true);
       closeClientForm();
       showToast('2 klien Semi Private berhasil didaftarkan dengan link masing-masing');
       renderAll();
       return;
     }
 
-    // ===== Edit klien Semi Private yang sudah ada — sinkronkan nama pasangan bila diubah =====
+    // Edit Semi Private: sinkronkan nama pasangan
     if (isSemi && !isNew){
       const existing = clients.find(c => String(c.id) === String(id));
       const prevMeta = (existing && existing.packageMeta) || {};
       packageMeta = { ...packageMeta, pairWith: prevMeta.pairWith || null, pairLabel: name2 || prevMeta.pairLabel || '' };
-      if (prevMeta.pairWith){
-        const partnerIdx = clients.findIndex(c => c.id === prevMeta.pairWith);
-        if (partnerIdx >= 0 && name2){
-          clients[partnerIdx] = {
-            ...clients[partnerIdx],
-            name: name2,
-            packageMeta: { ...clients[partnerIdx].packageMeta, pairLabel: name }
-          };
+      if (prevMeta.pairWith && name2){
+        const pi = clients.findIndex(c => c.id === prevMeta.pairWith);
+        if (pi >= 0){
+          clients[pi] = { ...clients[pi], name: name2,
+            packageMeta: { ...clients[pi].packageMeta, pairLabel: name } };
         }
       }
     }
 
-    const data = buildClientData(id, name, packageMeta);
-    if (isNew){ clients.push(data); }
-    else { const idx = clients.findIndex(c => String(c.id) === String(id)); clients[idx] = { ...clients[idx], ...data }; }
-
+    const data = buildClientData(id, name, packageMeta, ctx);
+    if (isNew) clients.push(data);
+    else {
+      const idx = clients.findIndex(c => String(c.id) === String(id));
+      clients[idx] = { ...clients[idx], ...data };
+    }
     await persistClients();
-    await finalizeClient(id);
-
+    await finalizeClient(id, programEntry, isNew);
     closeClientForm();
     showToast(isNew ? 'Klien baru berhasil didaftarkan' : 'Data klien diperbarui');
     renderAll();

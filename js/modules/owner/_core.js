@@ -17,39 +17,11 @@
     { id:'event-pacer', label:'Kerja Sama Event (Pacer)', category:'Kerja Sama', mode:'custom', komisiPerSesi:0 }
   ];
 /*__N6_UNIT__*/  const DEFAULT_COACH_ROSTER = [];
-/*__N6_UNIT__*/  const DAYS = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
-/*__N6_UNIT__*/  const BLOCKS = [
-    { key:'pagi', label:'Pagi', time:'06:00–09:00' },
-    { key:'siang', label:'Siang', time:'09:00–12:00' },
-    { key:'sore', label:'Sore', time:'15:00–18:00' },
-    { key:'malam', label:'Malam', time:'18:00–21:00' }
-  ];
-
-/*__N6_UNIT__*/  function slugify(name){ return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); }
-/*__N6_UNIT__*/  function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-/*__N6_UNIT__*/  function todayISO(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
-/*__N6_UNIT__*/  function daysBetween(a, b){ return Math.round((new Date(b) - new Date(a)) / 86400000); }
-/*__N6_UNIT__*/  function formatDateID(dateStr){
-    if (!dateStr) return '-';
-    const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-    const [y,m,d] = dateStr.split('-');
-    return parseInt(d,10) + ' ' + bulan[parseInt(m,10)-1] + ' ' + y;
-  }
-/*__N6_UNIT__*/  function formatRupiah(n){ n = Number(n) || 0; return 'Rp' + n.toLocaleString('id-ID'); }
 /*__N6_UNIT__*/  function clientPortalUrl(id){ return 'dashboard-client.html?client=' + encodeURIComponent(id); }
-/*__N6_UNIT__*/  function todayDayName(){
-    const jsDay = new Date().getDay(); // 0=Minggu
-    const idx = jsDay === 0 ? 6 : jsDay - 1;
-    return DAYS[idx];
-  }
-
-  // Coach schedule is shared with Admin CS on the SAME browser origin.
-  // Other Owner records stay in the Owner namespace; never overwrite Admin client records.
 /*__N6_UNIT__*/  const N6_SHARED_COACH_KEYS = new Set(['coachSchedule','coachDayOff']); // coachRoster dihapus, diambil dari Kelola Anggota via API
 /*__N6_UNIT__*/  const N6_ADMIN_PREFIX = 'n6csAdmin:';
 /*__N6_UNIT__*/  const N6_OWNER_PREFIX = 'n6Owner:';
   // Key yang didukung API — data ini lintas role via backend.
-/*__N6_UNIT__*/  const N6_API_KEYS = new Set(['clients','tickets','messages']);
 /*__N6_UNIT__*/  async function storeGet(key){
     // Coba via repository API dulu untuk key yang didukung.
     if (N6_API_KEYS.has(key) && window.storage) {
@@ -77,15 +49,6 @@
     try{localStorage.setItem(N6_OWNER_PREFIX+key,value);return true;}catch(e){showToast('Penyimpanan browser tidak tersedia');return false;}
   }
 
-/*__N6_UNIT__*/  function showToast(msg){
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.classList.add('show');
-    clearTimeout(window._toastTimer);
-    window._toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
-  }
-
-  /* ================= STATE ================= */
 /*__N6_UNIT__*/  let clients = [];
 /*__N6_UNIT__*/  let tickets = [];
 /*__N6_UNIT__*/  let archivedClients = [];
@@ -102,35 +65,11 @@
 /*__N6_UNIT__*/  let pendingArchiveNotice = 0;
 
 /*__N6_UNIT__*/  function catalogById(id){ return programCatalog.find(p => p.id === id); }
-/*__N6_UNIT__*/  function coachById(id){ return coachRoster.find(c => String(c.id) === String(id)); }
-
 /*__N6_UNIT__*/  function seedDemoIfEmpty(){
     // Data dummy dinonaktifkan — dashboard selalu mulai kosong, tanpa klien contoh.
     return false;
   }
 
-/*__N6_UNIT__*/  async function fetchCoachesFromApi(){
-    try {
-      const token = window.localStorage.getItem('n6:api:token');
-      if (!token) return [];
-      const res = await fetch('https://api.denisbergkam.com/api/n6/v1/accounts?tier=3&limit=200', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      if (!res.ok) return [];
-      const page = await res.json();
-      const items = (page && page.items) || [];
-      return items.map(a => ({
-        id: a.coach_id || a.id,
-        accountId: a.id,
-        name: a.full_name || a.username,
-        username: a.username,
-        phone: a.phone || '',
-        email: a.email || '',
-      }));
-    } catch (e) { return []; }
-  }
-
-  /* ================= LOAD DATA ================= */
 /*__N6_UNIT__*/  async function loadAllData(){
     const catalogRaw = await storeGet('programCatalog');
     try{ programCatalog = catalogRaw ? JSON.parse(catalogRaw) : []; }catch(e){ programCatalog = []; }
@@ -208,13 +147,6 @@
     pendingArchiveNotice = autoArchivedCount;
   }
 
-/*__N6_UNIT__*/  async function persistClients(){ await storeSet('clients', JSON.stringify(clients)); }
-/*__N6_UNIT__*/  async function persistTickets(){ await storeSet('tickets', JSON.stringify(tickets)); }
-/*__N6_UNIT__*/  async function persistChat(id){ await storeSet('chat:' + id, JSON.stringify(chatCache[id] || [])); }
-/*__N6_UNIT__*/  async function persistProgram(id){ await storeSet('program:' + id, JSON.stringify(programCache[id] || {})); }
-/*__N6_UNIT__*/  async function persistCoachRoster(){ /* dihapus: coachRoster dari API Kelola Anggota */ }
-/*__N6_UNIT__*/  async function persistCoachSchedule(){ await storeSet('coachSchedule', JSON.stringify(coachSchedule)); }
-/*__N6_UNIT__*/  async function persistCoachDayOff(){ await storeSet('coachDayOff', JSON.stringify(coachDayOff)); }
 /*__N6_UNIT__*/  async function persistExpenses(){ await storeSet('expenses', JSON.stringify(expenses)); }
 /*__N6_UNIT__*/  async function persistCatalog(){ await storeSet('programCatalog', JSON.stringify(programCatalog)); }
 /*__N6_UNIT__*/  function clientSessionCount(c){

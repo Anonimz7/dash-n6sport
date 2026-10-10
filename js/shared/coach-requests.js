@@ -12,7 +12,7 @@
  'use strict';
  const key='n6:coach:requests:v1';
  const kinds=['izin','reschedule','cuti'];
- const root=document.getElementById('panel-jadwalcoach');if(!root)return;
+ const root=document.getElementById('panel-jadwal');if(!root)return;
  const $=(q)=>root.querySelector(q);
  const escape=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function load(){try{const x=JSON.parse(localStorage.getItem(key));return Array.isArray(x)?x.filter(r=>r&&kinds.includes(r.kind)):[]}catch(e){return []}}

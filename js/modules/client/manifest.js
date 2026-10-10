@@ -5,7 +5,8 @@
  */
 //__N6_MANIFEST__
 export const MANIFEST_CLIENT = [
-  ['_core', 14],
+  ['_shared', 26],
+  ['_core', 13],
   ['ikon', 5],
   ['laporan', 5],
   ['kalender', 3],

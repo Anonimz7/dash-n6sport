@@ -4,10 +4,11 @@
  * Dibuat saat Fase C: pecah dari _synced.js menjadi modul granular.
  */
 //__N6_BODY__
+/*__N6_UNIT__*/  if (window.__n6BootstrapDone) return; window.__n6BootstrapDone = true;
   const navButtons = document.querySelectorAll('[data-panel]');
 /*__N6_UNIT__*/  const panels = document.querySelectorAll('.panel');
 /*__N6_UNIT__*/  const pageTitle = document.getElementById('pageTitle');
-/*__N6_UNIT__*/  const TITLES = { hub:'Beranda',hcprogram:'Buat Program',hcmanual:'Buat Program',hcclientchat:'Chat dengan Klien',hcmonitor:'Monitoring Klien',home:'Beranda', coach:'Coach', klien:'Klien', atlet:'Atlet Binaan', koreksi:'Koreksi',  chat:'Chat Tim', akun:'Pengaturan & Akun' };
+/*__N6_UNIT__*/  const TITLES = { home:'Beranda',hcprogram:'Buat Program',hcmanual:'Buat Program',chat:'Chat dengan Klien',hcmonitor:'Monitoring Klien', coach:'Coach', klien:'Klien', atlet:'Atlet Binaan', koreksi:'Koreksi', akun:'Pengaturan & Akun' };
 /*__N6_UNIT__*/  const MORE_SHEET_PANELS = ['coach', 'atlet', 'chat', 'akun'];
 /*__N6_UNIT__*/  const moreNavBtn = document.getElementById('moreNavBtn');
   navButtons.forEach(btn => {

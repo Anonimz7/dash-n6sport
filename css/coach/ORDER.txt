@@ -1,6 +1,5 @@
 # N6 css load order for role: coach
 # files MUST be included in this sequence (cascade depends on it)
-tokens.css	346
 base.css	373
 layout.css	8635
 components.css	8594

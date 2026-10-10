@@ -1,0 +1,23 @@
+# Build artifacts — dibangun oleh tools/build.sh, jangan commit
+js/dist/
+
+# Environment & secrets
+.env
+.env.local
+*.env
+
+# OS & editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Logs & temp
+*.log
+/tmp/
+
+# Node (jika nanti ada package.json)
+node_modules/

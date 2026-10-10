@@ -192,8 +192,8 @@
 /*__N6_UNIT__*/  const CHART_AMBER = '#B7791F';
 /*__N6_UNIT__*/  const CHART_GRID = '#F0EEE7';
 
-/*__N6_UNIT__*/  function buildChartConfig(key){
-    if (key === 'pencapaian') return {
+/*__N6_UNIT__*/  function chartConfig_pencapaian(){
+    return {
       type: 'bar',
       data: {
         labels: chartData.bulanLabel,
@@ -207,8 +207,11 @@
           y: { beginAtZero:true, ticks:{ stepSize:1, color: CHART_ASPHALT, font:{size:11} }, grid:{ color: CHART_GRID } }
         }
       }
-    };
-    if (key === 'performa') return {
+    }
+  }
+
+/*__N6_UNIT__*/  function chartConfig_performa(){
+    return {
       type: 'line',
       data: {
         labels: chartData.performaLabel,
@@ -225,8 +228,11 @@
           y:{ ticks:{ callback:(v)=>v+'%', color:CHART_ASPHALT, font:{size:11} }, grid:{ color:CHART_GRID } }
         }
       }
-    };
-    if (key === 'statusKlien') return {
+    }
+  }
+
+/*__N6_UNIT__*/  function chartConfig_statusKlien(){
+    return {
       type:'doughnut',
       data:{
         labels:['Aktif Normal','Bermasalah','Cedera'],
@@ -239,8 +245,11 @@
         responsive:true, maintainAspectRatio:false, cutout:'62%',
         plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11}, color:CHART_INK } } }
       }
-    };
-    if (key === 'profesional') return {
+    }
+  }
+
+/*__N6_UNIT__*/  function chartConfig_profesional(){
+    return {
       type:'radar',
       data:{
         labels: chartData.profesional.labels,
@@ -256,8 +265,11 @@
           r:{ min:0, max:100, ticks:{ display:false, stepSize:25 }, grid:{ color:CHART_GRID }, pointLabels:{ font:{size:10.5}, color:CHART_ASPHALT } }
         }
       }
-    };
-    if (key === 'ratingTren') return {
+    }
+  }
+
+/*__N6_UNIT__*/  function chartConfig_ratingTren(){
+    return {
       type:'line',
       data:{
         labels: chartData.bulanLabel,
@@ -274,7 +286,16 @@
           y:{ min:4, max:5, ticks:{ stepSize:0.5, color:CHART_ASPHALT, font:{size:10} }, grid:{ color:CHART_GRID } }
         }
       }
-    };
+    }
+  }
+
+/*__N6_UNIT__*/  function buildChartConfig(key){
+    if (key === 'pencapaian') return chartConfig_pencapaian();
+    if (key === 'performa') return chartConfig_performa();
+    if (key === 'statusKlien') return chartConfig_statusKlien();
+    if (key === 'profesional') return chartConfig_profesional();
+    if (key === 'ratingTren') return chartConfig_ratingTren();
+    return null;
   }
 
 /*__N6_UNIT__*/  function renderCharts(){

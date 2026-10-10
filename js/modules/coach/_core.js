@@ -6,23 +6,9 @@
 //__N6_BODY__
 
   /* ================= API CLIENT ================= */
-/*__N6_UNIT__*/  function n6ApiCfg(){ return window.N6_API || {}; }
-/*__N6_UNIT__*/  function n6ApiBase(){ return String(n6ApiCfg().base || 'https://api.denisbergkam.com/api/n6').replace(/\/+$/, ''); }
-/*__N6_UNIT__*/  function n6ApiToken(){
-    try { return window.localStorage.getItem(n6ApiCfg().tokenKey || 'n6:api:token'); }
-    catch(e){ return null; }
-  }
 /*__N6_UNIT__*/  function n6ApiUser(){
     try { return JSON.parse(window.localStorage.getItem(n6ApiCfg().userKey || 'n6:api:user') || 'null'); }
     catch(e){ return null; }
-  }
-/*__N6_UNIT__*/  function n6ApiReady(){ return n6ApiCfg().enabled === true && !!n6ApiToken(); }
-/*__N6_UNIT__*/  async function n6Api(path){
-    const res = await fetch(n6ApiBase() + '/' + String(path).replace(/^\/+/, ''), {
-      headers: { 'Authorization': 'Bearer ' + n6ApiToken() }
-    });
-    if (!res.ok) throw new Error('API ' + res.status + ' ' + path);
-    return res.json();
   }
 /*__N6_UNIT__*/  function fmtTanggalID(iso){
     if (!iso) return '-';

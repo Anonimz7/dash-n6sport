@@ -10,8 +10,8 @@ modules/jadwal.css	4039
 components.css	1414
 themes.css	16818
 modules/extras.css	1336
-polish/block-4.css	498
-polish/block-5.css	1432
-polish/block-6.css	368
-polish/block-7.css	794
-polish/block-8.css	635
+polish/password-field.css	498
+polish/quick-actions.css	1432
+polish/analytics-controls.css	368
+polish/coach-requests.css	794
+polish/report-tools.css	635

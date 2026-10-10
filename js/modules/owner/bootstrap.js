@@ -24,13 +24,13 @@
   }
 
   /* ================= NAV / PANEL SWITCH ================= */
-/*__N6_UNIT__*/  const panelTitles = { beranda:'Beranda', klien:'Klien', jadwalklien:'Jadwal Klien', jadwalcoach:'Jadwal Coach', harga:'Harga & Program', komisi:'Performa & Komisi', keuangan:'Keuangan', performa:'Performa Tim', tiket:'Tiket & Keluhan', pesan:'Pesan', akun:'Kelola Anggota', sandi:'Ganti Password' };
+/*__N6_UNIT__*/  const panelTitles = { home:'Beranda', klien:'Klien', 'jadwal-klien':'Jadwal Klien', 'jadwal-coach':'Jadwal Coach', harga:'Harga & Program', komisi:'Performa & Komisi', keuangan:'Keuangan', performa:'Performa Tim', tiket:'Tiket & Keluhan', chat:'Pesan', akun:'Kelola Anggota', sandi:'Ganti Password' };
 /*__N6_UNIT__*/  function switchPanel(name){
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     if(name === 'performa') name = 'komisi';
     document.getElementById('panel-' + name).classList.add('active');
     document.querySelectorAll('.side-nav button, .bottom-nav button[data-panel]').forEach(b => b.classList.toggle('active', b.dataset.panel === name));
-    document.getElementById('mobileMoreBtn').classList.toggle('more-active', !['beranda','klien','jadwalklien'].includes(name));
+    document.getElementById('mobileMoreBtn').classList.toggle('more-active', !['home','klien','jadwal-klien'].includes(name));
     document.getElementById('pageTitle').textContent = panelTitles[name] || name;
     closeSidebar();
   }
@@ -225,6 +225,7 @@
   });
   document.getElementById('shareScheduleStart').value=todayISO();
   (async function init(){
+    if (window.__n6BootstrapDone) return; window.__n6BootstrapDone = true;
     await loadAllData();
     await refreshSharedCoachSchedule();
     populateCoachFilters();

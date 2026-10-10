@@ -21,7 +21,7 @@
   }
 
   /* ================= NAV / PANEL SWITCH ================= */
-/*__N6_UNIT__*/  const panelTitles = { beranda:'Beranda', klien:'Klien', jadwalklien:'Jadwal Klien', jadwalcoach:'Jadwal Coach', harga:'Daftar Harga', tiket:'Tiket & Keluhan', pesan:'Pesan', sandi:'Ganti Password' };
+/*__N6_UNIT__*/  const panelTitles = { home:'Beranda', klien:'Klien', 'jadwal-klien':'Jadwal Klien', 'jadwal-coach':'Jadwal Coach', harga:'Daftar Harga', tiket:'Tiket & Keluhan', chat:'Pesan', sandi:'Ganti Password' };
 /*__N6_UNIT__*/  function switchPanel(name){
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById('panel-' + name).classList.add('active');
@@ -240,6 +240,7 @@ window.addEventListener('storage',e=>{
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)n6RefreshSharedCoachData();});
 /* ================= INIT ================= */
   (async function init(){
+    if (window.__n6BootstrapDone) return; window.__n6BootstrapDone = true;
     await loadAllData();
     populateCoachFilters();
     populateFormSelects();

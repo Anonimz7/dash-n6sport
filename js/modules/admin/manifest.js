@@ -5,9 +5,10 @@
  */
 //__N6_MANIFEST__
 export const MANIFEST_ADMIN = [
-  ['_core', 49],
-  ['beranda', 3],
-  ['klien', 20],
+  ['_shared', 26],
+  ['_core', 29],
+  ['home', 3],
+  ['klien', 25],
   ['klien-invoice', 1],
   ['jadwal-coach', 1],
   ['jadwal-coach-export', 1],
@@ -15,7 +16,7 @@ export const MANIFEST_ADMIN = [
   ['jadwal-klien', 1],
   ['harga', 3],
   ['tiket', 7],
-  ['pesan', 13],
+  ['chat', 13],
   ['jadwal-coach', 25],
   ['bootstrap', 17],
 ];

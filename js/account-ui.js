@@ -104,19 +104,7 @@
 
   /* ================= GANTI PASSWORD (semua peran) ================= */
 
-  function initGantiPassword() {
-    var root = document.getElementById('n6SandiRoot');
-    if (!root) {
-      var panel = document.getElementById('panel-sandi');
-      if (!panel) return;
-      root = panel;
-    }
-    if (!apiReady()) {
-      root.innerHTML = noticeHtml(
-        'Ganti password membutuhkan koneksi ke server (mode API). ' +
-        'Aktifkan API dan masuk terlebih dahulu.');
-      return;
-    }
+  function renderSandiForm(root){
     root.innerHTML =
       '<div class="n6a-wrap">' +
       '<div class="note-box">Gunakan kombinasi huruf besar, huruf kecil, angka, dan simbol ' +
@@ -137,14 +125,9 @@
       '<div id="n6SandiMsg" class="n6a-msg"></div>' +
       '<button type="submit" class="btn-primary">Simpan Password Baru</button>' +
       '</form></div></div></div>';
+  }
 
-    var form = document.getElementById('n6SandiForm');
-    var msg = document.getElementById('n6SandiMsg');
-    var pwFill = document.getElementById('n6PwFill');
-    var pwHint = document.getElementById('n6PwHint');
-    var baruInput = document.getElementById('n6SandiBaru');
-
-    // toggle tampil/sembunyi
+  function bindSandiWidgets(root){
     root.querySelectorAll('[data-eye]').forEach(function (b) {
       b.addEventListener('click', function () {
         var inp = document.getElementById(b.getAttribute('data-eye'));
@@ -152,8 +135,9 @@
         inp.type = inp.type === 'password' ? 'text' : 'password';
       });
     });
-
-    // indikator kekuatan password
+    var baruInput = document.getElementById('n6SandiBaru');
+    var pwFill = document.getElementById('n6PwFill');
+    var pwHint = document.getElementById('n6PwHint');
     baruInput.addEventListener('input', function () {
       var v = baruInput.value, score = 0;
       if (v.length >= 8) score++;
@@ -168,7 +152,14 @@
       pwFill.style.background = colors[score];
       pwHint.textContent = v ? ('Kekuatan: ' + labels[score]) : 'Kekuatan password akan muncul di sini.';
     });
+  }
 
+  function bindSandiSubmit(){
+    var form = document.getElementById('n6SandiForm');
+    var msg = document.getElementById('n6SandiMsg');
+    var baruInput = document.getElementById('n6SandiBaru');
+    var pwFill = document.getElementById('n6PwFill');
+    var pwHint = document.getElementById('n6PwHint');
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
       var lama = document.getElementById('n6SandiLama').value;
@@ -179,10 +170,7 @@
       if (baru !== baru2) { msg.className = 'n6a-msg err'; msg.textContent = 'Ulangi password baru tidak sama.'; return; }
       if (baru.length < 8) { msg.className = 'n6a-msg err'; msg.textContent = 'Password baru minimal 8 karakter.'; return; }
       try {
-        await api('auth/password', {
-          method: 'PUT',
-          body: { current_password: lama, new_password: baru },
-        });
+        await api('auth/password', { method: 'PUT', body: { current_password: lama, new_password: baru } });
         msg.className = 'n6a-msg ok';
         msg.textContent = 'Password berhasil diganti.';
         form.reset();
@@ -194,6 +182,18 @@
         msg.textContent = 'Gagal: ' + err.message;
       }
     });
+  }
+
+  function initGantiPassword() {
+    var root = document.getElementById('n6SandiRoot') || document.getElementById('panel-sandi');
+    if (!root) return;
+    if (!apiReady()) {
+      root.innerHTML = noticeHtml('Ganti password membutuhkan koneksi ke server (mode API). Aktifkan API dan masuk terlebih dahulu.');
+      return;
+    }
+    renderSandiForm(root);
+    bindSandiWidgets(root);
+    bindSandiSubmit();
   }
 
   /* ================= KELOLA ANGGOTA (owner) ================= */
