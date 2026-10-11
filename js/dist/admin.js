@@ -4,7 +4,7 @@
  * GENERATED FILE - do not edit. Source of truth is js/modules/admin/*.js
  * Rebuilt by tools/build.sh; concatenation is byte-identical to the
  * original <script> block in admin.html.
- * Build: git:1600331
+ * Build: git:473aafb
  */
 
 
@@ -370,9 +370,9 @@
     });
   };
   window.deleteArchivedClient = function(id){
-    const c = archivedClients.find(x => String(x.id) === String(id));
-    if (!c) return;
-    if (!confirm('Hapus permanen data "' + c.name + '"? Laporan latihan, riwayat chat, dan data program klien ini akan hilang selamanya dan tidak bisa dikembalikan.')) return;
+    const client = archivedClients.find(x => String(x.id) === String(id));
+    if (!client) return;
+    if (!confirm('Hapus permanen data "' + client.name + '"? Laporan latihan, riwayat chat, dan data program klien ini akan hilang selamanya dan tidak bisa dikembalikan.')) return;
     archivedClients = archivedClients.filter(x => String(x.id) !== String(id));
     Promise.all([
       storeSet('archivedClients', JSON.stringify(archivedClients)),
@@ -497,15 +497,15 @@
     document.getElementById('clientFormModal').classList.add('show');
   };
   window.editClient = function(id){
-    const c = clients.find(x => String(x.id) === String(id));
-    if (!c) return;
+    const client = clients.find(x => String(x.id) === String(id));
+    if (!client) return;
     const p = programCache[id] || {};
-    const meta = c.packageMeta || {};
+    const meta = client.packageMeta || {};
     document.getElementById('clientFormTitle').textContent = 'Edit Klien';
-    document.getElementById('fClientId').value = c.id;
-    document.getElementById('fName').value = c.name;
+    document.getElementById('fClientId').value = client.id;
+    document.getElementById('fName').value = client.name;
     document.getElementById('fName2').value = meta.pairLabel || '';
-    document.getElementById('fPhone').value = c.phone || '';
+    document.getElementById('fPhone').value = client.phone || '';
     document.getElementById('fCoach').value = c.coach || (coachRoster[0] ? coachRoster[0].name : '');
     document.getElementById('fProgram').value = c.programId || '';
     document.getElementById('fMeetings').value = meta.meetings || 2;
@@ -663,11 +663,11 @@
       }
     }
 
-    const data = buildClientData(id, name, packageMeta, ctx);
-    if (isNew) clients.push(data);
+    const clientData = buildClientData(id, name, packageMeta, ctx);
+    if (isNew) clients.push(clientData);
     else {
       const idx = clients.findIndex(c => String(c.id) === String(id));
-      clients[idx] = { ...clients[idx], ...data };
+      clients[idx] = { ...clients[idx], ...clientData };
     }
     await persistClients();
     await finalizeClient(id, programEntry, isNew);
@@ -677,9 +677,9 @@
   }
 
   window.deleteClient = function(id){
-    const c = clients.find(x => String(x.id) === String(id));
-    if (!c) return;
-    if (!confirm('Hapus klien "' + c.name + '"? Data laporan dan chat klien ini tidak akan tampil lagi di dashboard.')) return;
+    const client = clients.find(x => String(x.id) === String(id));
+    if (!client) return;
+    if (!confirm('Hapus klien "' + client.name + '"? Data laporan dan chat klien ini tidak akan tampil lagi di dashboard.')) return;
     clients = clients.filter(x => String(x.id) !== String(id));
     persistClients().then(() => { showToast('Klien dihapus'); renderAll(); });
   };
@@ -1014,7 +1014,7 @@
       const dateStr = dateStrOf(d.getFullYear(), d.getMonth(), d.getDate());
       const weekday = DAYS[col];
       const isToday = dateStr === todayStr;
-      const off = isCoachOff(coachId, dateStr);
+      const isDayOff = isCoachOff(coachId, dateStr);
 
       if (isToday){
         ctx.fillStyle = '#F5F3EE'; ctx.fillRect(cx + 1, cy + 1, colW - 2, cellH - 2);
@@ -1025,7 +1025,7 @@
       const dateLabel = String(d.getDate()) + (d.getDate() === 1 || dayOffset === 0 ? ' ' + MONTH_SHORT[d.getMonth()] : '');
       ctx.fillText(dateLabel, cx + pillSidePad, cy + 30);
 
-      if (off){
+      if (isDayOff){
         // Libur: blok warna hijau solid
         ctx.fillStyle = '#1E8E3E'; ctx.fillRect(cx + 2, cy + 2, colW - 4, cellH - 4);
         ctx.fillStyle = '#FFFFFF'; ctx.font = '800 16px Arial'; ctx.textAlign = 'center';
@@ -1066,8 +1066,8 @@
     // ===== LEGENDA =====
     function legendSwatch(x, yy, mode, label){
       const s = 26, sy = yy - 19;
-      const bg = mode === 'off' ? '#1E8E3E' : mode === 'filled' ? '#D62828' : '#FFFFFF';
-      const border = mode === 'off' ? '#1E8E3E' : mode === 'filled' ? '#D62828' : '#C9C7BE';
+      const bg = mode === 'isDayOff' ? '#1E8E3E' : mode === 'filled' ? '#D62828' : '#FFFFFF';
+      const border = mode === 'isDayOff' ? '#1E8E3E' : mode === 'filled' ? '#D62828' : '#C9C7BE';
       ctx.fillStyle = bg; roundRectPath(ctx, x, sy, s, s, 4); ctx.fill();
       ctx.lineWidth = 1.4; ctx.strokeStyle = border; roundRectPath(ctx, x, sy, s, s, 4); ctx.stroke();
       ctx.fillStyle = '#3B3A36'; ctx.font = '400 14.5px Arial'; ctx.textAlign = 'left';
@@ -1075,7 +1075,7 @@
     }
     legendSwatch(marginX, legendTop, 'empty', 'Putih — Tersedia, bisa dipesan');
     legendSwatch(marginX + 340, legendTop, 'filled', 'Merah — Terisi / penuh');
-    legendSwatch(marginX + 600, legendTop, 'off', 'Hijau — Coach libur sepanjang hari');
+    legendSwatch(marginX + 600, legendTop, 'isDayOff', 'Hijau — Coach libur sepanjang hari');
     ctx.fillStyle = '#8C8A82'; ctx.font = '400 13.5px Arial';
     ctx.fillText('Jam pada tiap sesi mengikuti jadwal yang sudah ditentukan Admin CS.', marginX, legendTop + 30);
 
@@ -1101,13 +1101,13 @@
 
   /* ================= DETAIL KLIEN ================= */
   window.openClientDetail = function(id){
-    const c = clients.find(x => String(x.id) === String(id));
-    if (!c) return;
+    const client = clients.find(x => String(x.id) === String(id));
+    if (!client) return;
     const p = programCache[id] || {};
     const reports = reportsCache[id] || {};
     const reportCount = Object.keys(reports).length;
     const issues = Object.keys(reports).filter(d => reports[d].issue).length;
-    document.getElementById('clientDetailTitle').textContent = c.name;
+    document.getElementById('clientDetailTitle').textContent = client.name;
     document.getElementById('clientDetailBody').innerHTML = `
       <div class="detail-grid">
         <div class="detail-item"><div class="l">Telepon</div><div class="v">${escapeHtml(c.phone || '-')}</div></div>
@@ -1611,9 +1611,9 @@
       let base = slugify(name) || 'coach'; id = base; let n = 2;
       while (coachRoster.some(c => String(c.id) === String(id))){ id = base + '-' + n; n++; }
     }
-    const data = { id, name, phone: document.getElementById('cfPhone').value.trim() };
-    if (isNew) coachRoster.push(data);
-    else { const idx = coachRoster.findIndex(c => String(c.id) === String(id)); coachRoster[idx] = data; }
+    const coachData = { id, name, phone: document.getElementById('cfPhone').value.trim() };
+    if (isNew) coachRoster.push(coachData);
+    else { const idx = coachRoster.findIndex(c => String(c.id) === String(id)); coachRoster[idx] = coachData; }
     await persistCoachRoster();
     closeCoachForm();
     showToast(isNew ? 'Coach baru ditambahkan' : 'Data coach diperbarui');
@@ -1783,10 +1783,10 @@
   }
   document.getElementById('n6ImportFile').addEventListener('change',async e=>{
     const f=e.target.files[0];if(!f)return;
-    try{const data=JSON.parse(await f.text());if(data.format!=='n6cs-admin-backup-v1'||!data.records||typeof data.records!=='object')throw Error('Format cadangan tidak sesuai');
-      if(!confirm('Impor akan mengganti data di browser ini. Ekspor cadangan data saat ini terlebih dahulu. Lanjutkan?'))return;
+    try{const backupData=JSON.parse(await f.text());if(data.format!=='n6cs-admin-backup-v1'||!data.records||typeof data.records!=='object')throw Error('Format cadangan tidak sesuai');
+      if(!confirm('Impor akan mengganti backupData di browser ini. Ekspor cadangan backupData saat ini terlebih dahulu. Lanjutkan?'))return;
       n6ExportData();
-      const entries=Object.entries(data.records).filter(([k,v])=>typeof v==='string' && (N6_KEYS.includes(k)||/^(chat|reports|program):/.test(k)));
+      const entries=Object.entries(backupData.records).filter(([k,v])=>typeof v==='string' && (N6_KEYS.includes(k)||/^(chat|reports|program):/.test(k)));
       for(const [k,v] of entries){JSON.parse(v);localStorage.setItem(STORE_PREFIX+k,v)}
       alert('Impor selesai. Halaman akan dimuat ulang.');location.reload();
     }catch(err){alert('Impor dibatalkan: '+err.message)}finally{e.target.value=''}

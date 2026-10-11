@@ -264,9 +264,9 @@
       let base = slugify(name) || 'coach'; id = base; let n = 2;
       while (coachRoster.some(c => String(c.id) === String(id))){ id = base + '-' + n; n++; }
     }
-    const data = { id, name, phone: document.getElementById('cfPhone').value.trim() };
-    if (isNew) coachRoster.push(data);
-    else { const idx = coachRoster.findIndex(c => String(c.id) === String(id)); coachRoster[idx] = data; }
+    const coachData = { id, name, phone: document.getElementById('cfPhone').value.trim() };
+    if (isNew) coachRoster.push(coachData);
+    else { const idx = coachRoster.findIndex(c => String(c.id) === String(id)); coachRoster[idx] = coachData; }
     await persistCoachRoster();
     closeCoachForm();
     showToast(isNew ? 'Coach baru ditambahkan' : 'Data coach diperbarui');

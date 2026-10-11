@@ -101,7 +101,7 @@
       const dateStr = dateStrOf(d.getFullYear(), d.getMonth(), d.getDate());
       const weekday = DAYS[col];
       const isToday = dateStr === todayStr;
-      const off = isCoachOff(coachId, dateStr);
+      const isDayOff = isCoachOff(coachId, dateStr);
 
       if (isToday){
         ctx.fillStyle = '#F5F3EE'; ctx.fillRect(cx + 1, cy + 1, colW - 2, cellH - 2);
@@ -112,7 +112,7 @@
       const dateLabel = String(d.getDate()) + (d.getDate() === 1 || dayOffset === 0 ? ' ' + MONTH_SHORT[d.getMonth()] : '');
       ctx.fillText(dateLabel, cx + pillSidePad, cy + 30);
 
-      if (off){
+      if (isDayOff){
         // Libur: blok warna hijau solid
         ctx.fillStyle = '#1E8E3E'; ctx.fillRect(cx + 2, cy + 2, colW - 4, cellH - 4);
         ctx.fillStyle = '#FFFFFF'; ctx.font = '800 16px Arial'; ctx.textAlign = 'center';
@@ -153,8 +153,8 @@
     // ===== LEGENDA =====
     function legendSwatch(x, yy, mode, label){
       const s = 26, sy = yy - 19;
-      const bg = mode === 'off' ? '#1E8E3E' : mode === 'filled' ? '#D62828' : '#FFFFFF';
-      const border = mode === 'off' ? '#1E8E3E' : mode === 'filled' ? '#D62828' : '#C9C7BE';
+      const bg = mode === 'isDayOff' ? '#1E8E3E' : mode === 'filled' ? '#D62828' : '#FFFFFF';
+      const border = mode === 'isDayOff' ? '#1E8E3E' : mode === 'filled' ? '#D62828' : '#C9C7BE';
       ctx.fillStyle = bg; roundRectPath(ctx, x, sy, s, s, 4); ctx.fill();
       ctx.lineWidth = 1.4; ctx.strokeStyle = border; roundRectPath(ctx, x, sy, s, s, 4); ctx.stroke();
       ctx.fillStyle = '#3B3A36'; ctx.font = '400 14.5px Arial'; ctx.textAlign = 'left';
@@ -162,7 +162,7 @@
     }
     legendSwatch(marginX, legendTop, 'empty', 'Putih — Tersedia, bisa dipesan');
     legendSwatch(marginX + 340, legendTop, 'filled', 'Merah — Terisi / penuh');
-    legendSwatch(marginX + 600, legendTop, 'off', 'Hijau — Coach libur sepanjang hari');
+    legendSwatch(marginX + 600, legendTop, 'isDayOff', 'Hijau — Coach libur sepanjang hari');
     ctx.fillStyle = '#8C8A82'; ctx.font = '400 13.5px Arial';
     ctx.fillText('Jam pada tiap sesi mengikuti jadwal yang sudah ditentukan Admin CS.', marginX, legendTop + 30);
 

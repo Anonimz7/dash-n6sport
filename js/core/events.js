@@ -6,9 +6,9 @@
  * the bus exists so new modules do not have to guess which.
  *
  *   const bus = getBus();
- *   const off = bus.on('clients:changed', () => reload());
+ *   const unsubscribe = bus.on('clients:changed', () => reload());
  *   bus.emit('clients:changed', { id });
- *   off();
+ *   unsubscribe();
  */
 
 const CHANNEL = '__n6_bus__';
@@ -25,11 +25,11 @@ function createBus() {
     },
 
     once(event, handler) {
-      const off = this.on(event, (payload) => {
-        off();
+      const unsubscribe = this.on(event, (payload) => {
+        unsubscribe();
         handler(payload);
       });
-      return off;
+      return unsubscribe;
     },
 
     off(event, handler) {

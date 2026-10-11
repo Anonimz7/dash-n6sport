@@ -54,11 +54,11 @@
     let id = document.getElementById('pfProgramId').value;
     const isNew = !id;
     if (isNew){ let base = slugify(label) || 'program'; id = base; let n = 2; while (catalogById(id)){ id = base + '-' + n; n++; } }
-    const data = { id, label, category: document.getElementById('pfCategory').value,
+    const priceData = { id, label, category: document.getElementById('pfCategory').value,
       mode:'fixed', unit:document.getElementById('pfUnit').value.trim(),
       price:Math.round(price), komisiPerSesi:Math.round(komisi) };
-    if (isNew) programCatalog.push(data);
-    else { const idx = programCatalog.findIndex(x => String(x.id) === String(id)); programCatalog[idx] = data; }
+    if (isNew) programCatalog.push(priceData);
+    else { const idx = programCatalog.findIndex(x => String(x.id) === String(id)); programCatalog[idx] = priceData; }
     await persistCatalog();
     closeProgramForm();
     showToast(isNew ? 'Program baru ditambahkan' : 'Harga program diperbarui');

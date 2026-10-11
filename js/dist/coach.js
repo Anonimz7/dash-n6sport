@@ -4,7 +4,7 @@
  * GENERATED FILE - do not edit. Source of truth is js/modules/coach/*.js
  * Rebuilt by tools/build.sh; concatenation is byte-identical to the
  * original <script> block in coach.html.
- * Build: git:1600331
+ * Build: git:473aafb
  */
 
 
@@ -119,8 +119,8 @@
   // Urutan hari API: 1=Senin..7=Minggu ; JS getDay(): 0=Minggu..6=Sabtu
   function apiWeekday(jsDay){ return ((jsDay + 6) % 7) + 1; }
   async function loadSchedule(){
-    const data = await n6Api('schedules/coach');
-    const slots = (data && data.slots) || [];
+    const scheduleData = await n6Api('schedules/coach');
+    const slots = (scheduleData && scheduleData.slots) || [];
     scheduleSlots = slots.filter(s => s.active !== false);
     const todayWd = apiWeekday(new Date().getDay());
     schedule = scheduleSlots
@@ -316,8 +316,8 @@
     return gajiFilterState.tahun + '-' + String(gajiFilterState.bulan).padStart(2,'0');
   }
   async function loadGaji(){
-    const data = await n6Api('commissions/summary?period=' + currentPeriodKey());
-    const rows = (data && data.rows) || [];
+    const commissionData = await n6Api('commissions/summary?period=' + currentPeriodKey());
+    const rows = (commissionData && commissionData.rows) || [];
     const me = n6ApiUser();
     const myCoachId = me && me.coach_id != null ? me.coach_id : null;
     gajiSummary = myCoachId != null ? (rows.find(r => String(r.coach_id) === String(myCoachId)) || null) : null;

@@ -26,8 +26,8 @@
   // Urutan hari API: 1=Senin..7=Minggu ; JS getDay(): 0=Minggu..6=Sabtu
 /*__N6_UNIT__*/  function apiWeekday(jsDay){ return ((jsDay + 6) % 7) + 1; }
 /*__N6_UNIT__*/  async function loadSchedule(){
-    const data = await n6Api('schedules/coach');
-    const slots = (data && data.slots) || [];
+    const scheduleData = await n6Api('schedules/coach');
+    const slots = (scheduleData && scheduleData.slots) || [];
     scheduleSlots = slots.filter(s => s.active !== false);
     const todayWd = apiWeekday(new Date().getDay());
     schedule = scheduleSlots

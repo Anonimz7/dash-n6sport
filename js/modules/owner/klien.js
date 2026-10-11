@@ -73,9 +73,9 @@
     });
   };
 /*__N6_UNIT__*/  window.deleteArchivedClient = function(id){
-    const c = archivedClients.find(x => String(x.id) === String(id));
-    if (!c) return;
-    if (!confirm('Hapus permanen data "' + c.name + '"? Laporan latihan, riwayat chat, dan data program klien ini akan hilang selamanya dan tidak bisa dikembalikan.')) return;
+    const client = archivedClients.find(x => String(x.id) === String(id));
+    if (!client) return;
+    if (!confirm('Hapus permanen data "' + client.name + '"? Laporan latihan, riwayat chat, dan data program klien ini akan hilang selamanya dan tidak bisa dikembalikan.')) return;
     archivedClients = archivedClients.filter(x => x.id !== id);
     Promise.all([
       storeSet('archivedClients', JSON.stringify(archivedClients)),
@@ -191,15 +191,15 @@
     document.getElementById('clientFormModal').classList.add('show');
   };
 /*__N6_UNIT__*/  window.editClient = function(id){
-    const c = clients.find(x => String(x.id) === String(id));
-    if (!c) return;
+    const client = clients.find(x => String(x.id) === String(id));
+    if (!client) return;
     const p = programCache[id] || {};
-    const meta = c.packageMeta || {};
+    const meta = client.packageMeta || {};
     document.getElementById('clientFormTitle').textContent = 'Edit Klien';
-    document.getElementById('fClientId').value = c.id;
-    document.getElementById('fName').value = c.name;
-    document.getElementById('fPhone').value = c.phone || '';
-    document.getElementById('fCoach').value = c.coach || (coachRoster[0] ? coachRoster[0].name : '');
+    document.getElementById('fClientId').value = client.id;
+    document.getElementById('fName').value = client.name;
+    document.getElementById('fPhone').value = client.phone || '';
+    document.getElementById('fCoach').value = client.coach || (coachRoster[0] ? coachRoster[0].name : '');
     document.getElementById('fProgram').value = c.programId || '';
     document.getElementById('fMeetings').value = meta.meetings || 2;
     document.getElementById('fWeeks').value = meta.weeks || 4;
@@ -291,22 +291,22 @@
   }
 
 /*__N6_UNIT__*/  window.deleteClient = function(id){
-    const c = clients.find(x => String(x.id) === String(id));
-    if (!c) return;
-    if (!confirm('Hapus klien "' + c.name + '"? Data laporan dan chat klien ini tidak akan tampil lagi di dashboard.')) return;
+    const client = clients.find(x => String(x.id) === String(id));
+    if (!client) return;
+    if (!confirm('Hapus klien "' + client.name + '"? Data laporan dan chat klien ini tidak akan tampil lagi di dashboard.')) return;
     clients = clients.filter(x => x.id !== id);
     persistClients().then(() => { showToast('Klien dihapus'); renderAll(); });
   };
 
   /* ================= INVOICE (JPG) ================= */
 /*__N6_UNIT__*/  window.openClientDetail = function(id){
-    const c = clients.find(x => String(x.id) === String(id));
-    if (!c) return;
+    const client = clients.find(x => String(x.id) === String(id));
+    if (!client) return;
     const p = programCache[id] || {};
     const reports = reportsCache[id] || {};
     const reportCount = Object.keys(reports).length;
     const issues = Object.keys(reports).filter(d => reports[d].issue).length;
-    document.getElementById('clientDetailTitle').textContent = c.name;
+    document.getElementById('clientDetailTitle').textContent = client.name;
     document.getElementById('clientDetailBody').innerHTML = `
       <div class="detail-grid">
         <div class="detail-item"><div class="l">Telepon</div><div class="v">${escapeHtml(c.phone || '-')}</div></div>

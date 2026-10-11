@@ -142,10 +142,10 @@
   }
   document.getElementById('n6ImportFile').addEventListener('change',async e=>{
     const f=e.target.files[0];if(!f)return;
-    try{const data=JSON.parse(await f.text());if(data.format!=='n6cs-admin-backup-v1'||!data.records||typeof data.records!=='object')throw Error('Format cadangan tidak sesuai');
-      if(!confirm('Impor akan mengganti data di browser ini. Ekspor cadangan data saat ini terlebih dahulu. Lanjutkan?'))return;
+    try{const backupData=JSON.parse(await f.text());if(data.format!=='n6cs-admin-backup-v1'||!data.records||typeof data.records!=='object')throw Error('Format cadangan tidak sesuai');
+      if(!confirm('Impor akan mengganti backupData di browser ini. Ekspor cadangan backupData saat ini terlebih dahulu. Lanjutkan?'))return;
       n6ExportData();
-      const entries=Object.entries(data.records).filter(([k,v])=>typeof v==='string' && (N6_KEYS.includes(k)||/^(chat|reports|program):/.test(k)));
+      const entries=Object.entries(backupData.records).filter(([k,v])=>typeof v==='string' && (N6_KEYS.includes(k)||/^(chat|reports|program):/.test(k)));
       for(const [k,v] of entries){JSON.parse(v);localStorage.setItem(STORE_PREFIX+k,v)}
       alert('Impor selesai. Halaman akan dimuat ulang.');location.reload();
     }catch(err){alert('Impor dibatalkan: '+err.message)}finally{e.target.value=''}
