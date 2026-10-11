@@ -12,6 +12,13 @@
     { key:'malam', label:'Malam', time:'18:00–21:00' }
   ];
 /*__N6_UNIT__*/ const DAYS = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
+/**
+ * KONVENSI TANGGAL N6:
+ * - todayISO(): tanggal hari ini (zona lokal browser), format YYYY-MM-DD
+ * - new Date(str): parsing tanggal dari string ISO
+ * - daysBetween(): selisih hari kalender (bukan 24 jam persis)
+ * Semua tanggal disimpan sebagai string ISO YYYY-MM-DD (tanpa waktu/timezone).
+ */
 /*__N6_UNIT__*/ function daysBetween(a, b){ return Math.round((new Date(b) - new Date(a)) / 86400000); }
 /*__N6_UNIT__*/ function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 /*__N6_UNIT__*/ function formatDateID(dateStr){
@@ -85,3 +92,5 @@
 /*__N6_UNIT__*/ async function persistCoachSchedule(){ await storeSet('coachSchedule', JSON.stringify(coachSchedule)); }
 /*__N6_UNIT__*/ async function persistProgram(id){ await storeSet('program:' + id, JSON.stringify(programCache[id] || {})); }
 /*__N6_UNIT__*/ async function persistTickets(){ await storeSet('tickets', JSON.stringify(tickets)); }
+
+/*__N6_UNIT__*/  function panelId(name){ return 'panel-' + name; }

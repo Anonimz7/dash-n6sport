@@ -5,7 +5,7 @@
  */
 //__N6_MANIFEST__
 export const MANIFEST_HEADCOACH = [
-  ['_shared', 26],
+  ['_shared', 27],
   ['_core', 27],
   ['home', 16],
   ['daftar-coach', 20],

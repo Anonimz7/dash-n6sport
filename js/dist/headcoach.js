@@ -4,7 +4,7 @@
  * GENERATED FILE - do not edit. Source of truth is js/modules/headcoach/*.js
  * Rebuilt by tools/build.sh; concatenation is byte-identical to the
  * original <script> block in headcoach.html.
- * Build: git:f4126ca
+ * Build: git:1600331
  */
 
 
@@ -15,6 +15,13 @@
     { key:'malam', label:'Malam', time:'18:00–21:00' }
   ];
  const DAYS = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
+/**
+ * KONVENSI TANGGAL N6:
+ * - todayISO(): tanggal hari ini (zona lokal browser), format YYYY-MM-DD
+ * - new Date(str): parsing tanggal dari string ISO
+ * - daysBetween(): selisih hari kalender (bukan 24 jam persis)
+ * Semua tanggal disimpan sebagai string ISO YYYY-MM-DD (tanpa waktu/timezone).
+ */
  function daysBetween(a, b){ return Math.round((new Date(b) - new Date(a)) / 86400000); }
  function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
  function formatDateID(dateStr){
@@ -88,6 +95,8 @@
  async function persistCoachSchedule(){ await storeSet('coachSchedule', JSON.stringify(coachSchedule)); }
  async function persistProgram(id){ await storeSet('program:' + id, JSON.stringify(programCache[id] || {})); }
  async function persistTickets(){ await storeSet('tickets', JSON.stringify(tickets)); }
+
+  function panelId(name){ return 'panel-' + name; }
 
   /* ================= API CLIENT ================= */
   function fmtTanggal(iso){

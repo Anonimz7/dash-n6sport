@@ -1,0 +1,62 @@
+{
+  "panels": [
+    {
+      "name": "home",
+      "status": "LOLOS",
+      "note": ""
+    },
+    {
+      "name": "klien",
+      "status": "LOLOS",
+      "note": ""
+    },
+    {
+      "name": "jadwal-klien",
+      "status": "LOLOS",
+      "note": ""
+    },
+    {
+      "name": "jadwal-coach",
+      "status": "LOLOS",
+      "note": ""
+    },
+    {
+      "name": "harga",
+      "status": "LOLOS",
+      "note": ""
+    },
+    {
+      "name": "komisi",
+      "status": "LOLOS",
+      "note": ""
+    },
+    {
+      "name": "keuangan",
+      "status": "LOLOS",
+      "note": ""
+    },
+    {
+      "name": "tiket",
+      "status": "LOLOS",
+      "note": ""
+    },
+    {
+      "name": "chat",
+      "status": "LOLOS",
+      "note": ""
+    },
+    {
+      "name": "akun",
+      "status": "LOLOS",
+      "note": ""
+    },
+    {
+      "name": "sandi",
+      "status": "LOLOS",
+      "note": ""
+    }
+  ],
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+  ]
+}

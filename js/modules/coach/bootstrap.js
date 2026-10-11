@@ -200,13 +200,12 @@
   });
 
   /* ================= TOAST ================= */
-/*__N6_UNIT__*/  let toastTimer;
 /*__N6_UNIT__*/  function showToast(msg){
     const toast = document.getElementById('toast');
     toast.textContent = msg;
     toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
   }
 /*__N6_UNIT__*/  window.showToast = showToast;
 

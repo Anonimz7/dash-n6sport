@@ -5,7 +5,7 @@
  */
 //__N6_MANIFEST__
 export const MANIFEST_ADMIN = [
-  ['_shared', 26],
+  ['_shared', 27],
   ['_core', 29],
   ['home', 3],
   ['klien', 25],

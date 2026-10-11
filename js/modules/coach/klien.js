@@ -42,13 +42,13 @@
         </div>
         <div class="progress-track"><div class="progress-fill" style="width:${p.progress}%"></div></div>
         <div class="progress-note">${p.note}</div>
-        <button class="btn-outline" style="margin-top:10px; padding:8px 16px; font-size:12px;" onclick="openClientDetail('${p.name}')">Detail Klien</button>
+        <button class="btn-outline" style="margin-top:10px; padding:8px 16px; font-size:12px;" onclick="openClientHistory('${p.name}')">Detail Klien</button>
       </div>
     `).join('');
   }
 
   /* ================= MODAL: DETAIL KLIEN (riwayat catatan latihan) ================= */
-/*__N6_UNIT__*/  window.openClientDetail = function(name){
+/*__N6_UNIT__*/  window.openClientHistory = function(name){
     document.getElementById('clientDetailTitle').textContent = 'Riwayat Latihan — ' + name;
     const history = logs.filter(l => l.client === name);
     const body = document.getElementById('clientDetailBody');
