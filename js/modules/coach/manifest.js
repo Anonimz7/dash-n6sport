@@ -13,6 +13,5 @@ export const MANIFEST_COACH = [
   ['keuangan', 8],
   ['laporan', 5],
   ['absensi', 15],
-  ['info', 5],
   ['bootstrap', 13],
 ];

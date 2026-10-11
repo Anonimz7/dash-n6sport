@@ -22,7 +22,7 @@
       <div class="client-row">
         <div style="cursor:pointer; flex:1; min-width:180px;" onclick="openClientDetail('${c.id}')">
           <div class="name">${escapeHtml(c.name)}</div>
-          <div class="meta">${escapeHtml(c.programLabel || 'Belum ada program')} — Coach ${escapeHtml(c.coach || '-')}${(c.packageMeta && c.packageMeta.pairLabel) ? ' · Bersama ' + escapeHtml(c.packageMeta.pairLabel) : ''}</div>
+          <div class="meta">${escapeHtml(c.programLabel || c.program || c.packageName || 'Belum ada program')} — Coach ${escapeHtml(c.coach || '-')}${(c.packageMeta && c.packageMeta.pairLabel) ? ' · Bersama ' + escapeHtml(c.packageMeta.pairLabel) : ''}</div>
         </div>
         <div class="client-tags">
           <span class="badge ${statusTone(st)}">${st}</span>
@@ -174,6 +174,7 @@
   }
 
 /*__N6_UNIT__*/  window.openClientForm = function(){
+    populateFormSelects();
     document.getElementById('clientFormTitle').textContent = 'Tambah Klien';
     document.getElementById('fClientId').value = '';
     document.getElementById('fName').value = '';

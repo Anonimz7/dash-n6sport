@@ -4,7 +4,7 @@
  * GENERATED FILE - do not edit. Source of truth is js/modules/owner/*.js
  * Rebuilt by tools/build.sh; concatenation is byte-identical to the
  * original <script> block in owner.html.
- * Build: git:473aafb
+ * Build: git:ba411d4
  */
 
 
@@ -421,7 +421,7 @@
       <div class="client-row">
         <div style="cursor:pointer; flex:1; min-width:180px;" onclick="openClientDetail('${c.id}')">
           <div class="name">${escapeHtml(c.name)}</div>
-          <div class="meta">${escapeHtml(c.programLabel || 'Belum ada program')} — Coach ${escapeHtml(c.coach || '-')}</div>
+          <div class="meta">${escapeHtml(c.programLabel || c.program || c.packageName || 'Belum ada program')} — Coach ${escapeHtml(c.coach || '-')}</div>
         </div>
         <div class="client-tags">
           <span class="badge ${statusTone(st)}">${st}</span>
@@ -565,6 +565,7 @@
   }
 
   window.openClientForm = function(){
+    populateFormSelects();
     document.getElementById('clientFormTitle').textContent = 'Tambah Klien';
     document.getElementById('fClientId').value = '';
     document.getElementById('fName').value = '';
@@ -1427,7 +1428,7 @@
     return d.getDate() + '/' + (d.getMonth()+1) + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   }
   window.openChatModal = function(clientId){
-    const c = clients.find(x => x.id === clientId);
+    const c = clients.find(x => String(x.id) === String(clientId));
     if (!c) return;
     activeChatClientId = clientId;
     document.getElementById('chatModalTitle').textContent = 'Chat — ' + c.name;

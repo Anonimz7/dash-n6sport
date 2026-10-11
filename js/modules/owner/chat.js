@@ -28,7 +28,7 @@
     return d.getDate() + '/' + (d.getMonth()+1) + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   }
 /*__N6_UNIT__*/  window.openChatModal = function(clientId){
-    const c = clients.find(x => x.id === clientId);
+    const c = clients.find(x => String(x.id) === String(clientId));
     if (!c) return;
     activeChatClientId = clientId;
     document.getElementById('chatModalTitle').textContent = 'Chat — ' + c.name;
