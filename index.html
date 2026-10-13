@@ -1545,8 +1545,8 @@ function swBlock(r){
  const c=cl(r.cid);
  const row=(l,u)=>`<div class="indr" style="align-items:flex-start;gap:12px"><span>${l}</span><div class="row" style="justify-content:flex-end;flex:1;min-width:0;flex-wrap:nowrap"><b style="min-width:0;font-weight:600;text-align:right">${swLink(u)}</b>${swOk(u)?`<button class="btn sm" data-act="copysw" data-v="${esc(u)}" aria-label="Salin link smartwatch">${ic('copy',13)}</button>`:''}</div></div>`;
  return `<div class="idcard"><b>Link smartwatch ${esc(c.name)}</b><div class="indl">${row('Dikirim klien untuk sesi ini',swFor(r.cid,r.date)||r.sw)}${row('Terdaftar di profil klien',c.sw)}</div></div>`}
-function fixBlock(r){return swBlock(r)+fixBlock0(r)}
-function fixBlock0(r){
+function fixBlock(r){return swBlock(r)+renderFixDetails(r)}
+function renderFixDetails(r){
  const c=cl(r.cid);
  if(r.fix&&S.editfix!==r.id)return `<div class="fixbox"><div class="row">${pill('Dikoreksi','good')}<span class="sub">${esc(cname(r.fix.by))} · ${hhmm(r.fix.at)}</span><span class="sp"></span><button class="btn sm" data-act="editfix" data-v="${r.id}">Ubah</button></div><p>${esc(r.fix.text)}</p></div>`;
  return `<form data-form="fix" data-id="${r.id}" class="listv"><label class="field"><span>Template koreksi</span><select id="f-tpl-${r.id}" data-tpl><option value="">Pilih template atau tulis sendiri</option>${D.tpl.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')}</select></label><label class="field"><span>Koreksi untuk ${esc(first(c.name))}</span><textarea id="f-fix-${r.id}" name="text" required placeholder="Tulis koreksi">${r.fix?esc(r.fix.text):''}</textarea></label><div class="row"><button class="btn primary sm" type="submit">${ic('send',14)} Kirim koreksi</button>${r.fix?'<button class="btn sm" type="button" data-act="editfix" data-v="">Batal</button>':''}</div></form>`}
@@ -1724,7 +1724,6 @@ HOOK['S.prog.age']=()=>{S.prog.hrmax=Math.max(120,Math.min(230,220-(S.prog.age||
 HOOK['S.prog.sdate']=()=>fitWeeks();
 HOOK['S.prog.edate']=()=>fitWeeks();
 HOOK['S.prog.target']=()=>{const d=TGTDEF[S.prog.target];if(d){S.prog.pbNow=d[0];S.prog.pbTarget=d[1]}};
-const genVol_unused=()=>{const P=S.prog,n=P.weeks.length;P.weeks=P.weeks.map((_,i)=>{let v=P.start*Math.pow(1+P.inc/100,i);if((i+1)%4===0)v*=.8;return Math.round(v)});if(P.phase==='pra'&&n>=3){P.weeks[n-1]=Math.round(P.weeks[n-1]*.5);P.weeks[n-2]=Math.round(P.weeks[n-2]*.7)}};
 async function exportReport(rp,fmt,name){
  try{await Promise.all(['500','600','700','800'].map(w=>document.fonts.load(w+' 20px Montserrat')))}catch(e){}await awaitLogo();
  const pages=reportPages(rp);let blob;
@@ -1783,8 +1782,8 @@ ACT.thread=t=>{S.chat=t.dataset.v;render()};
 const REPK=[['client','Ringkasan klien','klien'],['latihan','Hasil latihan klien','klien'],['komisi','Ringkasan komisi','komisi'],['keuangan','Ringkasan keuangan','keuangan'],['absen','Absensi coach','absensi'],['izin','Absensi: izin, jadwal, masalah','absensi']];
 function buildReport(kind){
  const sv=[S.per,S.pfrom,S.pto];S.per=S.repPer;S.pfrom=S.rfrom||'';S.pto=S.rto||'';
- try{return buildReport0(kind)}finally{[S.per,S.pfrom,S.pto]=sv}}
-function buildReport0(kind){
+ try{return buildReportContent(kind)}finally{[S.per,S.pfrom,S.pto]=sv}}
+function buildReportContent(kind){
  const d=S.repPer,per=perLbl(),rg=perRange();
  if(kind==='latihan'){const l=scope(D.clients).filter(c=>!c.arch),rows=l.map(c=>{const rs=D.reports.filter(x=>x.cid===c.id&&inRange(x.date,d)),got=rs.filter(x=>!x.missed),pl=sum(rs.map(x=>x.plan)),ak=sum(got.map(x=>x.km));return{c,n:got.length,ms:rs.length-got.length,ak,pct:pl?Math.round(ak/pl*100):0,fx:got.filter(x=>x.fix).length}}).filter(x=>x.n+x.ms>0);return{title:'Hasil latihan klien',per,sum:[['Klien aktif berlatih',rows.length],['Laporan masuk',sum(rows.map(x=>x.n))],['Tidak lapor',sum(rows.map(x=>x.ms))],['Total jarak',Math.round(sum(rows.map(x=>x.ak)))+' km']],head:['Nama','Paket','Coach','Laporan','Tidak lapor','Jarak (km)','Kepatuhan','Dikoreksi'],rows:rows.map(x=>[x.c.name,prog(x.c.pid).name,first(cname(x.c.coach)),x.n,x.ms,Math.round(x.ak*10)/10,x.pct+'%',x.fx])}}
  if(kind==='absen'){const rows=(S.role==='coach'?[ME.coach]:COACHES).map(c=>{let j=0,h=0;for(let t=new Date(rg.a);t<=rg.b&&t<=TODAY;t=addD(t,1)){const k=iso(t);if(!(D.pattern[c][dIdx(t)]||[]).length||offOn(c,k))continue;j++;const rec=(D.attCoach[c]||{})[k];if(rec&&rec.in)h++}return[cname(c),locOf(c),j,h,j?Math.round(h/j*100)+'%':'-']});return{title:'Absensi coach',per,sum:[['Coach',rows.length],['Hari terjadwal',sum(rows.map(x=>x[2]))],['Hari hadir',sum(rows.map(x=>x[3]))]],head:['Coach','Lokasi','Hari terjadwal','Hadir','Kehadiran'],rows}}
