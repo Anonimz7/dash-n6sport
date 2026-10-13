@@ -10,34 +10,7 @@
 <title>Number Six Running</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<<<<<<< HEAD
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
-=======
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" href="assets/img/logo-black.png">
-
-<!--
-  Third-party libraries, deduplicated across the five dashboards.
-  Single jsPDF version (2.5.2) — deferred load is fine because all PDF
-  usage goes through window.jspdf?.jsPDF guards at interaction time.
--->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
-
-<!--
-  Stylesheets are NOT linked here on purpose.
-
-  Each role ships its own cascade under css/<role>/, loaded in the order
-  recorded by tools/build.ps1 into js/core/bundles.js. js/app.js injects them
-  before the markup, so the cascade is identical to the five original
-  single-file dashboards. See css/<role>/ORDER.txt for the sequence.
-
-  Boot splash, inlined on purpose: it must be visible before any stylesheet
-  has loaded, otherwise there is a blank flash on a cold cache.
--->
->>>>>>> 1ed2587fac94dbccce16c26d3bdd04e5224da380
 <style>
 /* Layout: deep-navy sidebar with grouped modules, content column with a hero band and tabs per module.
    Palette: track orange for energy, volt lime, pool sky and violet as supporting sport colors on midnight navy.
@@ -235,6 +208,7 @@ h1{font-size:clamp(26px,3.6vw,34px);line-height:1.08}
 .field>span{font-size:12px;font-weight:600;color:var(--muted)}
 input,select,textarea{width:100%;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+.swt{position:relative;width:44px;height:26px;border-radius:999px;border:1px solid var(--line);background:var(--line);cursor:pointer;padding:0;transition:background .2s}.swt i{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}.swt[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}.swt[aria-checked="true"] i{transform:translateX(18px)}.swt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 input[type="checkbox"],input[type="radio"]{width:auto;accent-color:var(--accent)}
 textarea{min-height:76px;resize:vertical}
 .num{width:84px;font-family:var(--f-mono);text-align:right}
@@ -446,6 +420,31 @@ td small{display:block;color:var(--muted);font-size:12px}
 .tdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;background:var(--muted)}.tdot.good{background:var(--good)}.tdot.warn{background:var(--warn)}.tdot.bad{background:var(--bad)}.indl{display:flex;flex-direction:column}.indr{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}.indr:last-child{border-bottom:0}.indr span{color:var(--muted)}.alg{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:8px}.alg .li{align-items:center}@media(max-width:700px){.alg{grid-template-columns:1fr}}
 .bell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;flex:none}.bell:hover{border-color:var(--accent)}.bell .bdg{position:absolute;top:-4px;right:-4px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--bad);color:#fff;font:700 11px/19px var(--f-body);font-style:normal;text-align:center}
 .prgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}.prc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(11,22,48,.05),0 10px 24px -16px rgba(11,22,48,.25);border-top:4px solid var(--accent)}.prc:nth-child(4n+2){border-top-color:var(--sky)}.prc:nth-child(4n+3){border-top-color:var(--violet)}.prc:nth-child(4n+4){border-top-color:var(--volt)}.prh{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}.prn{font-family:var(--f-display);font-size:16px;font-weight:700;flex:1 1 160px;min-width:0}.prm{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:420px){.prm{grid-template-columns:1fr}}.prv{background:var(--surface-2);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}.prv>b{font-size:15px}.money{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding-left:10px}.money i{font-style:normal;font-weight:700;color:var(--muted);font-size:12px}.money input{border:0;background:none;padding:8px 8px 8px 0;font-family:var(--f-mono);font-weight:600;text-align:right}.money:focus-within{border-color:var(--accent)}
+
+.cptabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;position:sticky;top:0;z-index:20;background:var(--bg);margin-inline:-4px;padding-inline:4px}
+.cptabs button{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:56px;padding:8px 4px;font-size:13px;white-space:normal;text-align:center}
+.cpinfo{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:0 1px 2px rgba(11,22,48,.05)}
+.cpn b{display:block;font-size:19px;font-family:var(--f-display);line-height:1.2}
+.cpn span{color:var(--muted);font-size:13px}
+.cpd{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cpd>div{background:var(--surface-2);border-radius:12px;padding:9px 11px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.cpd small{font-size:11px;color:var(--muted);font-weight:600}
+.cpd b{font-size:14px;font-family:var(--f-mono)}
+.cp{max-width:560px;margin-inline:auto}
+.bub.me{display:block;padding:8px 12px;border-top:0;margin-top:0}
+.cp input,.cp select,.cp textarea{font-size:16px;min-height:46px}
+.cp .btn{min-height:46px}
+.cp .btn.sm{min-height:38px}
+.cp .card{padding:14px;border-radius:16px}
+.cp .li{padding:12px}
+.cp .cpbtn{width:100%;min-height:50px;font-size:15px}
+.cp .chat{max-height:52dvh;min-height:180px}
+.cp .bub{max-width:88%;font-size:14.5px}
+.cpsend{position:sticky;bottom:0;background:var(--surface);padding:8px 0 calc(8px + env(safe-area-inset-bottom,0px));z-index:5}
+.cpsend .btn{min-width:50px}
+.cp .chk input{width:22px;height:22px}
+.cp h1{font-size:26px}
+@media (max-width:420px){.cpn b{font-size:17px}.cpd b{font-size:13px}.cp .main,.cp{gap:12px}}
 </style>
 </head>
 <body>
@@ -615,6 +614,8 @@ D.clients.filter(c=>!c.arch&&cstat(c)!=='Selesai'&&c.cond!=='Istirahat').forEach
   D.reports.push(r);
  }
 });
+D.clients.forEach(c=>{c.sw='https://numbersix.example/sw/'+c.uid});
+D.reports.forEach(r=>{if(!r.missed&&parseInt(String(r.id).slice(2))%3!==0){const c=cl(r.cid);if(c)r.sw='https://numbersix.example/sw/'+c.uid+'/'+r.date}});
 D.tx=[];let _tid=1;
 const EXP=[['Sewa Studio',1,6000000,'Sewa studio dan ruang konsultasi'],['Software & Server',5,850000,'Langganan aplikasi dan server'],['Iklan',8,0,'Iklan Instagram dan Strava'],['Perlengkapan',15,0,'Cone, bib, dan perlengkapan sesi'],['Gaji Admin',25,5000000,'Gaji admin bulanan']];
 for(let m=5;m>=0;m--){
@@ -630,7 +631,6 @@ for(let m=5;m>=0;m--){
  EXP.forEach(([cat,day,amt,desc])=>{if(day>last)return;const a=amt||Math.round((2200000+rnd()*1800000)/50000)*50000;D.tx.push({id:'t'+_tid++,date:iso(new Date(b.getFullYear(),b.getMonth(),day)),type:'out',cat,desc,amt:a})});
 }
 D.targets={rev:45000000,klien:5,retensi:75,koreksi:90};
-D.retensi=72;
 D.paid={};D.payInfo={};
 D.msgs={
  team:[
@@ -750,7 +750,13 @@ const NAVT={beranda:'Beranda',klien:'Klien',coach:'Coach',komisi:'Komisi',keuang
 const navLabel=k=>S.role==='coach'?({klien:'Klien Saya',coach:'Jadwal Saya',komisi:'Komisi Saya'}[k]||NAVT[k]):NAVT[k];
 const PAGES={},MODALS={},FORMS={},ACT={},CONF={},HOOK={};
 const bellBtn=()=>{if(S.role==='coach'||typeof IND!=='function')return '';const n=IND().al.length;return `<button class="bell" data-act="modal" data-v="notif" aria-label="Notifikasi, ${n} hal perlu perhatian">${ic('bell',20)}${n?`<i class="bdg">${n}</i>`:''}</button>`};
+function clientPage(){
+ const c=cl(S.cview);
+ const head=`<div class="brand" style="padding:4px 2px 12px">${logo(40)}<div><b>NUMBER SIX</b><span class="pl">Running</span></div></div>`;
+ if(!c)return `<div class="shell" style="grid-template-columns:minmax(0,640px);justify-content:center"><main class="main">${head}<section class="card"><h3>Link tidak valid</h3><p class="sub">Dashboard klien tidak ditemukan. Minta link terbaru ke admin Number Six Running.</p></section></main></div>`;
+ return `<div class="shell" style="grid-template-columns:minmax(0,760px);justify-content:center"><main class="main cp">${head}<div><p class="eyebrow">Dashboard klien</p><h1>Halo, ${esc(first(c.name))}</h1></div>${cdashBody(c)}</main></div>`}
 function view(){
+ if(S.cview)return clientPage();
  const eyebrow={owner:'Tier 1 · Pemilik',admin:'Tier 2 · Admin',head:'Tier 3 · Head Coach',coach:'Portal Coach'}[S.role];
  const me=meUser();
  const groups=[['Operasional',['beranda','klien','coach','koreksi','program','pesan','absensi']],['Bisnis',['komisi','keuangan','laporan']],['Kelola',['anggota','setting','progress']]];
@@ -977,7 +983,7 @@ function activityCard(cls){return `<section class="card ${cls}"><header class="c
 function condCard(cls,list){
  const keys=Object.keys(CONDC),cnt=keys.map(k=>list.filter(c=>c.cond===k).length),tot=list.length||1;
  const st=['Aktif','Segera berakhir','Jeda','Selesai'].map(s=>[s,scope(D.clients).filter(c=>cstat(c)===s).length]);
- return `<section class="card ${cls}"><header class="ch"><h3>Ringkasan klien</h3><span class="sub">Distribusi kondisi klien</span></header>
+ return `<section class="card ${cls}" style="align-self:start"><header class="ch"><h3>Ringkasan klien</h3><span class="sub">Distribusi kondisi klien</span></header>
  <div class="stack" role="img" aria-label="Distribusi kondisi klien">${keys.map((k,i)=>cnt[i]?`<i style="width:${cnt[i]/tot*100}%;background:var(${CONDC[k]})"></i>`:'').join('')}</div>
  <ul class="legend">${keys.map((k,i)=>`<li><i style="background:var(${CONDC[k]})"></i>${k}<b>${cnt[i]}</b></li>`).join('')}</ul>
  <div class="row">${st.map(([s,n])=>`${stPill(s)}<b class="mono">${n}</b>`).join(' ')}</div></section>`}
@@ -1013,10 +1019,12 @@ function IND(){
  const dim=new Date(TODAY.getFullYear(),TODAY.getMonth()+1,0).getDate(),exp=D.targets.rev*TODAY.getDate()/dim;
  const noLoc=D.members.filter(m=>m.role!=='owner'&&m.role!=='admin'&&locOf(m.id)==='Lokasi belum diisi').length;
  const lastMsg=[].concat(D.msgs.team,...Object.values(D.msgs.dm)).map(m=>+m.t).sort((a,b)=>b-a)[0];
+ const dmW=Object.keys(D.msgs.dm).filter(id=>{const t=D.msgs.dm[id],l=t[t.length-1];return cl(id)&&!cl(id).arch&&l&&String(l.w).startsWith('cl')}).length,dmN=Object.keys(D.msgs.dm).filter(id=>cl(id)&&!cl(id).arch).length;
  const M=(v,m)=>money(v,m);
  const cards=[
   {m:'klien',t:'Klien',tone:ced?'bad':(per||soon)?'warn':'good',rows:[['Klien berjalan',live.length],['Segera berakhir',soon],['Perlu perhatian / cedera',per+ced],['Jeda',jeda]]},
   {m:'coach',t:'Coach',tone:free7===0?'bad':fill>=90?'warn':'good',rows:[['Slot terisi',fill+'%'],['Slot kosong 7 hari',free7],['Coach libur hari ini',offNow],['Total coach',COACHES.length]]},
+  {m:'pesan',t:'Pesan',tone:dmW?'warn':'good',rows:[['Menunggu balasan',dmW],['Thread klien',dmN]]},
   {m:'koreksi',t:'Koreksi',tone:kPct>=D.targets.koreksi?'good':kPct>=D.targets.koreksi-20?'warn':'bad',rows:[['Menunggu koreksi',pend],['Sudah dikoreksi',kPct+'%'],['Target',D.targets.koreksi+'%']]},
   {m:'absensi',t:'Absensi',tone:(reqW||issue)?'warn':'good',rows:[['Coach hadir hari ini',absen+' / '+COACHES.length],['Izin menunggu',reqW],['Masalah dilaporkan',issue],['Kehadiran klien 30 hari',cAtt+'%']]},
   {m:'laporan',t:'Laporan',tone:missed>3?'warn':'good',rows:[['Laporan latihan 7 hari',rep7],['Tidak lapor 7 hari',missed],['Retensi klien',retensiPct()+'%']]},
@@ -1025,6 +1033,7 @@ function IND(){
  ].filter(c=>perm(c.m)!=='none');
  const al=[];
  if(pend)al.push({lv:pend>10?'bad':'warn',x:pend+' laporan menunggu koreksi',m:'koreksi'});
+ if(dmW)al.push({lv:'warn',x:dmW+' pesan klien menunggu balasan',m:'pesan'});
  if(reqW)al.push({lv:'warn',x:reqW+' izin atau pengajuan menunggu persetujuan',m:'absensi'});
  if(issue)al.push({lv:'bad',x:issue+' masalah dilaporkan coach belum ditangani',m:'absensi'});
  if(ced)al.push({lv:'bad',x:ced+' klien cedera ringan',m:'klien'});
@@ -1063,10 +1072,10 @@ const GMET={inc:['Pendapatan',v=>jt(v),v=>(v/1e6).toLocaleString('id-ID',{maximu
 function growthCard(nF,cls){
  const gd=growthData(),keys=Object.keys(GMET).filter(k=>nF||!GMET[k][3]);if(!keys.includes(S.gm))S.gm=keys[0];
  const [nm,fmt,ax]=GMET[S.gm],vals=gd.map(m=>m[S.gm]),n=vals.length,partial=TODAY.getDate()<new Date(TODAY.getFullYear(),TODAY.getMonth()+1,0).getDate();
- const lastC=vals[n-2],prevC=vals[n-3],pct=(a,b)=>b?Math.round((a-b)/Math.abs(b)*100):null,sgn=p=>p==null?'-':(p>=0?'+':'')+p+'%';
+ const lastC=vals[n-2],prevC=vals[n-3],pct=(a,b)=>b?Math.round((a-b)/Math.abs(b)*100):(a?null:0),sgn=p=>p==null?'Baru mulai':(p>=0?'+':'')+p+'%';
  const mom=pct(lastC,prevC),tot=pct(lastC,vals[0]),avg=Math.round(sum(vals.slice(0,n-1))/(n-1)*10)/10;
- const chip=(p)=>p==null?'':`<span class="pill ${p>=0?'good':'bad'}">${sgn(p)}</span>`;
- const kp=`<div class="kpis">${kpi(nm+' '+gd[n-2].l,fmt(lastC),'bulan penuh terakhir')}${kpi('Dibanding '+gd[n-3].l,sgn(mom),'pertumbuhan bulan ke bulan')}${kpi('Sejak '+gd[0].l,sgn(tot),'pertumbuhan '+(n-2)+' bulan')}${kpi('Bulan ini s/d tgl '+TODAY.getDate(),fmt(vals[n-1]),'rata-rata bulan lalu '+fmt(avg))}</div>`;
+ const chip=(p)=>p==null?`<span class="pill info">Baru mulai</span>`:`<span class="pill ${p>=0?'good':'bad'}">${sgn(p)}</span>`;
+ const kp=`<div class="kpis">${kpi(nm+' '+gd[n-2].l,fmt(lastC),'bulan penuh terakhir')}${kpi('Dibanding '+gd[n-3].l,sgn(mom),'dibanding bulan sebelumnya')}${kpi('Sejak '+gd[0].l,sgn(tot),'pertumbuhan '+(n-2)+' bulan')}${kpi('Bulan ini s/d tgl '+TODAY.getDate(),fmt(vals[n-1]),'rata-rata bulan lalu '+fmt(avg))}</div>`;
  return `<section class="card ${cls}"><header class="ch"><div><h3>Pertumbuhan bisnis</h3><p class="sub">Enam bulan terakhir, dihitung dari transaksi dan data klien. ${gd[n-1].l} baru berjalan sampai tanggal ${TODAY.getDate()}.</p></div>${seg('gm',S.gm,keys.map(k=>[k,GMET[k][0]]))}</header>${kp}${trendChart(vals,gd.map((m,i)=>i===n-1&&partial?m.l+' (s/d '+TODAY.getDate()+')':m.l),ax,ax,partial,nm+' enam bulan terakhir')}<p class="sub" style="margin-top:6px">${S.gm==='inc'?'Pendapatan: total transaksi masuk di menu Keuangan.':S.gm==='laba'?'Laba bersih: pemasukan dikurangi pengeluaran per bulan di menu Keuangan.':S.gm==='baru'?'Klien baru: klien yang tanggal mulainya jatuh di bulan tersebut di menu Klien.':'Klien aktif: klien dengan masa program berjalan pada bulan tersebut.'} ${chip(mom)}</p></section>`}
 ACT.gm=t=>{S.gm=t.dataset.v;render()};
 PAGES.beranda=()=>{
@@ -1080,7 +1089,7 @@ PAGES.beranda=()=>{
  const reps=D.reports.filter(r=>!r.missed),fixed=reps.filter(r=>r.fix).length,kPct=Math.round(fixed/Math.max(1,reps.length)*100);
  const live=liveClients(),nw=live.filter(c=>parse(c.start)>=addD(TODAY,-30)).length,rn=live.filter(c=>c.renew&&parse(c.start)<addD(TODAY,-30)).length;
  const targets=`<section class="card c12"><header class="ch"><div><h3>Target indikator</h3><p class="sub">Periode ${{bulan:'bulan berjalan',kuartal:'3 bulan terakhir',semester:'6 bulan terakhir'}[S.tp]}</p></div><div class="row">${seg('tp',S.tp,[['bulan','Bulan ini'],['kuartal','3 bulan'],['semester','6 bulan']])}${S.role==='owner'?`<button class="btn sm" data-act="modal" data-v="targets">${ic('setting',15)} Atur target</button>`:''}</div></header>
- <div class="kpis">${meter('Pendapatan',revA,revT,jt,!nF)}${meter('Klien baru',newC,D.targets.klien*n,v=>v+' klien')}${meter('Retensi klien',retensiPct(),D.targets.retensi,v=>v+'%')}${meter('Laporan dikoreksi',kPct,D.targets.koreksi,v=>v+'%')}</div></section>`;
+ <div class="kpis">${meter('Pendapatan',revA,revT,jt,!nF)}${meter('Klien baru ('+({bulan:'bulan ini',kuartal:'3 bulan',semester:'6 bulan'}[S.tp])+')',newC,D.targets.klien*n,v=>v+' klien')}${meter('Retensi klien',retensiPct(),D.targets.retensi,v=>v+'%')}${meter('Laporan dikoreksi',kPct,D.targets.koreksi,v=>v+'%')}</div></section>`;
  const rev=growthCard(nF,'c12');
  const grow=`<section class="card c4"><header class="ch"><h3>Pertumbuhan klien</h3><span class="sub">${nw>=0?'+'+nw:nw} klien baru 30 hari</span></header>${donut([{l:'Klien baru',v:nw,c:'var(--accent)'},{l:'Perpanjangan',v:rn,c:'var(--volt)'},{l:'Berjalan',v:live.length-nw-rn,c:'var(--sky)'}],live.length,'klien berjalan')}</section>`;
  const kom=kF?`<section class="card c4"><header class="ch"><h3>Komisi sesi hadir per program</h3><span class="sub">30 hari</span></header>${hbar(D.programs.map(p=>({l:p.name.replace(/ \d+ Minggu| Bulanan/,''),v:sum(sesHadir(30).filter(x=>x.pid===p.id).map(x=>x.fee))})),v=>jt(v))}</section>`:locked('Komisi sesi hadir per program','c4','Komisi disembunyikan untuk peran '+ROLE[S.role]+'.');
@@ -1104,7 +1113,7 @@ MODALS.targets=()=>sheet('Atur target indikator',`<form data-form="targets" clas
 FORMS.targets=f=>{D.targets={rev:num(f.get('rev')),klien:num(f.get('klien')),retensi:num(f.get('retensi')),koreksi:num(f.get('koreksi'))};logAct('memperbarui target indikator');S.modal=null;toast('Target disimpan');render()};
 
 /* ================= 2. KLIEN ================= */
-const kact=(c,arch)=>S.role==='coach'?'':`<div class="acts"><button class="btn sm" data-act="clink" data-v="${c.id}">${ic('link',14)} Link</button>${arch?`<button class="btn sm" data-act="restore" data-v="${c.id}">Pulihkan</button><button class="btn sm danger" data-act="askdel" data-v="${c.id}">Hapus</button>`:`<button class="btn sm" data-act="modal" data-v="client" data-id="${c.id}">${ic('edit',14)} Edit</button><button class="btn sm" data-act="archive" data-v="${c.id}">Arsipkan</button>`}</div>`;
+const kact=(c,arch)=>S.role==='coach'?'':`<div class="acts"><button class="btn sm" data-act="clink" data-v="${c.id}">${ic('link',14)} Link</button>${arch?`<button class="btn sm" data-act="restore" data-v="${c.id}">Pulihkan</button><button class="btn sm danger" data-act="askdel" data-v="${c.id}">Hapus</button>`:`<button class="btn sm" data-act="modal" data-v="cdash" data-id="${c.id}">${ic('klien',14)} Dashboard</button><button class="btn sm" data-act="modal" data-v="client" data-id="${c.id}">${ic('edit',14)} Edit</button><button class="btn sm" data-act="archive" data-v="${c.id}">Arsipkan</button><button class="btn sm danger" data-act="askdel" data-v="${c.id}">${ic('trash',14)} Hapus</button>`}</div>`;
 PAGES.klien=()=>{
  const arch=S.tab===1,q=S.q.toLowerCase();
  const all=scope(D.clients),list=all.map((c,i)=>({c,i})).filter(x=>!!x.c.arch===arch&&x.c.name.toLowerCase().includes(q)&&(arch||S.cf==='all'||cstat(x.c)===S.cf)).sort((a,b)=>((b.c.reg||0)-(a.c.reg||0))||(a.c.start<b.c.start?1:a.c.start>b.c.start?-1:0)||(b.i-a.i)).map(x=>x.c);
@@ -1129,6 +1138,7 @@ MODALS.client=m=>{
  <label class="field"><span>Tanggal selesai</span><input name="end" type="date" required value="${endV}" data-cform ${c.end?'data-touched="1"':''}></label>
  <label class="field"><span>PB awal (mm:ss atau j:mm:ss)</span><input id="f-pbawal" name="pbNow" value="${esc(c.pbNow||'')}" placeholder="Contoh: 4:25:00"></label>
  <label class="field"><span>PB akhir / target</span><input id="f-pbakhir" name="pbTarget" value="${esc(c.pbTarget||'')}" placeholder="Contoh: 4:00:00"></label>
+ <label class="field full"><span>Link smartwatch klien (opsional)</span><input id="f-csw" name="sw" type="url" value="${esc(c.sw||'')}" placeholder="https://..."></label>
  <div class="row full"><button class="btn primary" type="submit">Simpan</button><button class="btn" type="button" data-act="dlinvoice">${ic('download',15)} Cetak invoice (JPG)</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
 function clientFormSync(t){
  const f=t.closest('form');if(!f)return;const p=prog(f.elements.pid.value);if(!p)return;
@@ -1139,11 +1149,18 @@ function clientFormSync(t){
 FORMS.client=f=>{
  const id=f.get('id'),start=f.get('start'),end=f.get('end');
  if(end<start){toast('Tanggal selesai tidak boleh sebelum tanggal mulai');return}
+ const swv=(f.get('sw')||'').trim();if(swv&&!swOk(swv)){toast('Link smartwatch harus diawali http:// atau https://');return}
  let c;
  if(id){c=cl(id)}else{c={id:'cl'+(D.clients.length+1+Math.floor(Math.random()*900)),uid:uidNext(),hrmax:188,mp:360,renew:false,arch:null,reg:Date.now(),cond:'Prima',coach:S.role==='coach'?ME.coach:COACHES[0]};D.clients.push(c)}
- c.name=f.get('name').trim();c.pid=f.get('pid');c.start=start;c.end=end;c.pbNow=(f.get('pbNow')||'').trim();c.pbTarget=(f.get('pbTarget')||'').trim();
+ c.name=f.get('name').trim();c.pid=f.get('pid');c.start=start;c.end=end;c.pbNow=(f.get('pbNow')||'').trim();c.pbTarget=(f.get('pbTarget')||'').trim();c.sw=swv;
  if(S.role==='coach')c.coach=ME.coach;
- logAct((id?'memperbarui klien ':'menambah klien ')+c.name);S.modal=null;toast('Klien disimpan dan tersinkron');render()};
+ /* pemasukan otomatis: klien baru = transaksi masuk sebesar harga program (tercatat hari ini) */
+ const pg=prog(c.pid);let inc='';
+ if(pg){
+  if(!id){D.tx.push({id:'t'+Date.now(),date:iso(TODAY),type:'in',pid:pg.id,cat:pg.name,coach:c.coach,desc:c.name,amt:pg.price,cid:c.id});inc=' Pemasukan program tercatat di Keuangan.'}
+  else{const x=D.tx.find(t=>t.cid===c.id);if(x){x.desc=c.name;x.coach=c.coach;if(x.pid!==pg.id){x.pid=pg.id;x.cat=pg.name;x.amt=pg.price;inc=' Pemasukan di Keuangan ikut diperbarui.'}}}
+ }
+ logAct((id?'memperbarui klien ':'menambah klien ')+c.name);S.modal=null;toast('Klien disimpan dan tersinkron.'+inc);render()};
 /* invoice klien (JPG), tema terang seperti jadwal kosong */
 function invoiceCanvas(d){
  const W=1080,SC=2,H=1180,tx=60,tw=960,cv=document.createElement('canvas');cv.width=W*SC;cv.height=H*SC;const g=cv.getContext('2d');g.scale(SC,SC);
@@ -1194,12 +1211,56 @@ ACT.dlinvoice=async()=>{
  }catch(e){console.error(e);toast('Gagal membuat invoice')}
 };
 Object.assign(ACT,{
- clink:t=>{const c=cl(t.dataset.v);copy('numbersix.example/c/'+slug(c.name),'Link klien tersalin')},
+ clink:t=>{const c=cl(t.dataset.v);copy(clientUrl(c),'Link dashboard klien tersalin')},
  archive:t=>{const c=cl(t.dataset.v);c.arch=iso(TODAY);logAct('mengarsipkan klien '+c.name);toast(c.name+' dipindah ke arsip');render()},
  restore:t=>{const c=cl(t.dataset.v);c.arch=null;logAct('memulihkan klien '+c.name);toast('Klien dipulihkan');render()},
  askdel:t=>{S.modal={k:'confirm',text:'Hapus permanen '+cl(t.dataset.v).name+'? Data klien tidak dapat dikembalikan.',yes:'delcl',arg:t.dataset.v,label:'Hapus permanen'};render()}
 });
 CONF.delcl=id=>{const c=cl(id);D.clients=D.clients.filter(x=>x.id!==id);D.book=D.book.filter(b=>b.client!==id);D.reports=D.reports.filter(r=>r.cid!==id);logAct('menghapus klien '+c.name)};
+const fullD=k=>{const d=parse(k);return d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()};
+const swFor=(cid,date)=>((D.swLinks||[]).find(x=>x.cid===cid&&x.date===date)||{}).url;
+const clientUrl=c=>location.href.split('#')[0]+'#c='+c.uid;
+const cdashBody=c=>{
+ const sent={};D.reports.forEach(r=>{if(r.cid===c.id&&r.sw)sent[r.date]=r.sw});(D.swLinks||[]).forEach(x=>{if(x.cid===c.id)sent[x.date]=x.url});
+ const sentL=Object.keys(sent).sort().reverse().slice(0,5);
+ const inbox=D.reports.filter(r=>r.cid===c.id&&r.fix).sort((a,b)=>new Date(b.fix.at)-new Date(a.fix.at)).slice(0,6);
+ const th=(D.msgs.dm[c.id]||[]).filter(x=>!String(x.text).startsWith('Koreksi '));
+ const bub=th.map(x=>{const mine=x.w===c.id;return `<div class="bub ${mine?'me':''}"><small>${mine?'Anda':esc(senderName(x.w))} · ${hhmm(new Date(x.t))}</small>${esc(x.text)}</div>`}).join('')||'<p class="sub">Belum ada pesan.</p>';
+ const ct=S.cdTab||0;
+ const tb=`<nav class="tabs cptabs" role="tablist" aria-label="Menu dashboard klien">${[['Setor Link',sentL.length],['Koreksi Coach',inbox.length],['Pesan',th.length]].map(([l,n],k)=>`<button role="tab" data-act="cdtab" data-v="${k}" aria-selected="${ct===k}">${l} <span class="pill info">${n}</span></button>`).join('')}</nav>`;
+ return `${tb}
+ <div class="cpinfo"><div class="cpn"><b>${esc(c.name)}</b><span>${esc(prog(c.pid).name)}</span></div><div class="cpd"><div><small>Tanggal mulai</small><b>${fullD(c.start)}</b></div><div><small>Tanggal selesai</small><b>${fullD(cend(c))}</b></div></div><div class="row">${stPill(cstat(c))}${cstat(c)==='Aktif'||cstat(c)==='Segera berakhir'?`<span class="sub">sisa ${Math.max(0,Math.round((parse(cend(c))-TODAY)/864e5))} hari</span>`:''}<span class="sub">· Coach ${esc(first(cname(c.coach)))}</span></div>${S.cview?'':`<small class="mono" style="word-break:break-all">${esc(clientUrl(c))} <button class="btn sm ghost" data-act="clink" data-v="${c.id}" aria-label="Salin link dashboard">${ic('copy',13)}</button></small>`}</div>
+ ${ct===0?`<section class="card"><header class="ch"><h3>Setor link hasil latihan</h3><span class="sub">Pilih tanggal latihan lalu tempel link smartwatch</span></header><form data-form="cdash" class="fg"><input type="hidden" name="cid" value="${c.id}">
+ <div class="field full"><span>Tanggal latihan</span><input id="f-cddate" name="date" type="date" required value="${iso(TODAY)}" min="${c.start}" max="${iso(TODAY)}"><div class="row" style="margin-top:6px"><button type="button" class="btn sm" data-act="cdday" data-v="0">Hari ini</button><button type="button" class="btn sm" data-act="cdday" data-v="1">Kemarin</button></div></div>
+ <div class="field full"><span>Link smartwatch</span><div class="row" style="flex-wrap:nowrap"><input id="f-cdurl" name="url" type="url" inputmode="url" autocapitalize="off" required placeholder="https://..."><button type="button" class="btn" data-act="cdpaste">Tempel</button></div></div>
+ <label class="chk full"><input type="checkbox" name="reg" checked><span><b>Simpan juga sebagai link terdaftar</b><small>Tampil di profil klien pada menu Koreksi.</small></span></label>
+ <div class="row full"><button class="btn primary cpbtn" type="submit">${ic('send',16)} Setor ke coach</button></div></form>
+ ${sentL.length?`<div class="listv">${sentL.map(k=>`<div class="li"><div><b>${fmtD(k)}</b><small style="word-break:break-all">${swLink(sent[k])}</small></div>${pill('Terkirim','good')}</div>`).join('')}</div>`:''}</section>`:''}
+ ${ct===1?`<section class="card"><header class="ch"><h3>Koreksi dari coach</h3><span class="sub">${inbox.length} terbaru</span></header><div class="listv">${inbox.map(r=>`<div class="li"><div><b>${esc(r.type)} · ${fmtD(r.date)}</b><small>${esc(r.fix.text)}</small><small class="mono">${esc(cname(r.fix.by))} · ${fmtD(new Date(r.fix.at))} ${hhmm(new Date(r.fix.at))}</small></div></div>`).join('')||'<p class="sub">Belum ada koreksi.</p>'}</div></section>`:''}
+ ${ct===2?`<section class="card"><header class="ch"><h3>Pesan</h3><span class="sub">Terhubung ke menu Pesan Pemilik, Admin, Head Coach, dan coach</span></header><div class="chat">${bub}</div>
+ <form data-form="cdmsg" class="row cpsend" style="flex-wrap:nowrap"><input type="hidden" name="cid" value="${c.id}"><input id="f-cdmsg" name="text" required autocomplete="off" enterkeyhint="send" placeholder="Tulis pesan ke tim Number Six" aria-label="Tulis pesan"><button class="btn primary" type="submit" aria-label="Kirim">${ic('send',16)}</button></form>
+ ${!S.cview&&can('pesan')?`<div class="row"><button class="btn sm" data-act="openchat" data-v="${c.id}">Buka di menu Pesan</button></div>`:''}</section>`:''}`};
+MODALS.cdash=m=>{const c=cl(m.id);return c?sheet('Dashboard klien',cdashBody(c)):''};
+FORMS.cdash=f=>{
+ const c=cl(f.get('cid')),u=(f.get('url')||'').trim(),dt=f.get('date')||'';
+ if(!c)return;
+ if(!swOk(u)){toast('Link harus diawali http:// atau https://');return}
+ if(!/^\d{4}-\d\d-\d\d$/.test(dt)||parse(dt)>TODAY||dt<c.start){toast('Pilih tanggal latihan dari tanggal mulai program sampai hari ini');return}
+ D.swLinks=D.swLinks||[];const i=D.swLinks.findIndex(x=>x.cid===c.id&&x.date===dt),rec={cid:c.id,date:dt,url:u,at:new Date()};
+ if(i>=0)D.swLinks[i]=rec;else D.swLinks.push(rec);
+ if(f.get('reg'))c.sw=u;
+ const has=D.reports.some(r=>r.cid===c.id&&r.date===dt&&!r.missed);
+ logAct('menerima link hasil latihan '+c.name+' ('+fmtD(dt)+')');
+ toast(has?'Link tanggal '+fmtD(dt)+' terkirim ke coach':'Link tersimpan. Belum ada laporan latihan tanggal '+fmtD(dt)+', link tampil di Koreksi saat laporan masuk');
+ S.modal=S.cview?null:{k:'cdash',id:c.id};render()};
+FORMS.cdmsg=f=>{
+ const c=cl(f.get('cid')),t=(f.get('text')||'').trim();if(!c||!t)return;
+ (D.msgs.dm[c.id]=D.msgs.dm[c.id]||[]).push({w:c.id,text:t,t:new Date()});
+ logAct('menerima pesan dari klien '+c.name);toast('Pesan terkirim ke tim');S.focus={id:'f-cdmsg',pos:0};S.modal=S.cview?null:{k:'cdash',id:c.id};render()};
+ACT.cdtab=t=>{S.cdTab=+t.dataset.v;render()};
+ACT.cdday=t=>{const i=document.getElementById('f-cddate');if(i){const c=cl(S.cview)||null,v=iso(addD(TODAY,-(+t.dataset.v)));i.value=c&&v<c.start?c.start:v}};
+ACT.cdpaste=async()=>{const i=document.getElementById('f-cdurl');try{const v=(await navigator.clipboard.readText()||'').trim();if(i&&v){i.value=v;toast('Link ditempel')}else toast('Clipboard kosong')}catch(e){toast('Tempel manual: tekan lama di kolom link')}};
+ACT.openchat=t=>{if(!can('pesan'))return;S.chat=t.dataset.v;S.page='pesan';S.tab=1;S.modal=null;S.nav=false;render(false)};
 MODALS.confirm=m=>sheet('Konfirmasi',`<p>${esc(m.text)}</p><div class="row"><button class="btn primary" data-act="yes">${esc(m.label||'Ya, lanjutkan')}</button><button class="btn" data-act="close">Batal</button></div>`);
 
 /* ================= 3. COACH ================= */
@@ -1373,6 +1434,7 @@ Object.assign(ACT,{
 });
 Object.assign(ACT,{
  copyuid:t=>copy(t.dataset.v,'ID klien '+t.dataset.v+' tersalin'),
+ copysw:t=>copy(t.dataset.v,'Link smartwatch tersalin'),
  slot:t=>{const c=t.dataset.c,di=+t.dataset.d,sl=t.dataset.t,a=D.pattern[c][di];
   if(a.includes(sl)){if(D.book.some(b=>b.coach===c&&b.day===di&&b.time===sl)){toast('Slot ini terisi klien. Pindahkan klien dulu.');return}D.pattern[c]=D.pattern[c].slice();D.pattern[c][di]=a.filter(x=>x!==sl)}
   else{D.pattern[c][di]=[...a,sl].sort()}
@@ -1402,21 +1464,19 @@ PAGES.komisi=()=>{
   body=`<div class="toolbar">${perBar()}</div><div class="tw"><table><thead><tr><th>Coach</th><th class="n">Klien aktif</th><th class="n">Sesi hadir</th><th class="n">Total komisi</th><th>Pembayaran</th>${mine?'':'<th>Aksi</th>'}</tr></thead><tbody>${coaches.map(x=>`<tr><td><b>${esc(cname(x.c))}</b></td><td class="n">${D.clients.filter(c=>c.coach===x.c&&!c.arch&&cstat(c)!=='Selesai').length}</td><td class="n">${x.nSes}</td><td class="n"><b>${M(x.kom)}</b></td><td>${D.paid[x.c]?pill('Dibayar','good')+(D.payInfo[x.c]?`<small class="sub" style="display:block;margin-top:4px">${fmtD(parse(D.payInfo[x.c].date))} · ${esc(D.payInfo[x.c].method)}</small>`:''):pill('Belum dibayar','warn')}</td>${mine?'':`<td>${perm('komisi')==='full'?`${D.paid[x.c]?`<button class="btn sm" data-act="paid" data-v="${x.c}">Batalkan</button>`:`<button class="btn sm primary" style="white-space:nowrap" data-act="modal" data-v="bayar" data-id="${x.c}">Bayar komisi</button>`}`:'-'}</td>`}</tr>`).join('')}</tbody></table></div>`}
  if(t===2){
   const ed=S.role==='owner';
-  body=`${banner('Komisi per sesi hadir dihitung otomatis: setiap klien yang diabsen Hadir oleh coach menambah komisi coach sebesar nominal di kartu program. Tidak ada komisi penjualan program.','info')}${ed?banner('Harga dan komisi bebas Anda atur. Ketik angka lalu tekan Tab atau klik di luar kolom, perubahan langsung tersimpan.'):banner('Tambah, ubah, dan hapus program hanya dapat dilakukan oleh Pemilik.')}
+  body=`${banner('Komisi per sesi hadir dihitung otomatis: setiap klien yang diabsen Hadir oleh coach menambah komisi coach sebesar nominal di kartu program. Tidak ada komisi penjualan program.','info')}${ed?banner('Harga dan komisi bebas Anda atur. Tekan Edit pada baris program untuk mengubah nama, harga, komisi, dan durasinya di jendela pop up.'):banner('Tambah, ubah, dan hapus program hanya dapat dilakukan oleh Pemilik.')}
   <div class="toolbar"><h3 style="font-size:16px">Daftar program</h3><span class="sub">${PR().length} program</span><span class="sp"></span>${ed?`<button class="btn primary" data-act="modal" data-v="prog">${ic('plus',15)} Tambah program</button>`:''}</div>
-  <div class="prgrid">${PR().map(p=>{const di=D.programs.indexOf(p),n=D.clients.filter(c=>!c.arch&&c.pid===p.id&&cstat(c)!=='Selesai').length;
-   return `<section class="prc"><div class="prh">${ed?`<input id="f-pn${di}" class="prn" value="${esc(p.name)}" data-set="D.programs.${di}.name" aria-label="Nama program">`:`<b class="prn">${esc(p.name)}</b>`}<span class="pill info">${n} klien aktif</span></div>
-   ${ed?`<label class="field"><span>Durasi / satuan</span><input id="f-pu${di}" value="${esc(p.unit||'')}" data-set="D.programs.${di}.unit" data-unitwk placeholder="Contoh: 16 minggu, per bulan"></label>`:`<p class="sub">${esc(p.unit||'-')}</p>`}
-   <div class="prm">${S.role==='coach'?'':`<div class="prv"><span class="sub">Harga program</span>${ed?`<label class="money"><i>Rp</i><input id="f-pp${di}" type="number" inputmode="numeric" min="0" step="any" value="${p.price}" data-set="D.programs.${di}.price" data-num aria-label="Harga ${esc(p.name)}"></label>`:''}<b class="mono">${progPrice(p)}</b></div>`}
-   <div class="prv"><span class="sub">Komisi per sesi hadir</span>${ed?`<label class="money"><i>Rp</i><input id="f-pf${di}" type="number" inputmode="numeric" min="0" step="any" value="${p.fee}" data-set="D.programs.${di}.fee" data-num aria-label="Komisi per sesi ${esc(p.name)}"></label>`:''}<b class="mono">${money(p.fee,'komisi')}</b></div></div>
-   ${ed?`<div class="row"><span class="sp"></span><button class="btn sm danger" data-act="askprog" data-v="${p.id}">${ic('trash',14)} Hapus</button></div>`:''}</section>`}).join('')}</div>`}
+  <div class="tw dt"><table><thead><tr><th>Nama program</th><th>Durasi</th>${S.role==='coach'?'':'<th class="n">Harga program</th>'}<th class="n">Komisi per sesi hadir</th><th class="n">Klien aktif</th>${ed?'<th>Aksi</th>':''}</tr></thead><tbody>${PR().map(p=>{const n=D.clients.filter(c=>!c.arch&&c.pid===p.id&&cstat(c)!=='Selesai').length;
+   return `<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.unit||'-')}</td>${S.role==='coach'?'':`<td class="n mono">${progPrice(p)}</td>`}<td class="n mono">${money(p.fee,'komisi')}</td><td class="n">${n}</td>${ed?`<td><div class="acts"><button class="btn sm" data-act="modal" data-v="prog" data-id="${p.id}">${ic('edit',14)} Edit</button><button class="btn sm danger" data-act="askprog" data-v="${p.id}">${ic('trash',14)} Hapus</button></div></td>`:''}</tr>`}).join('')}</tbody></table></div>
+  <div class="mlist">${PR().map(p=>{const n=D.clients.filter(c=>!c.arch&&c.pid===p.id&&cstat(c)!=='Selesai').length;
+   return `<div class="li" style="align-items:flex-start"><div style="flex:1"><b>${esc(p.name)}</b><small>Durasi: ${esc(p.unit||'-')}</small>${S.role==='coach'?'':`<small>Harga program: <span class="mono">${progPrice(p)}</span></small>`}<small>Komisi per sesi hadir: <span class="mono">${money(p.fee,'komisi')}</span></small></div>${pill(n+' klien aktif','info')}${ed?`<div style="width:100%"><div class="acts"><button class="btn sm" data-act="modal" data-v="prog" data-id="${p.id}">${ic('edit',14)} Edit</button><button class="btn sm danger" data-act="askprog" data-v="${p.id}">${ic('trash',14)} Hapus</button></div></div>`:''}</div>`}).join('')}</div>`}
  return `<div class="stackv">${maskNote('komisi')}${tabsBar(tabs)}${body}</div>`};
 MODALS.prog=m=>{
  const p=m.id?prog(m.id):{name:'',price:'',unit:'',fee:60000};if(!p)return '';
  return sheet(m.id?'Ubah program':'Tambah program',`<form data-form="prog" class="fg"><input type="hidden" name="id" value="${m.id||''}">
  <label class="field full"><span>Nama program</span><input id="f-pgn" name="name" required value="${esc(p.name)}" placeholder="Contoh: Marathon 16 Minggu"></label>
  <label class="field"><span>Harga (Rp)</span><input id="f-pgp" name="price" type="number" min="0" step="any" required value="${p.price}"></label>
- <label class="field"><span>Keterangan durasi / satuan</span><input id="f-pgu" name="unit" value="${esc(p.unit||'')}" placeholder="Contoh: 16 minggu, per bulan"></label>
+ <label class="field"><span>Durasi</span><input id="f-pgu" name="unit" value="${esc(p.unit||'')}" placeholder="Contoh: 16 minggu, per bulan"></label>
   <label class="field"><span>Komisi per sesi hadir (Rp)</span><input id="f-pgf" name="fee" type="number" min="0" step="any" required value="${p.fee}"></label>
  <div class="row full"><button class="btn primary" type="submit">Simpan</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
 FORMS.prog=f=>{
@@ -1479,7 +1539,14 @@ const kCoachId=()=>S.role==='coach'?ME.coach:(S.kcoach==='all'?null:S.kcoach);
 const kReports=()=>{const id=kCoachId();return D.reports.filter(r=>{const c=cl(r.cid);return c&&(!id||c.coach===id)})};
 const zonePill=(hr,mx)=>{const z=hrZone(hr,mx);return `<span class="pill"><i class="zdot" style="background:var(--z${z.z})"></i>Z${z.z}</span>`};
 const korFilters=(noWeek)=>`<div class="toolbar">${S.role==='coach'?'':`<label class="field" style="max-width:220px"><span>Coach</span><select data-f="kcoach"><option value="all">Semua coach</option>${COACHES.map(c=>`<option value="${c}" ${S.kcoach===c?'selected':''}>${esc(cname(c))}</option>`).join('')}</select></label>`}${noWeek?'<span class="sub">Laporan harian hanya untuk minggu ini</span>':seg('kweek',S.kweek,[[0,'Minggu ini'],[1,'Minggu lalu']])}</div>`;
-function fixBlock(r){
+const swOk=u=>/^https?:\/\/\S+$/i.test(String(u||'').trim());
+const swLink=u=>swOk(u)?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer" style="word-break:break-all">${esc(u)}</a>`:(u?esc(u):'<span class="sub">Belum ada</span>');
+function swBlock(r){
+ const c=cl(r.cid);
+ const row=(l,u)=>`<div class="indr" style="align-items:flex-start;gap:12px"><span>${l}</span><div class="row" style="justify-content:flex-end;flex:1;min-width:0;flex-wrap:nowrap"><b style="min-width:0;font-weight:600;text-align:right">${swLink(u)}</b>${swOk(u)?`<button class="btn sm" data-act="copysw" data-v="${esc(u)}" aria-label="Salin link smartwatch">${ic('copy',13)}</button>`:''}</div></div>`;
+ return `<div class="idcard"><b>Link smartwatch ${esc(c.name)}</b><div class="indl">${row('Dikirim klien untuk sesi ini',swFor(r.cid,r.date)||r.sw)}${row('Terdaftar di profil klien',c.sw)}</div></div>`}
+function fixBlock(r){return swBlock(r)+fixBlock0(r)}
+function fixBlock0(r){
  const c=cl(r.cid);
  if(r.fix&&S.editfix!==r.id)return `<div class="fixbox"><div class="row">${pill('Dikoreksi','good')}<span class="sub">${esc(cname(r.fix.by))} · ${hhmm(r.fix.at)}</span><span class="sp"></span><button class="btn sm" data-act="editfix" data-v="${r.id}">Ubah</button></div><p>${esc(r.fix.text)}</p></div>`;
  return `<form data-form="fix" data-id="${r.id}" class="listv"><label class="field"><span>Template koreksi</span><select id="f-tpl-${r.id}" data-tpl><option value="">Pilih template atau tulis sendiri</option>${D.tpl.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')}</select></label><label class="field"><span>Koreksi untuk ${esc(first(c.name))}</span><textarea id="f-fix-${r.id}" name="text" required placeholder="Tulis koreksi">${r.fix?esc(r.fix.text):''}</textarea></label><div class="row"><button class="btn primary sm" type="submit">${ic('send',14)} Kirim koreksi</button>${r.fix?'<button class="btn sm" type="button" data-act="editfix" data-v="">Batal</button>':''}</div></form>`}
@@ -1515,7 +1582,7 @@ PAGES.koreksi=()=>{
  if(t===3){
   body=`${banner('Gunakan {nama} dan {jenis} di dalam teks. Keduanya diganti otomatis dengan nama depan klien dan jenis sesi.')}<div class="listv">${D.tpl.map((x,i)=>`<section class="card"><div class="fg"><label class="field"><span>Judul template</span><input id="f-tt${i}" value="${esc(x.title)}" data-set="D.tpl.${i}.title"></label><label class="field full"><span>Isi koreksi</span><textarea id="f-tx${i}" data-set="D.tpl.${i}.text">${esc(x.text)}</textarea></label></div><div class="row"><button class="btn sm danger" data-act="tpldel" data-v="${i}">${ic('trash',14)} Hapus</button></div></section>`).join('')}</div><div><button class="btn primary" data-act="tplnew">${ic('plus',15)} Program baru</button></div>`}
  return `<div class="stackv">${tabsBar(tabs)}${body}</div>`};
-FORMS.fix=(f,form)=>{const r=D.reports.find(x=>x.id===form.dataset.id);r.fix={by:meId(),text:f.get('text').trim(),at:new Date()};S.editfix=null;logAct('mengirim koreksi untuk '+cl(r.cid).name);toast('Koreksi terkirim ke '+first(cl(r.cid).name));render()};
+FORMS.fix=(f,form)=>{const r=D.reports.find(x=>x.id===form.dataset.id);r.fix={by:meId(),text:f.get('text').trim(),at:new Date()};(D.msgs.dm[r.cid]=D.msgs.dm[r.cid]||[]).push({w:meId(),text:'Koreksi '+r.type+' '+fmtD(r.date)+': '+r.fix.text,t:r.fix.at});S.editfix=null;logAct('mengirim koreksi untuk '+cl(r.cid).name);toast('Koreksi terkirim dan masuk ke dashboard '+first(cl(r.cid).name));render()};
 Object.assign(ACT,{
  kopen:t=>{const d=parse(t.dataset.d),mon=addD(TODAY,-dIdx(TODAY));S.kweek=Math.max(0,Math.round((mon-addD(d,-dIdx(d)))/(7*864e5)));S.kdate=t.dataset.d;S.page='koreksi';S.tab=d<mon?1:2;S.modal=null;S.nav=false;render(false)},
  kdate:t=>{S.kdate=t.dataset.v;render()},
@@ -1531,10 +1598,8 @@ const PHASEINC={umum:6,khusus:8,pra:4};
 const PHASEDESC={umum:'Membangun dasar aerobik dan konsistensi latihan. Volume naik bertahap.',khusus:'Latihan spesifik menuju target. Volume naik lebih agresif.',pra:'Penajaman menjelang lomba. Volume naik lebih pelan.'};
 const TARGETS=[['c12','Lari 12 menit',null],['5000','5000 m',5],['10000','10000 m',10],['21097','21K (half marathon)',21.0975],['42195','42K (marathon)',42.195]];
 const TGTDEF={c12:['2400','2800'],'5000':['25:00','22:00'],'10000':['52:00','47:00'],'21097':['2:05:00','1:55:00'],'42195':['4:25:00','4:00:00']};
-const mkTpls=()=>[
- {id:'t1',name:'Standar 5 sesi',rows:[{k:'Recovery',day:5,share:10,int:78,hl:55,hh:65},{k:'Easy',day:1,share:15,int:85,hl:62,hh:72},{k:'Tempo',day:2,share:20,int:106,hl:80,hh:88},{k:'Interval',day:4,share:15,int:114,hl:88,hh:97},{k:'Long Run',day:6,share:40,int:91,hl:65,hh:76}]},
- {id:'t2',name:'Dasar aerobik',rows:[{k:'Easy',day:1,share:25,int:82,hl:60,hh:70},{k:'Easy 2',day:3,share:20,int:82,hl:60,hh:70},{k:'Recovery',day:5,share:15,int:75,hl:55,hh:65},{k:'Long Run',day:6,share:40,int:88,hl:62,hh:74}]},
- {id:'t3',name:'Prakompetisi tajam',rows:[{k:'Easy',day:1,share:15,int:85,hl:62,hh:72},{k:'Tempo',day:2,share:25,int:106,hl:80,hh:88},{k:'Interval',day:4,share:20,int:114,hl:88,hh:97},{k:'Recovery',day:5,share:10,int:78,hl:55,hh:65},{k:'Long Run',day:6,share:30,int:92,hl:66,hh:78}]}];
+const PROGLIST=[['Easy Run',60,70],['Medium Run',70,80],['Tempo',80,88],['Long Run',62,75],['Fartlek',70,90],['Jog-stride',60,75],['Interval',88,97],['Hill Run',80,92],['Cross Training',60,75],['Threshold',85,92],['Pace Tinggi',85,95],['Strength Training',null,null],['Core',null,null],['Drill',null,null],['Teknik',null,null],['MAF Training',null,null,true],['Rest Day',null,null]];
+const mkTpls=()=>[{id:'t1',name:'Daftar program',rows:PROGLIST.map((x,i)=>({k:x[0],day:(i%7),share:0,int:x[1]?Math.round((x[1]+x[2])/2*1.1):80,hl:x[1],hh:x[2],maf:!!x[3]}))}];
 const phaseName=()=>(PHASES.find(p=>p[0]===S.prog.phase)||PHASES[0])[1];
 const L=(k,p,n)=>({km:k,pace:p,note:n||''});
 const mkPresets=()=>[
@@ -1568,11 +1633,13 @@ const syncEnd=()=>{const P=S.prog;P.edate=iso(addD(parse(P.sdate),P.weeks.length
 const wkLbl=i=>{const a=addD(parse(S.prog.sdate),7*i),b=addD(a,6),z=parse(S.prog.edate);return fmtD(a)+' - '+fmtD(b>z?z:b)};
 const refRow=ref=>{if(!ref)return null;const k=ref.indexOf('|'),t=S.prog.tpls.find(x=>x.id===ref.slice(0,k));return t?t.rows.find(r=>r.k===ref.slice(k+1))||null:null};
 const refName=ref=>ref?ref.slice(ref.indexOf('|')+1):'';
-const hrOf=row=>row?[Math.round(S.prog.hrmax*row.hl/100),Math.round(S.prog.hrmax*row.hh/100)]:null;
+const hrOf=row=>{if(!row)return null;if(row.maf){const m=Math.max(100,180-(S.prog.age||0));return[m-10,m]}if(row.hl==null||row.hh==null)return null;return[Math.round(S.prog.hrmax*row.hl/100),Math.round(S.prog.hrmax*row.hh/100)]};
+const hrTxt=x=>{const h=hrOf(x);return h?h[0]+'-'+h[1]:'-'};
+const hrPctTxt=x=>x.maf?'180 - umur':(x.hl==null?'-':x.hl+'-'+x.hh+'%');
 const blankBlock=()=>({ref:'',lines:[L('','','')]});
 const blankDay=()=>({blocks:[blankBlock()]});
 const blankWeek=()=>[0,1,2,3,4,5,6].map(blankDay);
-const seedWeek=()=>{const w=blankWeek(),set=(d,k,km,pace,note)=>{w[d]={blocks:[{ref:k?'t1|'+k:'',lines:[L(km,pace,note)]}]}};set(1,'Easy','6 km','6:40/km','Santai, masih bisa ngobrol');set(2,'Tempo','8 km','5:25/km','Pemanasan 2 km, tempo 4 km, pendinginan 2 km');set(4,'Interval','6 km','5:00/km','5 x 800 m, jeda jogging 400 m');set(5,'Recovery','4 km','7:15/km','Sangat santai');set(6,'Long Run','16 km','6:15/km','Stabil, minum tiap 5 km');return w};
+const seedWeek=()=>{const w=blankWeek(),set=(d,k,km,pace,note)=>{w[d]={blocks:[{ref:k?'t1|'+k:'',lines:[L(km,pace,note)]}]}};set(1,'Easy Run','6 km','6:40/km','Santai, masih bisa ngobrol');set(2,'Tempo','8 km','5:25/km','Pemanasan 2 km, tempo 4 km, pendinginan 2 km');set(4,'Interval','6 km','5:00/km','5 x 800 m, jeda jogging 400 m');set(5,'Easy Run','4 km','7:15/km','Sangat santai');set(6,'Long Run','16 km','6:15/km','Stabil, minum tiap 5 km');return w};
 const ensureSched=()=>{const P=S.prog;if(!Array.isArray(P.sched)||!P.sched.length)P.sched=[seedWeek()];while(P.sched.length<P.weeks.length)P.sched.push(blankWeek());P.sched.length=P.weeks.length;P.sched.forEach(w=>{while(w.length<7)w.push(blankDay());w.forEach(d=>{if(!Array.isArray(d.blocks)){d.blocks=[{ref:d.ref||'',lines:Array.isArray(d.lines)?d.lines:[L(d.km||'',d.pace||'',d.note||'')]}];delete d.ref;delete d.lines;delete d.km;delete d.pace;delete d.note}if(!d.blocks.length)d.blocks.push(blankBlock());d.blocks.forEach(b=>{if(!Array.isArray(b.lines)||!b.lines.length)b.lines=[L('','','')]})})})};
 const wkRows=wi=>S.prog.sched[wi].map((d,di)=>({di,d,bl:d.blocks.map((b,bi)=>{const r=refRow(b.ref);return{b,bi,r,hr:hrOf(r),name:r?r.k:(b.ref?refName(b.ref):'')}})}));
 const wkHead=det=>['Hari','Jenis latihan'].concat(det?['HR (bpm)']:[],['Jarak / gerakan','Pace / intensitas / set','Keterangan']);
@@ -1624,7 +1691,7 @@ PAGES.program=()=>{
   <label class="field"><span>Tanggal selesai</span><input id="f-ped" type="date" value="${P.edate}" min="${P.sdate}" data-set="S.prog.edate"></label></div>
   <div style="margin-top:12px"><span class="sub">Pilihan program</span>${seg('pphase',P.phase,PHASES)}</div>
   </section>
-  <div class="listv">${P.weeks.map((_,wi)=>`<section class="card"><div class="wkh"><div><h3>Minggu ${wi+1}</h3><span class="sub">${wkLbl(wi)}</span></div>${wi?`<button class="btn sm" data-act="copyweek" data-v="${wi}">Salin dari minggu ${wi}</button>`:''}</div><div class="daylist">${wkRows(wi).map(x=>`<div class="dayb"><div class="dayt"><b>${DAYSL[x.di]}</b><span class="sub">${x.bl.length} jenis latihan</span><span class="sp"></span><button class="btn sm" data-act="blkadd" data-w="${wi}" data-d="${x.di}" ${x.bl.length>=4?'disabled':''}>+ Jenis latihan</button></div>${x.bl.map(q=>`<div class="blk"><div class="dayh">${jenisSel(wi,x.di,q.bi)}<span class="mono sub">${q.hr?'HR '+q.hr[0]+'-'+q.hr[1]+' bpm ('+q.r.hl+'-'+q.r.hh+'%)':'HR otomatis'}</span><select id="f-ap${wi}-${x.di}-${q.bi}" data-apply data-w="${wi}" data-d="${x.di}" data-b="${q.bi}" aria-label="Isi dari preset ${DAYSL[x.di]} ${q.bi+1}"><option value="">Isi dari preset...</option>${P.presets.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>${x.bl.length>1?`<button class="btn sm danger" data-act="blkdel" data-w="${wi}" data-d="${x.di}" data-b="${q.bi}" aria-label="Hapus jenis latihan ${q.bi+1}">${ic('trash',14)}</button>`:''}</div>${q.b.lines.map((l,li)=>`<div class="ln"><input id="f-l${wi}-${x.di}-${q.bi}-${li}-k" value="${esc(l.km)}" data-set="S.prog.sched.${wi}.${x.di}.blocks.${q.bi}.lines.${li}.km" placeholder="Jarak / gerakan: 400 m, Squat" aria-label="Jarak atau gerakan ${DAYSL[x.di]} baris ${li+1}"><input id="f-l${wi}-${x.di}-${q.bi}-${li}-p" value="${esc(l.pace)}" data-set="S.prog.sched.${wi}.${x.di}.blocks.${q.bi}.lines.${li}.pace" placeholder="Pace / intensitas / set: 5:00/km, 3 x 12" aria-label="Pace atau set ${DAYSL[x.di]} baris ${li+1}"><input id="f-l${wi}-${x.di}-${q.bi}-${li}-n" value="${esc(l.note)}" maxlength="80" data-set="S.prog.sched.${wi}.${x.di}.blocks.${q.bi}.lines.${li}.note" placeholder="Keterangan" aria-label="Keterangan ${DAYSL[x.di]} baris ${li+1}"><button class="btn sm" data-act="lndel" data-w="${wi}" data-d="${x.di}" data-b="${q.bi}" data-v="${li}" aria-label="Hapus baris ${li+1}">${ic('trash',14)}</button></div>`).join('')}<div class="row"><button class="btn sm" data-act="lnadd" data-w="${wi}" data-d="${x.di}" data-b="${q.bi}" ${q.b.lines.length>=12?'disabled':''}>+ Baris</button>${q.b.lines.length>1?`<span class="sub">${q.b.lines.length} baris</span>`:''}</div></div>`).join('')}</div>`).join('')}</div></section>`).join('')}</div>
+  <div class="listv">${P.weeks.map((_,wi)=>`<section class="card"><div class="wkh"><div><h3>Minggu ${wi+1}</h3><span class="sub">${wkLbl(wi)}</span></div>${wi?`<button class="btn sm" data-act="copyweek" data-v="${wi}">Salin dari minggu ${wi}</button>`:''}</div><div class="daylist">${wkRows(wi).map(x=>`<div class="dayb"><div class="dayt"><b>${DAYSL[x.di]}</b><span class="sub">${x.bl.length} jenis latihan</span><span class="sp"></span><button class="btn sm" data-act="blkadd" data-w="${wi}" data-d="${x.di}" ${x.bl.length>=4?'disabled':''}>+ Jenis latihan</button></div>${x.bl.map(q=>`<div class="blk"><div class="dayh">${jenisSel(wi,x.di,q.bi)}<span class="mono sub">${q.hr?'HR '+q.hr[0]+'-'+q.hr[1]+' bpm ('+hrPctTxt(q.r)+')':(q.r?'Tanpa target HR':'HR otomatis')}</span><select id="f-ap${wi}-${x.di}-${q.bi}" data-apply data-w="${wi}" data-d="${x.di}" data-b="${q.bi}" aria-label="Isi dari preset ${DAYSL[x.di]} ${q.bi+1}"><option value="">Isi dari preset...</option>${P.presets.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>${x.bl.length>1?`<button class="btn sm danger" data-act="blkdel" data-w="${wi}" data-d="${x.di}" data-b="${q.bi}" aria-label="Hapus jenis latihan ${q.bi+1}">${ic('trash',14)}</button>`:''}</div>${q.b.lines.map((l,li)=>`<div class="ln"><input id="f-l${wi}-${x.di}-${q.bi}-${li}-k" value="${esc(l.km)}" data-set="S.prog.sched.${wi}.${x.di}.blocks.${q.bi}.lines.${li}.km" placeholder="Jarak / gerakan: 400 m, Squat" aria-label="Jarak atau gerakan ${DAYSL[x.di]} baris ${li+1}"><input id="f-l${wi}-${x.di}-${q.bi}-${li}-p" value="${esc(l.pace)}" data-set="S.prog.sched.${wi}.${x.di}.blocks.${q.bi}.lines.${li}.pace" placeholder="Pace / intensitas / set: 5:00/km, 3 x 12" aria-label="Pace atau set ${DAYSL[x.di]} baris ${li+1}"><input id="f-l${wi}-${x.di}-${q.bi}-${li}-n" value="${esc(l.note)}" maxlength="80" data-set="S.prog.sched.${wi}.${x.di}.blocks.${q.bi}.lines.${li}.note" placeholder="Keterangan" aria-label="Keterangan ${DAYSL[x.di]} baris ${li+1}"><button class="btn sm" data-act="lndel" data-w="${wi}" data-d="${x.di}" data-b="${q.bi}" data-v="${li}" aria-label="Hapus baris ${li+1}">${ic('trash',14)}</button></div>`).join('')}<div class="row"><button class="btn sm" data-act="lnadd" data-w="${wi}" data-d="${x.di}" data-b="${q.bi}" ${q.b.lines.length>=12?'disabled':''}>+ Baris</button>${q.b.lines.length>1?`<span class="sub">${q.b.lines.length} baris</span>`:''}</div></div>`).join('')}</div>`).join('')}</div></section>`).join('')}</div>
   <div class="row">${wkBtns}</div>`}
  if(t===2){
   const rs=crRows(),done=P.crSig===crSigNow(),okn=rs.filter(x=>x.ok),tm=sum(okn.map(x=>x.time)),td=sum(okn.map(x=>x.dist));
@@ -1642,7 +1709,7 @@ PAGES.program=()=>{
   <div class="tw"><table class="sg" style="min-width:860px"><thead><tr><th>No</th><th>% Intensitas pace</th><th>Jarak (m)</th><th class="n">Pace/km</th><th class="n">Waktu jarak</th><th class="n">HR (bpm)</th></tr></thead><tbody>${rs.map(x=>`<tr><td>${x.i+1}</td><td>${sel(`f-cri${x.i}`,`S.prog.cr.${x.i}.int`,INTS,x.c.int,v=>v+'%','Pilih %',`Intensitas baris ${x.i+1}`)}</td><td>${sel(`f-crd${x.i}`,`S.prog.cr.${x.i}.dist`,DISTS,x.c.dist,v=>v+' m','Pilih jarak',`Jarak baris ${x.i+1}`)}</td><td class="n mono">${done&&x.ok?mmss(x.pace)+'/km':'-'}</td><td class="n mono">${done&&x.ok?hmsT(x.time):'-'}</td><td class="n mono">${done&&x.ok?x.bpm[0]+'-'+x.bpm[1]+'<small class="sub" style="display:block">'+x.pc[0]+'-'+x.pc[1]+'% HR maks</small>':'-'}</td></tr>`).join('')}</tbody></table></div>
   <p class="sub" style="margin-top:8px">Pilih intensitas (60% sampai 140%) dan jarak dari daftar, lalu tekan Hitung. 100% intensitas sama dengan pace PB target.</p></section>`}
  if(t===3){
-  body=`<section class="card"><header class="ch"><div><h3>Daftar program</h3><p class="sub">Tambahkan program secara manual. Nama di sini muncul sebagai pilihan Jenis latihan di Susun program. Batas HR dihitung otomatis dari umur yang diisi di Identitas klien (HR maksimal = 220 dikurangi umur: ${P.hrmax} bpm).</p></div><button class="btn primary" data-act="prnew">${ic('plus',15)} Tambah program</button></header><div class="tw"><table><thead><tr><th>Nama program</th><th class="n">Batas HR (bpm)</th><th></th></tr></thead><tbody>${T.rows.map((x,i)=>`<tr><td><input id="f-rk${i}" value="${esc(x.k)}" data-set="S.prog.tpls.${ti}.rows.${i}.k" aria-label="Nama program"></td><td class="n mono">${hrOf(x)[0]}-${hrOf(x)[1]}</td><td><button class="btn sm danger" data-act="prdel" data-v="${i}" aria-label="Hapus program" ${T.rows.length<=1?'disabled':''}>${ic('trash',14)} Hapus</button></td></tr>`).join('')}</tbody></table></div></section>`}
+  body=`<section class="card"><header class="ch"><div><h3>Daftar program</h3><p class="sub">Tambahkan program secara manual. Nama di sini muncul sebagai pilihan Jenis latihan di Susun program. Batas HR dihitung otomatis dari umur: HR maksimal = 220 dikurangi umur, zona HR berupa persen dari HR maksimal. MAF Training memakai rumus 180 dikurangi umur. Tanda - berarti latihan tanpa target HR.</p></div><button class="btn primary" data-act="prnew">${ic('plus',15)} Tambah program</button></header><div class="fg"><label class="field"><span>Umur (tahun)</span><input id="f-cpage" type="number" min="10" max="90" value="${P.age}" data-set="S.prog.age" data-num></label><div class="idcard"><small>HR maksimal</small><b class="mono" style="font-size:20px">${P.hrmax} bpm</b><small>MAF: ${Math.max(100,180-P.age)-10}-${Math.max(100,180-P.age)} bpm</small></div></div><div class="tw"><table><thead><tr><th>Nama program</th><th class="n">Zona HR</th><th class="n">Batas HR (bpm)</th><th></th></tr></thead><tbody>${T.rows.map((x,i)=>`<tr><td><input id="f-rk${i}" value="${esc(x.k)}" data-set="S.prog.tpls.${ti}.rows.${i}.k" aria-label="Nama program"></td><td class="n mono">${hrPctTxt(x)}</td><td class="n mono"><b>${hrTxt(x)}</b></td><td><button class="btn sm danger" data-act="prdel" data-v="${i}" aria-label="Hapus program" ${T.rows.length<=1?'disabled':''}>${ic('trash',14)} Hapus</button></td></tr>`).join('')}</tbody></table></div></section>`}
  if(t===3){const pi=psI(),PS=P.presets[pi];body+=`<section class="card"><header class="ch"><h3>Preset isi latihan</h3><span class="sub">Daftar baris siap pakai (tangga interval, strength, dll). Dipilih lewat "Isi dari preset" di Susun program</span></header>
   <div class="fg"><label class="field"><span>Preset</span><select id="f-pps" data-set="S.prog.psId" aria-label="Pilih preset">${P.presets.map(p=>`<option value="${p.id}" ${p.id===P.psId?'selected':''}>${esc(p.name)}</option>`).join('')}</select></label><label class="field"><span>Nama preset</span><input id="f-psname" value="${esc(PS.name)}" data-set="S.prog.presets.${pi}.name" aria-label="Nama preset"></label></div>
   <div class="row" style="margin-top:12px"><button class="btn primary" data-act="psnew">${ic('plus',15)} Preset baru</button><button class="btn" data-act="psdup">Duplikat</button><button class="btn danger" data-act="psdel" ${P.presets.length<=1?'disabled':''}>${ic('trash',14)} Hapus preset</button></div>
@@ -1701,7 +1768,7 @@ PAGES.pesan=()=>{
  if(t===0)body=`<section class="card"><header class="ch"><h3>Ruang tim</h3><span class="sub">Pemilik, admin, head coach, dan semua coach</span></header>${bubbles(D.msgs.team)}${msgForm('team','Tulis pesan untuk tim')}</section>`;
  if(t===1){
   const all=scope(liveClients());if(!all.some(c=>c.id===S.chat)&&all[0])S.chat=all[0].id;const mq=(S.mq||'').trim().toLowerCase(),cs=mq?all.filter(c=>c.name.toLowerCase().includes(mq)||String(c.uid||'').toLowerCase().includes(mq)):all;
-  body=`<div class="msgs"><section class="card"><header class="ch"><h3>Member</h3><span class="sub">${cs.length} dari ${all.length}</span></header><input id="mq" data-qm type="search" placeholder="Cari nama atau ID klien" value="${esc(S.mq||'')}" aria-label="Cari klien" style="margin-bottom:8px"><div class="listv" style="gap:2px;max-height:60vh;overflow:auto">${!cs.length?'<p class="sub">Klien tidak ditemukan.</p>':''}${cs.map(c=>{const th=D.msgs.dm[c.id]||[],last=th[th.length-1];return `<button class="th" data-act="thread" data-v="${c.id}" aria-pressed="${S.chat===c.id}"><b>${esc(c.name)}</b><small>${last?esc(last.text):'Belum ada pesan'}</small></button>`}).join('')}</div></section>
+  body=`<div class="msgs"><section class="card"><header class="ch"><h3>Member</h3><span class="sub">${cs.length} dari ${all.length}</span></header><input id="mq" data-qm type="search" placeholder="Cari nama atau ID klien" value="${esc(S.mq||'')}" aria-label="Cari klien" style="margin-bottom:8px"><div class="listv" style="gap:2px;max-height:60vh;overflow:auto">${!cs.length?'<p class="sub">Klien tidak ditemukan.</p>':''}${cs.map(c=>{const th=D.msgs.dm[c.id]||[],last=th[th.length-1];return `<button class="th" data-act="thread" data-v="${c.id}" aria-pressed="${S.chat===c.id}"><b>${esc(c.name)}</b><small>${last?esc(last.text):'Belum ada pesan'}</small>${last&&String(last.w).startsWith('cl')?'<small style="color:var(--warn);font-weight:700">Menunggu balasan</small>':''}</button>`}).join('')}</div></section>
   <section class="card"><header class="ch"><h3>${esc(cl(S.chat)?.name||'')}</h3><span class="sub">${esc(first(cname(cl(S.chat)?.coach||'')))} sebagai coach</span></header>${bubbles(D.msgs.dm[S.chat]||[])}${msgForm('dm','Tulis pesan untuk member')}</section></div>`}
  if(t===2){
   const v=S.bcTo,n=recips(v).length;
@@ -1713,7 +1780,7 @@ FORMS.bc=f=>{const v=S.bcTo,n=recips(v).length;let to='Semua klien aktif';if(v.s
 ACT.thread=t=>{S.chat=t.dataset.v;render()};
 
 /* ================= 10. LAPORAN ================= */
-const REPK=[['client','Ringkasan klien','klien'],['latihan','Hasil latihan klien','klien'],['komisi','Ringkasan komisi','komisi'],['keuangan','Ringkasan keuangan','keuangan'],['absen','Absensi coach','absensi'],['izin','Izin coach dan klien','absensi']];
+const REPK=[['client','Ringkasan klien','klien'],['latihan','Hasil latihan klien','klien'],['komisi','Ringkasan komisi','komisi'],['keuangan','Ringkasan keuangan','keuangan'],['absen','Absensi coach','absensi'],['izin','Absensi: izin, jadwal, masalah','absensi']];
 function buildReport(kind){
  const sv=[S.per,S.pfrom,S.pto];S.per=S.repPer;S.pfrom=S.rfrom||'';S.pto=S.rto||'';
  try{return buildReport0(kind)}finally{[S.per,S.pfrom,S.pto]=sv}}
@@ -1724,9 +1791,24 @@ function buildReport0(kind){
  if(kind==='client'){const l=scope(D.clients).filter(c=>!c.arch),st=s=>l.filter(c=>cstat(c)===s).length;return{title:'Ringkasan klien',per,sum:[['Klien berjalan',liveClients().length],['Baru dalam periode',l.filter(c=>inRange(c.start,d)).length],['Segera berakhir',st('Segera berakhir')],['Jeda',st('Jeda')],['Selesai',st('Selesai')]],head:['Nama','Paket','Coach','Status','Kondisi'],rows:l.map(c=>[c.name,prog(c.pid).name,first(cname(c.coach)),cstat(c),c.cond])}}
  if(kind==='komisi'){const k=komData(d),M=v=>money(v,'komisi');return{title:'Ringkasan komisi',per,sum:[['Sesi hadir',sum(k.byCoach.map(x=>x.nSes))],['Total komisi',M(sum(k.byCoach.map(x=>x.kom)))]],head:['Coach','Sesi hadir','Komisi','Pembayaran'],rows:k.byCoach.map(x=>[cname(x.c),x.nSes,M(x.kom),D.paid[x.c]?'Dibayar':'Belum'])}}
  if(kind==='keuangan'){const i=txIn(d,'in'),o=txIn(d,'out'),M=v=>money(v);const cats=[...new Set([...i,...o].map(x=>x.type+'|'+x.cat))];return{title:'Ringkasan keuangan',per,sum:[['Pemasukan',M(sum(i.map(x=>x.amt)))],['Pengeluaran',M(sum(o.map(x=>x.amt)))],['Laba bersih',M(sum(i.map(x=>x.amt))-sum(o.map(x=>x.amt)))]],head:['Jenis','Kategori','Jumlah'],rows:cats.map(c=>{const[tp,cat]=c.split('|'),l=(tp==='in'?i:o).filter(x=>x.cat===cat);return[tp==='in'?'Masuk':'Keluar',cat,M(sum(l.map(x=>x.amt)))]})}}
- const l=D.reqs.filter(r=>['izin_coach','izin_client','cuti'].includes(r.type)&&(S.role!=='coach'||(r.type==='izin_client'?cl(r.who)?.coach===ME.coach:r.who===ME.coach)));
- return{title:'Izin coach dan klien',per,sum:[['Total pengajuan',l.length],['Disetujui',l.filter(r=>r.status==='Disetujui').length],['Menunggu',l.filter(r=>r.status==='Menunggu').length]],head:['Jenis','Pihak','Tanggal','Status'],rows:l.map(r=>[REQT[r.type],r.type==='izin_client'?cl(r.who).name:cname(r.who),fmtD(r.date)+(r.date2&&r.date2!==r.date?' - '+fmtD(r.date2):''),r.status])}}
-const reportText=r=>[`N6 - ${r.title.toUpperCase()}`,`Periode ${r.per}`,'',...r.sum.map(([k,v])=>`${k}: ${v}`),'',r.head.join('\t'),...r.rows.map(x=>x.join('\t'))].join('\n');
+ const mine=S.role==='coach',own=r=>r.type==='izin_client'?cl(r.who)?.coach===ME.coach:r.who===ME.coach;
+ const l=D.reqs.filter(r=>(!mine||own(r))&&inRange(iso(new Date(r.at)),d)).sort((x,y)=>new Date(y.at)-new Date(x.at));
+ const cnt=(tp,st)=>l.filter(r=>r.type===tp&&(!st||r.status===st)).length,tot=st=>l.filter(r=>!st||r.status===st).length;
+ const rekap=REQK.map(k=>[REQT[k],cnt(k),cnt(k,'Disetujui'),cnt(k,'Menunggu'),cnt(k,'Ditolak'),cnt(k,'Selesai')]);
+ rekap.push(['Total',tot(),tot('Disetujui'),tot('Menunggu'),tot('Ditolak'),tot('Selesai')]);
+ const pihak=r=>r.type==='izin_client'?(cl(r.who)?.name||'-'):cname(r.who);
+ const tgl=r=>r.type==='masalah'?fmtD(new Date(r.at)):fmtD(r.date)+(r.date2&&r.date2!==r.date?' - '+fmtD(r.date2):'');
+ const ket=r=>(r.sev?'['+r.sev+'] ':'')+(r.t1?'Jam '+r.t1+'-'+r.t2+'. ':'')+(r.detail||'-');
+ const detail=l.map(r=>[REQT[r.type],pihak(r),tgl(r),ket(r),r.status]);
+ return{title:'Ringkasan absensi dan pengajuan',per,
+  sum:[['Total pengajuan',tot()],['Disetujui',tot('Disetujui')],['Menunggu',tot('Menunggu')],['Ditolak',tot('Ditolak')],['Masalah diselesaikan',cnt('masalah','Selesai')]],
+  head:['Jenis','Pihak','Tanggal','Keterangan','Status'],rows:detail,
+  sections:[
+   {title:'Rekap per jenis',note:'Izin Coach, Reschedule, Cuti, Berhalangan, Izin Client, Masalah',head:['Jenis','Total','Disetujui','Menunggu','Ditolak','Selesai'],rows:rekap,boldLast:true,align:['l','c','c','c','c','c']},
+   {title:'Rincian pengajuan',note:detail.length+' data, terbaru di atas',head:['Jenis','Pihak','Tanggal','Keterangan','Status'],rows:detail}
+  ]}}
+const repSecs=r=>r.sections||[{head:r.head,rows:r.rows}];
+const reportText=r=>[`N6 - ${r.title.toUpperCase()}`,`Periode ${r.per}`,'',...r.sum.map(([k,v])=>`${k}: ${v}`),...[].concat(...repSecs(r).map(sc=>['',(sc.title?sc.title.toUpperCase():''),sc.head.join('\t'),...sc.rows.map(x=>x.join('\t'))]))].join('\n');
 PAGES.laporan=()=>{
  if(!REPK.some(k=>k[0]===S.rep&&can(k[2])))S.rep='client';
  const r=buildReport(S.rep);
@@ -1735,7 +1817,7 @@ PAGES.laporan=()=>{
  <div class="toolbar"><span class="sub">${esc(r.title)} · ${esc(r.per)}</span><span class="sp"></span><button class="btn" data-act="copyrep">${ic('copy',15)} Salin laporan</button><button class="btn primary" data-act="dlpdf">${ic('download',15)} Unduh PDF</button></div>
  <article class="paper"><div class="row">${logo(30)}<span class="sub">Laporan</span></div><div><h4>${r.title}</h4><p class="sub">Periode ${r.per}. Dibuat ${fmtD(TODAY)} oleh ${esc(meUser().name)}.</p></div>
  <div class="kpis">${r.sum.map(([k,v])=>kpi(k,v)).join('')}</div>
- <div class="tw"><table><thead><tr>${r.head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${r.rows.map(x=>`<tr>${x.map((c,i)=>`<td class="${typeof c==='string'&&/^Rp/.test(c)?'n':''}">${esc(c)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${r.head.length}" class="sub">Tidak ada data pada periode ini.</td></tr>`}</tbody></table></div></article>
+ ${repSecs(r).map(sc=>`${sc.title?`<div class="wkh" style="margin-top:6px"><h4 style="font-size:15px">${esc(sc.title)}</h4>${sc.note?`<span class="sub">${esc(sc.note)}</span>`:''}</div>`:''}<div class="tw"><table><thead><tr>${sc.head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${sc.rows.map((x,ri)=>`<tr>${x.map((c,i)=>`<td class="${typeof c==='string'&&/^Rp/.test(c)?'n':''}" ${sc.boldLast&&ri===sc.rows.length-1?'style="font-weight:800"':''}>${esc(c)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${sc.head.length}" class="sub">Tidak ada data pada periode ini.</td></tr>`}</tbody></table></div>`).join('')}</article>
  <p class="sub">Unduh PDF memakai laporan dan periode yang sedang dipilih. Pilih Pilih tanggal untuk rentang custom.</p></div>`};
 const repBar=()=>{const sv=[S.per,S.pfrom,S.pto];S.per=S.repPer;S.pfrom=S.rfrom||'';S.pto=S.rto||'';const rg=perRange();S.rfrom=iso(rg.a);S.rto=iso(rg.b);[S.per,S.pfrom,S.pto]=sv;
  return seg('repper',S.repPer,[[7,'7 hari'],[30,'30 hari'],[90,'90 hari'],['bulan','Bulan ini'],['kustom','Pilih tanggal']])+(S.repPer==='kustom'?`<span class="drng"><input type="date" id="f-rfrom" data-f="rfrom" max="${iso(TODAY)}" value="${S.rfrom}" aria-label="Dari tanggal"><span class="sub">s/d</span><input type="date" id="f-rto" data-f="rto" max="${iso(TODAY)}" value="${S.rto}" aria-label="Sampai tanggal"></span>`:'')};
@@ -1794,22 +1876,31 @@ const REQT={izin_coach:'Izin Coach',reschedule:'Reschedule Jadwal',cuti:'Cuti',b
 const REQK=Object.keys(REQT);
 const whoName=r=>r.type==='izin_client'?(cl(r.who)?.name||'-'):cname(r.who);
 function attList(){
- const co=S.role==='coach'?ME.coach:(S.acoach||COACHES[0]);
+ const isC=S.role==='coach',sel=isC?ME.coach:(S.acoach||COACHES[0]),all=!isC&&sel==='all';
+ const cos=all?COACHES.slice():[sel];
  let dk=S.adate||iso(TODAY);if(parse(dk)>TODAY)dk=iso(TODAY);
  D.attSlot=D.attSlot||{};
- const rows=sessionsOn(co,parse(dk)),by={};
- rows.forEach(r=>{(by[r.time]=by[r.time]||[]).push(r.c.name+' ('+((prog(r.c.pid)||{}).name||'-')+')')});
- const slots=Object.keys(by).sort().map(t=>({t,names:by[t],rec:D.attSlot[dk+'|'+co+'|'+t]||null,ok:attOpen(dk,t)}));
- const done=slots.filter(x=>x.rec).length,open=slots.filter(x=>!x.rec&&x.ok).length,lock=slots.filter(x=>!x.rec&&!x.ok).length;
- const items=slots.map(x=>{
-  const st=x.rec?x.rec.s:null;
+ const per=cos.map(co=>{
+  const by={};sessionsOn(co,parse(dk)).forEach(r=>{(by[r.time]=by[r.time]||[]).push(r.c.name+' ('+((prog(r.c.pid)||{}).name||'-')+')')});
+  return{co,slots:Object.keys(by).sort().map(t=>({co,t,names:by[t],rec:D.attSlot[dk+'|'+co+'|'+t]||null,ok:attOpen(dk,t)}))}});
+ const all_=[].concat(...per.map(x=>x.slots));
+ const done=all_.filter(x=>x.rec).length,open=all_.filter(x=>!x.rec&&x.ok).length,lock=all_.filter(x=>!x.rec&&!x.ok).length;
+ const item=x=>{
+  const co=x.co,st=x.rec?x.rec.s:null,end=hhmm(attOpenAt(dk,x.t));
   const btns=[['Hadir','Konfirmasi hadir'],['Tidak hadir','Tidak hadir']].map(([v,l])=>`<button class="btn sm ${st===v?'primary':''}" data-act="cattset" data-d="${dk}" data-co="${co}" data-t="${x.t}" data-s="${v}" ${x.ok?'':'disabled'} aria-pressed="${st===v}">${l}</button>`).join('');
-  const info=st?pill(st==='Hadir'?'Hadir':'Tidak hadir',st==='Hadir'?'good':'bad'):(x.ok?pill('Menunggu konfirmasi','warn'):pill('Terkunci sampai '+hhmm(attOpenAt(dk,x.t)),'info'));
-  return `<div class="li" style="align-items:flex-start;flex-wrap:wrap;gap:8px"><div style="flex:1;min-width:220px"><small style="color:${x.rec?'var(--good)':'var(--warn)'};font-weight:700">${x.rec?esc(cname(co))+', absensi jadwal ini sudah dikonfirmasi.':(S.role==='coach'?esc(cname(co))+', kamu memiliki jadwal absensi yang harus kamu konfirmasi.':esc(cname(co))+' memiliki jadwal absensi yang harus dikonfirmasi.')}</small><b>Jadwal melatih ${x.t} - ${hhmm(attOpenAt(dk,x.t))} WIB</b><small><b>Coach:</b> ${esc(cname(co))}</small><small><b>Lokasi melatih:</b> ${esc(locOf(co))}</small><small><b>Klien yang dilatih:</b> ${x.names.map(esc).join('; ')}</small><small><b>Absensi bisa diisi:</b> mulai pukul ${hhmm(attOpenAt(dk,x.t))} (setelah jadwal selesai)</small>${x.rec?`<small><b>Status:</b> ${x.rec.s==='Hadir'?'Coach hadir melatih':'Coach tidak hadir'}, dikonfirmasi oleh ${esc(x.rec.by)} pukul ${x.rec.at}</small>`:''}</div><div class="acts">${info}${btns}</div></div>`}).join('');
- return `<div class="toolbar">${coachPicker('acoach')}<label class="field" style="max-width:200px"><span>Tanggal melatih</span><input type="date" data-f="adate" max="${iso(TODAY)}" value="${dk}"></label></div>
- <div class="kpis">${kpi('Jadwal melatih',slots.length,esc(locOf(co)))}${kpi('Sudah dikonfirmasi',done,'')}${kpi('Siap dikonfirmasi',open,'jadwal sudah lewat')}${kpi('Terkunci',lock,'belum waktunya')}</div>
+  const info=st?pill(st==='Hadir'?'Hadir':'Tidak hadir',st==='Hadir'?'good':'bad'):(x.ok?pill('Menunggu konfirmasi','warn'):pill('Terkunci sampai '+end,'info'));
+  const body=S.attCompact
+   ?`<div style="flex:1;min-width:200px"><b>${x.t} - ${end} WIB</b><small>${all?esc(first(cname(co)))+' · ':''}${esc(locOf(co))} · ${x.names.map(n=>esc(n.slice(0,n.lastIndexOf(' (')))).join(', ')}</small></div>`
+   :`<div style="flex:1;min-width:220px"><small style="color:${x.rec?'var(--good)':'var(--warn)'};font-weight:700">${x.rec?esc(cname(co))+', absensi jadwal ini sudah dikonfirmasi.':(isC?esc(cname(co))+', kamu memiliki jadwal absensi yang harus kamu konfirmasi.':esc(cname(co))+' memiliki jadwal absensi yang harus dikonfirmasi.')}</small><b>Jadwal melatih ${x.t} - ${end} WIB</b><small><b>Coach:</b> ${esc(cname(co))}</small><small><b>Lokasi melatih:</b> ${esc(locOf(co))}</small><small><b>Klien yang dilatih:</b> ${x.names.map(esc).join('; ')}</small><small><b>Absensi bisa diisi:</b> mulai pukul ${end} (setelah jadwal selesai)</small>${x.rec?`<small><b>Status:</b> ${x.rec.s==='Hadir'?'Coach hadir melatih':'Coach tidak hadir'}, dikonfirmasi oleh ${esc(x.rec.by)} pukul ${x.rec.at}</small>`:''}</div>`;
+  return `<div class="li" style="align-items:flex-start;flex-wrap:wrap;gap:8px">${body}<div class="acts">${info}${btns}</div></div>`};
+ const list=all
+  ?per.map(x=>`<div class="listv"><h4 style="margin:6px 0 0;font-size:14px">${esc(cname(x.co))} <span class="sub">· ${esc(locOf(x.co))} · ${x.slots.length} jadwal</span></h4>${x.slots.map(item).join('')||'<p class="sub" style="margin:0">Tidak ada jadwal melatih pada tanggal ini.</p>'}</div>`).join('')
+  :(all_.map(item).join('')||'<section class="card"><p class="sub">Tidak ada jadwal melatih pada tanggal ini.</p></section>');
+ const picker=isC?'':`<label class="field" style="max-width:260px"><span>Coach</span><select data-f="acoach"><option value="all" ${all?'selected':''}>Semua coach</option>${COACHES.map(c=>`<option value="${c}" ${sel===c?'selected':''}>${esc(cname(c))}</option>`).join('')}</select></label>`;
+ return `<div class="toolbar">${picker}<label class="field" style="max-width:200px"><span>Tanggal melatih</span><input type="date" data-f="adate" max="${iso(TODAY)}" value="${dk}"></label><span class="sp"></span><div class="row"><span class="sub" id="lb-cmp">Ringkas keterangan</span><button type="button" class="swt" role="switch" aria-checked="${!!S.attCompact}" aria-labelledby="lb-cmp" data-act="attcompact"><i></i></button></div></div>
+ <div class="kpis">${kpi('Jadwal melatih',all_.length,all?cos.length+' coach':esc(locOf(sel)))}${kpi('Sudah dikonfirmasi',done,'')}${kpi('Siap dikonfirmasi',open,'jadwal sudah lewat')}${kpi('Terkunci',lock,'belum waktunya')}</div>
  ${banner('Absensi coach hanya bisa dikonfirmasi setelah jadwal melatih selesai, yaitu '+ATT_MIN+' menit setelah jam mulai. Tombol aktif otomatis saat waktunya tiba. Konfirmasi Hadir langsung tampil di dashboard Pemilik.','info')}
- <div class="listv">${items||'<section class="card"><p class="sub">Tidak ada jadwal melatih pada tanggal ini.</p></section>'}</div>`}
+ <div class="listv">${list}</div>`}
 PAGES.absensi=()=>{
  const t=Math.min(S.tab,6);
  if(t===0){return `<div class="stackv">${tabsBar(['Daftar Hadir'].concat(REQK.map(k=>REQT[k])))}${attList()}</div>`}
@@ -1831,6 +1922,7 @@ MODALS.req=()=>{
  <label class="field full"><span>${type==='masalah'?'Jelaskan masalah':rs?'Detail sesi dan alasan':'Alasan'}</span><textarea id="f-rdet" name="detail" required placeholder="Tulis dengan singkat dan jelas"></textarea></label>
  <div class="row full"><button class="btn primary" type="submit">Kirim</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
 FORMS.req=f=>{const type=f.get('type'),who=S.role==='coach'&&type!=='izin_client'?ME.coach:f.get('who');D.reqs.push({id:'r'+Date.now(),type,who:type==='masalah'?meId():who,date:f.get('date')||iso(TODAY),date2:f.get('date2')||f.get('date')||iso(TODAY),detail:f.get('detail').trim(),sev:f.get('sev')||undefined,status:'Menunggu',at:new Date()});logAct('mengajukan '+REQT[type].toLowerCase());S.modal=null;toast('Terkirim dan langsung tampil di portal Pemilik');render()};
+ACT.attcompact=()=>{S.attCompact=!S.attCompact;render()};
 ACT.cattset=t=>{
  const k=t.dataset.d,co=t.dataset.co,tm=t.dataset.t,v=t.dataset.s;
  if(!['Hadir','Tidak hadir'].includes(v)||!COACHES.includes(co))return;
@@ -1963,6 +2055,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.modal){S.modal=nu
  syncListen(()=>{try{ensurePage()}catch(e){}const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){a.addEventListener('blur',()=>render(),{once:true})}else{render()}toast('Data diperbarui dari portal lain')});
  if(S.role==='coach'){S.sched=ME.coach;S.cal=ME.coach;S.share=ME.coach}
  D.clients=D.clients.filter(c=>!c.arch||(TODAY-parse(c.arch))/864e5<7);
+ const hm=location.hash.match(/^#c=([A-Za-z0-9-]+)/);if(hm){const k=byUid(hm[1]);S.cview=k?k.id:'x'}
+ window.addEventListener('hashchange',()=>{try{location.reload()}catch(e){}});
  applyTheme();ensurePage();render(false);
 })();
 
