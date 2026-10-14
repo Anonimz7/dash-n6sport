@@ -6,7 +6,8 @@ import { $, esc, hhmm } from '../core/helpers.js';
 import { icon, logo } from '../core/icons.js';
 import { buildIndicators } from '../core/indicators.js';
 import { MODALS, PAGES } from '../core/registry.js';
-import { appState, store } from '../core/store.js';
+import { linkEntries, unreadTotals } from '../core/shared.js';
+import { appState, findClientById, store } from '../core/store.js';
 import { syncPush } from '../core/sync.js';
 import { clientPage } from '../portal/client-portal.js';
 import { pill, renderSegmented, sheet } from './components.js';
@@ -18,7 +19,8 @@ function view(){
  const eyebrow={owner:'Tier 1 · Pemilik',admin:'Tier 2 · Admin',head:'Tier 3 · Head Coach',coach:'Portal Coach'}[appState.role];
  const me=meUser();
  const groups=[['Operasional',['beranda','klien','coach','koreksi','program','pesan','absensi']],['Bisnis',['komisi','keuangan','laporan']],['Kelola',['anggota','setting','progress']]];
- const side=groups.map(([g,keys])=>{const it=keys.filter(k=>k==='setting'||canAccess(k)).map(k=>`<button class="nav" data-act="nav" data-v="${k}" ${appState.page===k?'aria-current="page"':''}>${icon(NAVIC[k])}<span>${navLabel(k)}</span>${perm(k)==='mask'&&k!=='setting'?'<em class="tag">Terkunci</em>':''}</button>`).join('');return it?`<div class="ng"><p class="nl">${g}</p>${it}</div>`:''}).join('');
+ const unreadCount=unreadTotals();
+ const side=groups.map(([g,keys])=>{const it=keys.filter(k=>k==='setting'||canAccess(k)).map(k=>`<button class="nav" data-act="nav" data-v="${k}" ${appState.page===k?'aria-current="page"':''}>${icon(NAVIC[k])}<span>${navLabel(k)}</span>${k==='pesan'&&unreadCount.all?`<i class="ub" aria-label="${unreadCount.all} pesan belum dibaca">${unreadCount.all>99?'99+':unreadCount.all}</i>`:''}${perm(k)==='mask'&&k!=='setting'?'<em class="tag">Terkunci</em>':''}</button>`).join('');return it?`<div class="ng"><p class="nl">${g}</p>${it}</div>`:''}).join('');
  const body=(canAccess(appState.page)||appState.page==='setting')?PAGES[appState.page]():lockedPage();
  return `<div class="shell ${appState.nav?'nav-open':''}">
  <aside class="side" aria-label="Navigasi">
@@ -44,8 +46,9 @@ function renderBottomNav(){
  for(const k of ['pesan','absensi','program','laporan','komisi','keuangan']){if(prim.length>=4)break;if(allow(k)&&!prim.includes(k))prim.push(k)}
  prim=prim.slice(0,4);
  const bl=k=>({klien:'Klien',coach:appState.role==='coach'?'Jadwal':'Coach',program:'Program'}[k]||NAVT[k]);
- const pn=canAccess('koreksi')?getPendingCorrections(appState.role==='coach'?ROLE_USER_IDS.coach:null).length:0;
- const btn=k=>`<button data-act="nav" data-v="${k}" ${appState.page===k?'aria-current="page"':''} aria-label="${navLabel(k)}"><span class="ico">${icon(NAVIC[k],20)}${k==='koreksi'&&pn?`<em class="bdg">${pn>99?'99+':pn}</em>`:''}</span><span>${bl(k)}</span></button>`;
+ const pendingKoreksi=canAccess('koreksi')?getPendingCorrections(appState.role==='coach'?ROLE_USER_IDS.coach:null).length+linkEntries().filter(r=>!r.fix&&(appState.role!=='coach'||findClientById(r.cid).coach===ROLE_USER_IDS.coach)).length:0;
+ const unreadPesan=canAccess('pesan')?unreadTotals().all:0;
+ const btn=k=>`<button data-act="nav" data-v="${k}" ${appState.page===k?'aria-current="page"':''} aria-label="${navLabel(k)}"><span class="ico">${icon(NAVIC[k],20)}${k==='koreksi'&&pendingKoreksi?`<em class="bdg">${pendingKoreksi>99?'99+':pendingKoreksi}</em>`:''}${k==='pesan'&&unreadPesan?`<em class="bdg">${unreadPesan>99?'99+':unreadPesan}</em>`:''}</span><span>${bl(k)}</span></button>`;
  return `<nav class="bnav" aria-label="Menu utama">${prim.map(btn).join('')}<button data-act="modal" data-v="more" ${prim.includes(appState.page)?'':'aria-current="page"'} aria-label="Menu lainnya"><span class="ico">${icon('more',20)}</span><span>Lainnya</span></button></nav>`}
 MODALS.more=()=>{
  const me=meUser();
@@ -67,7 +70,7 @@ function render(keep=true){
  if(typeof syncPush==='function')syncPush();
 }
 function renderModal(){const m=appState.modal;return MODALS[m.k]?MODALS[m.k](m):''}
-function navigateTo(p){appState.page=p;appState.tab=0;appState.q='';appState.cf='all';appState.nav=false;appState.modal=null;render(false)}
+function navigateTo(p){appState.openMark=null;appState.page=p;appState.tab=0;appState.q='';appState.cf='all';appState.nav=false;appState.modal=null;render(false)}
 let toastTimer;
 function toast(m){const el=$('#toast');el.textContent=m;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{el.hidden=true},2800)}
 function copyToClipboard(text,msg){

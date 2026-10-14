@@ -5,7 +5,7 @@ import { COACHES, CONDC, ROLE_USER_IDS } from '../core/constants.js';
 import { TODAY, addD, esc, first, fmtD, formatRupiah, hhmm, iso, parseDate, slug } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
 import { ACT, CONF, FORMS, MODALS, PAGES } from '../core/registry.js';
-import { appState, findClientById, findProgramById, getClientEndDate, getClientStatus, getMemberName, nextClientUid, store } from '../core/store.js';
+import { appState, findClientById, findProgramById, getClientEndDate, getClientStatus, getMemberName, isSemi, nextClientUid, partnerOf, store, uniqClientId } from '../core/store.js';
 import { cdashBody } from '../portal/cdash.js';
 import { clientUrl, isValidShareUrl } from '../portal/links.js';
 import { activePrograms, banner, pill, sheet, statusPill, tabsBar } from '../ui/components.js';
@@ -15,60 +15,102 @@ import { copyToClipboard, render, toast } from '../ui/shell.js';
 const kact=(c,arch)=>appState.role==='coach'?'':`<div class="acts"><button class="btn sm" data-act="clink" data-v="${c.id}">${icon('link',14)} Link</button>${arch?`<button class="btn sm" data-act="restore" data-v="${c.id}">Pulihkan</button><button class="btn sm danger" data-act="askdel" data-v="${c.id}">Hapus</button>`:`<button class="btn sm" data-act="modal" data-v="cdash" data-id="${c.id}">${icon('klien',14)} Dashboard</button><button class="btn sm" data-act="modal" data-v="client" data-id="${c.id}">${icon('edit',14)} Edit</button><button class="btn sm" data-act="archive" data-v="${c.id}">Arsipkan</button><button class="btn sm danger" data-act="askdel" data-v="${c.id}">${icon('trash',14)} Hapus</button>`}</div>`;
 PAGES.klien=()=>{
  const arch=appState.tab===1,q=appState.q.toLowerCase();
- const all=scope(store.clients),list=all.map((c,i)=>({c,i})).filter(x=>!!x.c.arch===arch&&x.c.name.toLowerCase().includes(q)&&(arch||appState.cf==='all'||getClientStatus(x.c)===appState.cf)).sort((a,b)=>((b.c.reg||0)-(a.c.reg||0))||(a.c.start<b.c.start?1:a.c.start>b.c.start?-1:0)||(b.i-a.i)).map(x=>x.c);
+ const canByCoach=appState.role==='owner'||appState.role==='admin';
+ if(!canByCoach||(appState.clcoach!=='all'&&!COACHES.includes(appState.clcoach)))appState.clcoach='all';
+ const all=scope(store.clients),list=all.map((c,i)=>({c,i})).filter(x=>!!x.c.arch===arch&&x.c.name.toLowerCase().includes(q)&&(appState.clcoach==='all'||x.c.coach===appState.clcoach)&&(arch||appState.cf==='all'||getClientStatus(x.c)===appState.cf)).sort((a,b)=>((b.c.reg||0)-(a.c.reg||0))||(a.c.start<b.c.start?1:a.c.start>b.c.start?-1:0)||(b.i-a.i)).map(x=>x.c);
  const canEdit=appState.role!=='coach';
  const rows=list.map(c=>{
   const p=findProgramById(c.pid),left=c.arch?7-Math.round((TODAY-parseDate(c.arch))/864e5):0;
-  return `<tr><td><b>${esc(c.name)}</b><small class="mono">${esc(c.uid)} <button class="btn sm ghost" data-act="copyuid" data-v="${c.uid}" aria-label="Salin ID ${esc(c.name)}">${icon('copy',13)}</button></small><small><i class="cdot" style="background:var(${CONDC[c.cond]})"></i> ${c.cond}</small></td><td>${esc(p.name)}</td><td class="mono">${fmtD(c.start)} - ${fmtD(getClientEndDate(c))}</td><td>${esc(first(getMemberName(c.coach)))}</td><td>${arch?pill('Hapus dalam '+Math.max(0,left)+' hari','warn'):statusPill(getClientStatus(c))}</td>
+  return `<tr><td><b>${esc(c.name)}</b><small class="mono">${esc(c.uid)} <button class="btn sm ghost" data-act="copyuid" data-v="${c.uid}" aria-label="Salin ID ${esc(c.name)}">${icon('copy',13)}</button></small><small><i class="cdot" style="background:var(${CONDC[c.cond]})"></i> ${c.cond}</small>${c.note?`<small title="${esc(c.note)}" style="max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Catatan: ${esc(c.note)}</small>`:''}${partnerOf(c)?`<small>Semi privat · dengan ${esc(partnerOf(c).name)}</small>`:''}</td><td>${esc(p.name)}</td><td class="mono">${fmtD(c.start)} - ${fmtD(getClientEndDate(c))}</td><td>${esc(first(getMemberName(c.coach)))}</td><td>${arch?pill('Hapus dalam '+Math.max(0,left)+' hari','warn'):statusPill(getClientStatus(c))}</td>
   ${canEdit?`<td>${kact(c,arch)}</td>`:''}</tr>`}).join('');
- const mlist=list.map(c=>{const p=findProgramById(c.pid),left=c.arch?7-Math.round((TODAY-parseDate(c.arch))/864e5):0;return `<div class="li" style="align-items:flex-start"><div style="flex:1"><b>${esc(c.name)}</b><small class="mono">${esc(c.uid)} <button class="btn sm ghost" data-act="copyuid" data-v="${c.uid}" aria-label="Salin ID ${esc(c.name)}">${icon('copy',13)}</button></small><small>${esc(p.name)}</small><small class="mono">${fmtD(c.start)} - ${fmtD(getClientEndDate(c))} · ${esc(first(getMemberName(c.coach)))}</small></div>${arch?pill('Hapus dalam '+Math.max(0,left)+' hari','warn'):statusPill(getClientStatus(c))}${canEdit?`<div style="width:100%">${kact(c,arch)}</div>`:''}</div>`}).join('');
+ const mlist=list.map(c=>{const p=findProgramById(c.pid),left=c.arch?7-Math.round((TODAY-parseDate(c.arch))/864e5):0;return `<div class="li" style="align-items:flex-start"><div style="flex:1"><b>${esc(c.name)}</b><small class="mono">${esc(c.uid)} <button class="btn sm ghost" data-act="copyuid" data-v="${c.uid}" aria-label="Salin ID ${esc(c.name)}">${icon('copy',13)}</button></small><small>${esc(p.name)}</small><small class="mono">${fmtD(c.start)} - ${fmtD(getClientEndDate(c))} · ${esc(first(getMemberName(c.coach)))}</small>${partnerOf(c)?`<small>Semi privat · dengan ${esc(partnerOf(c).name)}</small>`:''}${c.note?`<small>Catatan: ${esc(c.note)}</small>`:''}</div>${arch?pill('Hapus dalam '+Math.max(0,left)+' hari','warn'):statusPill(getClientStatus(c))}${canEdit?`<div style="width:100%">${kact(c,arch)}</div>`:''}</div>`}).join('');
  return `<div class="stackv">${tabsBar(['Daftar klien','Arsip'])}
  ${arch?banner('Klien yang diarsipkan dihapus permanen setelah 7 hari. Pulihkan sebelum batas waktu.'):''}
- <div class="toolbar"><input id="q" data-q type="search" placeholder="Cari nama klien" value="${esc(appState.q)}" aria-label="Cari klien">${arch?'':`<select data-f="cf" aria-label="Filter status"><option value="all">Semua status</option>${['Aktif','Segera berakhir','Jeda','Selesai'].map(s=>`<option ${appState.cf===s?'selected':''}>${s}</option>`).join('')}</select>`}<span class="sp"></span>${canEdit&&!arch?`<button class="btn primary" data-act="modal" data-v="client">${icon('plus',15)} Tambah klien</button>`:''}</div>
+ <div class="toolbar"><input id="q" data-q type="search" placeholder="Cari nama klien" value="${esc(appState.q)}" aria-label="Cari klien">${canByCoach?`<select data-f="clcoach" aria-label="Filter coach"><option value="all">Semua coach (${store.clients.filter(c=>!!c.arch===arch).length})</option>${COACHES.map(id=>`<option value="${id}" ${appState.clcoach===id?'selected':''}>${esc(getMemberName(id))} (${store.clients.filter(c=>c.coach===id&&!!c.arch===arch).length})</option>`).join('')}</select>`:''}${arch?'':`<select data-f="cf" aria-label="Filter status"><option value="all">Semua status</option>${['Aktif','Segera berakhir','Jeda','Selesai'].map(s=>`<option ${appState.cf===s?'selected':''}>${s}</option>`).join('')}</select>`}<span class="sp"></span>${canEdit&&!arch?`<button class="btn primary" data-act="modal" data-v="client">${icon('plus',15)} Tambah klien</button>`:''}</div>
  <div class="tw dt"><table><thead><tr><th>Nama</th><th>Paket</th><th>Mulai - selesai</th><th>Coach</th><th>Status</th>${canEdit?'<th>Aksi</th>':''}</tr></thead><tbody>${rows||`<tr><td colspan="${canEdit?6:5}" class="sub">Tidak ada klien yang cocok.</td></tr>`}</tbody></table></div><div class="mlist">${mlist||'<p class="sub">Tidak ada klien yang cocok.</p>'}</div></div>`};
 MODALS.client=m=>{
  const c=m.id?findClientById(m.id):{name:'',pid:activePrograms()[0].id,start:iso(TODAY),pbNow:'',pbTarget:''};
- const programOrDefault=findProgramById(c.pid)||activePrograms()[0],endV=c.end||iso(addD(parseDate(c.start),programOrDefault.wk*7));
+ const programOrDefault=findProgramById(c.pid)||activePrograms()[0],endV=c.end||iso(addD(parseDate(c.start),programOrDefault.wk*7)),coachV=COACHES.includes(c.coach)?c.coach:(appState.role==='coach'?ROLE_USER_IDS.coach:COACHES[0]);
+ const pasangan=m.id?partnerOf(c):null,paketSemi=isSemi(programOrDefault),dataPasangan=pasangan||{name:'',pbNow:'',pbTarget:'',note:''};
+ const tautanDash=k=>k&&k.uid?`<small class="mono" style="word-break:break-all">${esc(k.uid)} · ${esc(clientUrl(k))} <button type="button" class="btn sm ghost" data-act="clink" data-v="${k.id}" aria-label="Salin link dashboard ${esc(k.name)}">${icon('copy',13)}</button></small>`:'<small>Link dashboard dibuat otomatis setelah disimpan.</small>';
  return sheet(m.id?'Ubah klien':'Tambah klien',`<form data-form="client" class="fg"><input type="hidden" name="id" value="${m.id||''}">
- <label class="field full"><span>Nama klien</span><input id="f-cname" name="name" required value="${esc(c.name)}"></label>
+ <label class="field full"><span>Nama coach</span><select name="coach" ${appState.role==='coach'?'disabled':''} required>${COACHES.map(id=>`<option value="${id}" ${id===coachV?'selected':''}>${esc(getMemberName(id))}</option>`).join('')}</select></label>
  <label class="field full"><span>Pilih program</span><select name="pid" data-cform>${activePrograms().map(p=>`<option value="${p.id}" ${p.id===c.pid?'selected':''}>${esc(p.name)}</option>`).join('')}</select></label>
- <div class="idcard full"><small>Harga program</small><b id="pricebox" class="mono" style="font-size:20px">${formatRupiah(programOrDefault.price)}</b><small id="priceunit">${esc(programOrDefault.unit||'')}</small></div>
+ <div class="idcard full"><small>Harga program</small><b id="pricebox" class="mono" style="font-size:20px">${formatRupiah(programOrDefault.price)}</b><small id="priceunit">${esc(programOrDefault.unit||'')}</small><small id="semihint" data-semi ${paketSemi?'':'hidden'}>Paket 2 peserta: pembayaran <b>satu kali</b> sebesar <b class="mono" id="semitotal">${formatRupiah(programOrDefault.price)}</b> untuk kedua peserta. Masing-masing peserta punya ID dan link dashboard sendiri.</small></div>
  <label class="field"><span>Tanggal mulai</span><input name="start" type="date" required value="${c.start}" data-cform></label>
  <label class="field"><span>Tanggal selesai</span><input name="end" type="date" required value="${endV}" data-cform ${c.end?'data-touched="1"':''}></label>
- <label class="field"><span>PB awal (mm:ss atau j:mm:ss)</span><input id="f-pbawal" name="pbNow" value="${esc(c.pbNow||'')}" placeholder="Contoh: 4:25:00"></label>
- <label class="field"><span>PB akhir / target</span><input id="f-pbakhir" name="pbTarget" value="${esc(c.pbTarget||'')}" placeholder="Contoh: 4:00:00"></label>
- <label class="field full"><span>Link smartwatch klien (opsional)</span><input id="f-csw" name="sw" type="url" value="${esc(c.sw||'')}" placeholder="https://..."></label>
+ <div class="peserta full fg" id="peserta1">
+  <div class="full"><h4 id="p1title">${paketSemi?'Peserta 1':'Data klien'}</h4>${m.id?tautanDash(c):''}</div>
+  <label class="field full"><span>Nama klien</span><input id="f-cname" name="name" required value="${esc(c.name)}"></label>
+  <label class="field"><span>PB awal (mm:ss atau j:mm:ss)</span><input id="f-pbawal" name="pbNow" value="${esc(c.pbNow||'')}" placeholder="Contoh: 4:25:00"></label>
+  <label class="field"><span>PB akhir / target</span><input id="f-pbakhir" name="pbTarget" value="${esc(c.pbTarget||'')}" placeholder="Contoh: 4:00:00"></label>
+  <label class="field full"><span>Catatan / keterangan (opsional)</span><textarea id="f-cnote" name="note" rows="3" maxlength="300" placeholder="Contoh: riwayat cedera, jam latihan favorit, atau info penting lain">${esc(c.note||'')}</textarea></label>
+ </div>
+ <div class="peserta full fg" id="peserta2" data-semi ${paketSemi?'':'hidden'}>
+  <div class="full"><h4>Peserta 2</h4>${tautanDash(pasangan)}</div>
+  <label class="field full"><span>Nama klien ke-2</span><input id="f-cname2" name="name2" ${paketSemi?'required':''} value="${esc(dataPasangan.name)}"></label>
+  <label class="field"><span>PB awal (mm:ss atau j:mm:ss)</span><input id="f-pbawal2" name="pbNow2" value="${esc(dataPasangan.pbNow||'')}" placeholder="Contoh: 4:25:00"></label>
+  <label class="field"><span>PB akhir / target</span><input id="f-pbakhir2" name="pbTarget2" value="${esc(dataPasangan.pbTarget||'')}" placeholder="Contoh: 4:00:00"></label>
+  <label class="field full"><span>Catatan / keterangan (opsional)</span><textarea id="f-cnote2" name="note2" rows="3" maxlength="300" placeholder="Catatan khusus untuk peserta ke-2">${esc(dataPasangan.note||'')}</textarea></label>
+ </div>
  <div class="row full"><button class="btn primary" type="submit">Simpan</button><button class="btn" type="button" data-act="dlinvoice">${icon('download',15)} Cetak invoice (JPG)</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
 function clientFormSync(t){
  const f=t.closest('form');if(!f)return;const p=findProgramById(f.elements.pid.value);if(!p)return;
  const pb=f.querySelector('#pricebox'),pu=f.querySelector('#priceunit');if(pb)pb.textContent=formatRupiah(p.price);if(pu)pu.textContent=p.unit||'';
+ const paketSemi=isSemi(p);f.querySelectorAll('[data-semi]').forEach(e=>{e.hidden=!paketSemi});
+ const inputNama2=f.elements.name2;if(inputNama2)inputNama2.required=paketSemi;const tt=f.querySelector('#semitotal');if(tt)tt.textContent=formatRupiah(p.price);const t1=f.querySelector('#p1title');if(t1)t1.textContent=paketSemi?'Peserta 1':'Data klien';
  if(t.name==='end'){t.dataset.touched='1';return}
  if(t.name==='pid'||t.name==='start'){const st=f.elements.start.value,en=f.elements.end;if(st&&!en.dataset.touched)en.value=iso(addD(parseDate(st),p.wk*7))}
 }
 FORMS.client=async f=>{
  const id=f.get('id'),start=f.get('start'),end=f.get('end');
  if(end<start){toast('Tanggal selesai tidak boleh sebelum tanggal mulai');return}
- const swv=(f.get('sw')||'').trim();if(swv&&!isValidShareUrl(swv)){toast('Link smartwatch harus diawali http:// atau https://');return}
- const name=f.get('name').trim(),pid=f.get('pid');
- const coachId=appState.role==='coach'?ROLE_USER_IDS.coach:(id?(findClientById(id)||{}).coach:COACHES[0]);
- let c,inc='';
- if(isApiMode()){
-  c=await apiSaveClient({id,name,program_id:pid,start,coach_id:coachId});
-  c.end=end;c.pbNow=(f.get('pbNow')||'').trim();c.pbTarget=(f.get('pbTarget')||'').trim();if(swv)c.sw=swv;
-  const pg=findProgramById(pid);
-  if(pg&&!id){await apiSaveTransaction({date:iso(TODAY),type:'in',program_id:pg.id,category:pg.name,coach_id:c.coach,desc:name,amount:pg.price});inc=' Pemasukan program tercatat di Keuangan.'}
- }else{
-  if(id){c=findClientById(id)}else{c={id:'cl'+(store.clients.length+1+Math.floor(Math.random()*900)),uid:nextClientUid(),hrmax:188,mp:360,renew:false,arch:null,reg:Date.now(),cond:'Prima',coach:coachId};store.clients.push(c)}
-  c.name=name;c.pid=pid;c.start=start;c.end=end;c.pbNow=(f.get('pbNow')||'').trim();c.pbTarget=(f.get('pbTarget')||'').trim();c.sw=swv;
-  if(appState.role==='coach')c.coach=ROLE_USER_IDS.coach;
+ const coachTerpilih=appState.role==='coach'?ROLE_USER_IDS.coach:f.get('coach');
+ if(!COACHES.includes(coachTerpilih)){toast('Pilih nama coach');return}
+ const pg=findProgramById(f.get('pid')),paketSemi=isSemi(pg),trimVal=k=>(f.get(k)||'').trim();
+ const dataPeserta1={name:trimVal('name'),pbNow:trimVal('pbNow'),pbTarget:trimVal('pbTarget'),note:trimVal('note')};
+ const dataPeserta2=paketSemi?{name:trimVal('name2'),pbNow:trimVal('pbNow2'),pbTarget:trimVal('pbTarget2'),note:trimVal('note2')}:null;
+ if(!dataPeserta1.name){toast('Nama klien wajib diisi');return}
+ if(paketSemi&&!dataPeserta2.name){toast('Isi nama klien ke-2 untuk paket 2 peserta');return}
+ const api=isApiMode();
+ /* buat klien: via API bila mode API (field tambahan grp/note/end diset lokal, pola sama seperti end/pbNow di fase C) */
+ const buatKlienBaru=async nama=>{
+  if(api)return await apiSaveClient({name:nama,program_id:f.get('pid'),start,coach_id:coachTerpilih});
+  const k={id:uniqClientId(),uid:nextClientUid(),hrmax:188,mp:360,renew:false,arch:null,reg:Date.now(),cond:'Prima',coach:coachTerpilih,note:''};
+  store.clients.push(k);return k;
+ };
+ const c0=id?findClientById(id):await buatKlienBaru(dataPeserta1.name),isNew1=!id;
+ let c=c0,dataPasangan=null,isNew2=false,lepas='';
+ if(paketSemi){dataPasangan=partnerOf(c);if(!dataPasangan){dataPasangan=await buatKlienBaru(dataPeserta2.name);isNew2=true}c.grp=c.grp||'g'+Date.now();dataPasangan.grp=c.grp}
+ else if(c.grp){const o=partnerOf(c);delete c.grp;if(o){delete o.grp;lepas=' Pasangan semi privat dilepas dan tetap tercatat sebagai klien sendiri.'}}
+ let moved='',inc='';
+ const simpanSatu=async(k,o,isNew,primary)=>{
+  const coachLama=!isNew&&k.coach!==coachTerpilih;
+  const grp=k.grp; /* apiSaveClient me-replace objek di store -> amankan field lokal dulu */
+  let cur=k;
+  if(api&&k.id)cur=await apiSaveClient({id:k.id,name:o.name,program_id:f.get('pid'),start,coach_id:coachTerpilih});
+  Object.assign(cur,{name:o.name,pid:f.get('pid'),start,end,pbNow:o.pbNow,pbTarget:o.pbTarget,note:o.note,coach:coachTerpilih});
+  if(grp)cur.grp=grp;else delete cur.grp;
+  /* ganti coach: sesi lama di jadwal coach sebelumnya dilepas agar tidak dobel/yatim (sama seperti menu Jadwal coach) */
+  if(coachLama){const n=store.book.filter(b=>b.client===cur.id).length;store.book=store.book.filter(b=>b.client!==cur.id);moved=' Coach diganti ke '+first(getMemberName(coachTerpilih))+(n?', sesi lama dilepas. Atur ulang jadwal di menu Coach.':'.')}
   /* pemasukan otomatis: klien baru = transaksi masuk sebesar harga program (tercatat hari ini) */
-  const pg=findProgramById(c.pid);
-  if(pg){
-   if(!id){store.tx.push({id:'t'+Date.now(),date:iso(TODAY),type:'in',pid:pg.id,cat:pg.name,coach:c.coach,desc:c.name,amt:pg.price,cid:c.id});inc=' Pemasukan program tercatat di Keuangan.'}
-   else{const x=store.tx.find(t=>t.cid===c.id);if(x){x.desc=c.name;x.coach=c.coach;if(x.pid!==pg.id){x.pid=pg.id;x.cat=pg.name;x.amt=pg.price;inc=' Pemasukan di Keuangan ikut diperbarui.'}}}
+  /* paket 2 peserta: satu pembayaran saja, dicatat di peserta 1 dengan nama gabungan */
+  if(pg&&primary){
+   const namaGabungan=paketSemi&&dataPeserta2?dataPeserta1.name+' & '+dataPeserta2.name:cur.name;
+   if(api){
+    if(isNew){await apiSaveTransaction({date:iso(TODAY),type:'in',program_id:pg.id,category:pg.name,coach_id:cur.coach,desc:namaGabungan,amount:pg.price});inc=' Pemasukan program tercatat di Keuangan (satu pembayaran).'}
+   }else{
+    const x=store.tx.find(t=>t.cid===cur.id);
+    if(!x&&isNew){store.tx.push({id:'t'+Date.now()+Math.floor(Math.random()*999),date:iso(TODAY),type:'in',pid:pg.id,cat:pg.name,coach:cur.coach,desc:namaGabungan,amt:pg.price,cid:cur.id});inc=' Pemasukan program tercatat di Keuangan (satu pembayaran).'}
+    else if(x){x.desc=namaGabungan;x.coach=cur.coach;if(x.pid!==pg.id){x.pid=pg.id;x.cat=pg.name;x.amt=pg.price;inc=' Pemasukan di Keuangan ikut diperbarui.'}}
+   }
   }
- }
- logAct((id?'memperbarui klien ':'menambah klien ')+c.name);appState.modal=null;toast('Klien disimpan dan tersinkron.'+inc);render()};
+  return cur;
+ };
+ c=await simpanSatu(c,dataPeserta1,isNew1,true);
+ if(paketSemi)dataPasangan=await simpanSatu(dataPasangan,dataPeserta2,isNew2,false);
+ logAct((id?'memperbarui klien ':'menambah klien ')+c.name+(paketSemi?' dan '+dataPasangan.name+' (paket 2 peserta)':''));
+ appState.modal=null;toast((paketSemi?'Paket 2 peserta disimpan: dua dashboard terpisah, satu pembayaran.':'Klien disimpan dan tersinkron.')+moved+lepas+inc);render()};
 function invoiceCanvas(d){
  const W=1080,SC=2,H=1180,tx=60,tw=960,cv=document.createElement('canvas');cv.width=W*SC;cv.height=H*SC;const g=cv.getContext('2d');g.scale(SC,SC);
  const F=(w,z)=>w+' '+z+'px Montserrat, Arial, sans-serif',rr=(x,y,w,h,r)=>{g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()};
@@ -111,7 +153,7 @@ ACT.dlinvoice=async()=>{
  if(!f.reportValidity())return;
  try{
   const fd=new FormData(f),p=findProgramById(fd.get('pid')),id=fd.get('id'),k=id?findClientById(id):null,uid=k?k.uid:nextClientUid();
-  const d={name:fd.get('name').trim(),uid,no:'INV-'+iso(TODAY).replace(/-/g,'')+'-'+uid.replace('N6-',''),prog:p.name,unit:p.unit,price:p.price,start:fd.get('start'),end:fd.get('end'),pbNow:(fd.get('pbNow')||'').trim(),pbTarget:(fd.get('pbTarget')||'').trim()};
+  const paketSemi=isSemi(p)&&(fd.get('name2')||'').trim(),d={name:fd.get('name').trim()+(paketSemi?' & '+fd.get('name2').trim():''),uid,no:'INV-'+iso(TODAY).replace(/-/g,'')+'-'+uid.replace('N6-',''),prog:p.name,unit:(p.unit||'')+(paketSemi?' · 2 peserta':''),price:p.price,start:fd.get('start'),end:fd.get('end'),pbNow:(fd.get('pbNow')||'').trim(),pbTarget:(fd.get('pbTarget')||'').trim()};
   try{await Promise.all(['500','600','700','800'].map(w=>document.fonts.load(w+' 20px Montserrat')))}catch(e){}await awaitLogo();
   const cv=invoiceCanvas(d),a=document.createElement('a');a.href=cv.toDataURL('image/jpeg',.92);a.download='invoice-'+slug(d.name)+'-'+iso(TODAY)+'.jpg';document.body.appendChild(a);a.click();a.remove();
   logAct('mencetak invoice '+d.name);toast('Invoice diunduh sebagai JPG');

@@ -3,7 +3,7 @@ import { money, perm } from './access.js';
 import { COACHES, NAVT } from './constants.js';
 import { filterTransactions, freeSlots, getSessionAttendance, inRange, liveClients, monthly, offOn } from './derived.js';
 import { TODAY, esc, iso, sum } from './helpers.js';
-import { clientAttRate, locOf } from './shared.js';
+import { clientAttRate, locOf, unreadTotals } from './shared.js';
 import { findClientById, getClientStatus, store } from './store.js';
 import { pill } from '../ui/components.js';
 
@@ -28,7 +28,7 @@ function buildIndicators(){
  const cards=[
   {m:'klien',t:'Klien',tone:ced?'bad':(per||soon)?'warn':'good',rows:[['Klien berjalan',live.length],['Segera berakhir',soon],['Perlu perhatian / cedera',per+ced],['Jeda',jeda]]},
   {m:'coach',t:'Coach',tone:free7===0?'bad':fill>=90?'warn':'good',rows:[['Slot terisi',fill+'%'],['Slot kosong 7 hari',free7],['Coach libur hari ini',offNow],['Total coach',COACHES.length]]},
-  {m:'pesan',t:'Pesan',tone:dmW?'warn':'good',rows:[['Menunggu balasan',dmW],['Thread klien',dmN]]},
+  {m:'pesan',t:'Pesan',tone:dmW?'warn':'good',rows:[['Belum dibaca',unreadTotals().all],['Menunggu balasan',dmW],['Thread klien',dmN]]},
   {m:'koreksi',t:'Koreksi',tone:kPct>=store.targets.koreksi?'good':kPct>=store.targets.koreksi-20?'warn':'bad',rows:[['Menunggu koreksi',pend],['Sudah dikoreksi',kPct+'%'],['Target',store.targets.koreksi+'%']]},
   {m:'absensi',t:'Absensi',tone:(reqW||issue)?'warn':'good',rows:[['Coach hadir hari ini',absen+' / '+COACHES.length],['Izin menunggu',reqW],['Masalah dilaporkan',issue],['Kehadiran klien 30 hari',cAtt+'%']]},
   {m:'laporan',t:'Laporan',tone:missed>3?'warn':'good',rows:[['Laporan latihan 7 hari',rep7],['Tidak lapor 7 hari',missed],['Retensi klien',retensiPct()+'%']]},
@@ -37,6 +37,7 @@ function buildIndicators(){
  ].filter(c=>perm(c.m)!=='none');
  const al=[];
  if(pend)al.push({lv:pend>10?'bad':'warn',x:pend+' laporan menunggu koreksi',m:'koreksi'});
+ {const un=unreadTotals().all;if(un)al.push({lv:'info',x:un+' pesan belum dibaca',m:'pesan'})}
  if(dmW)al.push({lv:'warn',x:dmW+' pesan klien menunggu balasan',m:'pesan'});
  if(reqW)al.push({lv:'warn',x:reqW+' izin atau pengajuan menunggu persetujuan',m:'absensi'});
  if(issue)al.push({lv:'bad',x:issue+' masalah dilaporkan coach belum ditangani',m:'absensi'});

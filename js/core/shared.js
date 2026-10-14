@@ -1,9 +1,29 @@
 /* js/core/shared.js — diekstrak otomatis dari index.html (fase 4 refactor) */
-import { COACHES, rnd } from './constants.js';
-import { getReportsOf, inRange, offOn, offSlot } from './derived.js';
+import { COACHES, PLAN, rnd } from './constants.js';
+import { getReportsOf, inRange, liveClients, offOn, offSlot } from './derived.js';
 import { TODAY, addD, dIdx, first, hhmm, iso, mmss, parseDate, sum } from './helpers.js';
-import { findClientById, getClientStatus, getMemberName, store } from './store.js';
+import { findClientById, getClientStatus, getMemberName, appState, store } from './store.js';
 import { pill } from '../ui/components.js';
+import { canAccess, meId } from './access.js';
+
+/* ===== status baca pesan: tiap pengguna punya penanda "terakhir dibaca" per percakapan ===== */
+const waktuAwal=()=>store.msgSeedT||(store.msgSeedT=Date.now()-150*60000);
+const readAt=(who,key)=>{const r=store.msgRead||(store.msgRead={});const v=r[who+'|'+key];return v===undefined?waktuAwal():v};
+const markRead=(who,key)=>{(store.msgRead||(store.msgRead={}))[who+'|'+key]=Date.now()};
+const waktuPesan=m=>+new Date(m.t);
+const unreadOf=(arr,who,key)=>arr.filter(m=>m.w!==who&&waktuPesan(m)>readAt(who,key));
+const unreadDm=(cid,who)=>unreadOf(store.msgs.dm[cid]||[],who,'dm:'+cid).length;
+function unreadTotals(){const me=meId();if(!canAccess('pesan'))return{team:0,dm:0,all:0};const team=unreadOf(store.msgs.team,me,'team').length,dm=(store.clients.filter(c=>!c.arch&&getClientStatus(c)!=='Selesai')).reduce((n,c)=>n+unreadDm(c.id,me),0);return{team,dm,all:team+dm}}
+/* posisi "terakhir dibaca" dibekukan selama percakapan terbuka, supaya tanda BARU tidak hilang saat layar dirender ulang */
+const openSince=(who,key)=>{const k=who+'|'+key;if(!appState.openMark||appState.openMark.k!==k)appState.openMark={k,since:readAt(who,key)};return appState.openMark.since};
+const ubBadge=n=>n?` <i class="ub" aria-label="${n} belum dibaca">${n>99?'99+':n}</i>`:'';
+/* tautan latihan dari dashboard klien yang belum ada laporannya:
+   tetap muncul di Koreksi sebagai entri tersendiri. Koreksi disimpan di data link itu dan kembali ke dashboard klien. */
+const slId=x=>'sl|'+x.cid+'|'+x.date;
+const planTypeOn=date=>(PLAN[dIdx(parseDate(date))]||{t:'Latihan'}).t;
+const hasReportOn=(cid,date)=>store.reports.some(y=>y.cid===cid&&y.date===date&&!y.missed);
+const linkEntries=()=>(store.swLinks||[]).filter(x=>{const c=findClientById(x.cid);return c&&!c.arch&&!hasReportOn(x.cid,x.date)}).map(x=>({id:slId(x),cid:x.cid,date:x.date,type:planTypeOn(x.date),link:true,sw:x.url,fix:x.fix||null}));
+const fixOnDate=(cid,date)=>{const r=store.reports.find(y=>y.cid===cid&&y.date===date&&!y.missed);if(r)return r.fix;const x=(store.swLinks||[]).find(y=>y.cid===cid&&y.date===date);return x?(x.fix||null):null};
 
 store.prof={
  u3:{rating:4.9,reviews:41,since:'2021-03-01'},u4:{rating:4.8,reviews:36,since:'2022-05-10'},
@@ -111,4 +131,4 @@ function buildSessionLogs(){
 buildSessionLogs();
 const senderName=w=>w.startsWith('cl')?(findClientById(w)?.name||'Klien'):getMemberName(w);
 
-export { ATTENDANCE_TONES, ATT_MIN, LEVELS, SKILLS, attOpen, attOpenAt, attPill, attRate, buildSessionLogs, clientAttRate, coachLevel, coachScore, compliance, locOf, senderName, sesStart, sessionsOn, skillAvg, skillParts, upcoming };
+export { ATTENDANCE_TONES, ATT_MIN, LEVELS, SKILLS, attOpen, attOpenAt, attPill, attRate, buildSessionLogs, clientAttRate, coachLevel, coachScore, compliance, fixOnDate, hasReportOn, linkEntries, locOf, markRead, openSince, planTypeOn, readAt, senderName, sesStart, sessionsOn, skillAvg, skillParts, slId, ubBadge, unreadDm, unreadOf, unreadTotals, upcoming, waktuAwal, waktuPesan };

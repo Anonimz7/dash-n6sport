@@ -38,12 +38,13 @@ MODALS.prog=m=>{
  <label class="field"><span>Harga (Rp)</span><input id="f-pgp" name="price" type="number" min="0" step="any" required value="${p.price}"></label>
  <label class="field"><span>Durasi</span><input id="f-pgu" name="unit" value="${esc(p.unit||'')}" placeholder="Contoh: 16 minggu, per bulan"></label>
   <label class="field"><span>Komisi per sesi hadir (Rp)</span><input id="f-pgf" name="fee" type="number" min="0" step="any" required value="${p.fee}"></label>
+  <label class="field"><span>Jumlah peserta</span><select name="peserta"><option value="1" ${+p.peserta===2?'':'selected'}>1 orang (individu)</option><option value="2" ${+p.peserta===2?'selected':''}>2 orang (paket, satu pembayaran)</option></select></label>
  <div class="row full"><button class="btn primary" type="submit">Simpan</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
 FORMS.prog=f=>{
  if(appState.role!=='owner')return;
  const id=f.get('id'),name=f.get('name').trim();if(!name){toast('Nama program wajib diisi');return}
  let p=id&&findProgramById(id);if(!p){p={id:'p'+Date.now(),lvl:.7};store.programs.push(p)}
- p.name=name;p.price=num(f.get('price'));p.unit=f.get('unit').trim();p.fee=num(f.get('fee'));
+ p.name=name;p.price=num(f.get('price'));p.unit=f.get('unit').trim();p.fee=num(f.get('fee'));p.peserta=+f.get('peserta')===2?2:1;
  const mm=p.unit.match(/(\d+)\s*(minggu|mgg)/i);p.wk=mm?+mm[1]:(p.wk||4);delete p.del;appState.syncAt=new Date();
  logAct((id?'mengubah program ':'menambah program ')+p.name);appState.modal=null;toast(id?'Program diperbarui':'Program ditambahkan');render()};
 CONF.delprog=id=>{const p=findProgramById(id);p.del=true;appState.syncAt=new Date();logAct('menghapus program '+p.name)};

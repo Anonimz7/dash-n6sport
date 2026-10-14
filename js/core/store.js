@@ -17,7 +17,8 @@ store.programs=[
  {id:'p2',name:'Half Marathon 12 Minggu',price:4200000,unit:'12 minggu',wk:12,lvl:.75},
  {id:'p3',name:'10K Starter 8 Minggu',price:2400000,unit:'8 minggu',wk:8,lvl:.5},
  {id:'p4',name:'Pace Rescue 4 Minggu',price:1500000,unit:'4 minggu',wk:4,lvl:.6},
- {id:'p5',name:'Private 1-on-1 Bulanan',price:3500000,unit:'per bulan',wk:4,lvl:.85}
+ {id:'p5',name:'Private 1-on-1 Bulanan',price:3500000,unit:'per bulan',wk:4,lvl:.85},
+ {id:'p6',name:'Paket Berdua 8 Minggu',price:4000000,unit:'8 minggu',wk:8,lvl:.6,peserta:2,fee:60000}
 ];
 const findProgramById=id=>store.programs.find(p=>p.id===id);
 const nextClientUid=()=>'N6-'+(1001+Math.max(-1,...store.clients.map(c=>parseInt(String(c.uid||'').slice(3))-1001||0))+1);
@@ -38,6 +39,13 @@ store.clients[13].arch=iso(addD(TODAY,-3));
 store.clients[14].arch=iso(addD(TODAY,-1));
 const findClientById=id=>store.clients.find(c=>c.id===id);
 const getMemberName=id=>store.members.find(m=>m.id===id)?.name||'-';
+/* paket semi privat: program dengan peserta:2 (atau nama mengandung "semi privat"/"paket berdua") */
+const isSemi=p=>!!p&&(+p.peserta===2||/semi[\s-]*priv|paket\s*(berdua|2)/i.test(p.name||''));
+const partnerOf=c=>c&&c.grp?store.clients.find(x=>x.grp===c.grp&&x.id!==c.id)||null:null;
+const uniqClientId=()=>{let id;do{id='cl'+(store.clients.length+1+Math.floor(Math.random()*9000))}while(store.clients.some(x=>x.id===id));return id};
+/* catatan awal klien contoh */
+const SEED_NOTES={'Reza Fahlevi':'Sering terlambat setor laporan. Perlu diingatkan lewat pesan.','Bagas Santoso':'Cedera ringan betis kanan. Kurangi intensitas sampai pulih.','Yoga Permana':'Target half marathon. Pace belum stabil, fokus easy run.','Citra Lestari':'Istirahat sementara, lanjut setelah urusan keluarga selesai.','Putri Maharani':'Berminat perpanjang program bulan depan.','Nadia Salsabila':'Berminat perpanjang program bulan depan.'};
+store.clients.forEach(c=>{c.note=SEED_NOTES[c.name]||''});
 const getClientEndDate=c=>c.end||iso(addD(parseDate(c.start),findProgramById(c.pid).wk*7));
 function getClientStatus(c){if(c.arch)return'Arsip';if(c.cond==='Istirahat')return'Jeda';const e=parseDate(getClientEndDate(c));if(e<TODAY)return'Selesai';if((e-TODAY)/864e5<=14)return'Segera berakhir';return'Aktif'}
 store.pattern={};
@@ -131,7 +139,7 @@ store.acl={
  coach:{beranda:'full',klien:'full',coach:'full',koreksi:'none',program:'full',pesan:'full',absensi:'full',komisi:'full',keuangan:'none',laporan:'none',anggota:'none',setting:'full',progress:'none'}
 };
 const appState={role:'owner',page:'beranda',tab:0,nav:false,modal:null,q:'',cf:'all',per:30,tp:'bulan',gate:false,theme:'system',
- kcoach:'all',kweek:0,kdate:iso(TODAY),sched:'u4',cal:'u4',chat:'cl1',editfix:null,rep:'client',repPer:30,confirm:null,syncAt:new Date(),focus:null,share:'u4',shareDays:7,bcTo:'all',acoach:'u4',adate:iso(TODAY),
+ kcoach:'all',clcoach:'all',kweek:0,kdate:iso(TODAY),sched:'u4',cal:'u4',chat:'cl1',editfix:null,rep:'client',repPer:30,confirm:null,syncAt:new Date(),focus:null,openMark:null,share:'u4',shareDays:7,bcTo:'all',acoach:'u4',adate:iso(TODAY),
  prog:{name:'Aditya Nugroho',coach:'Dimas Pratama',age:34,target:'42195',pbNow:'4:25:00',pbTarget:'4:00:00',title:'',phase:'umum',sdate:iso(TODAY),edate:iso(addD(TODAY,6)),hrmax:186,weeks:[36],start:36,inc:8,calcVol:48,detail:true,fmt:'pdf',tplId:'t1'}
 };
 store.types=[
@@ -142,4 +150,4 @@ store.types=[
  {k:'Long Run',zone:2,day:6,pace:110,share:40}
 ];
 
-export { EXP, SEED_CLIENTS, _rid, _tid, appState, fillTemplate, findClientById, findClientByUid, findProgramById, getClientEndDate, getClientStatus, getMemberName, nextClientUid, store };
+export { EXP, SEED_CLIENTS, _rid, _tid, appState, fillTemplate, findClientById, findClientByUid, findProgramById, getClientEndDate, getClientStatus, getMemberName, isSemi, nextClientUid, partnerOf, store, uniqClientId };
