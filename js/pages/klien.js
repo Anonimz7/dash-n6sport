@@ -1,5 +1,6 @@
 /* js/pages/klien.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { canAccess, logAct, scope } from '../core/access.js';
+import { apiSaveClient, apiSaveTransaction, apiSendPortalMessage, isApiMode } from '../core/api.js';
 import { COACHES, CONDC, ROLE_USER_IDS } from '../core/constants.js';
 import { TODAY, addD, esc, first, fmtD, formatRupiah, hhmm, iso, parseDate, slug } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
@@ -44,19 +45,28 @@ function clientFormSync(t){
  if(t.name==='end'){t.dataset.touched='1';return}
  if(t.name==='pid'||t.name==='start'){const st=f.elements.start.value,en=f.elements.end;if(st&&!en.dataset.touched)en.value=iso(addD(parseDate(st),p.wk*7))}
 }
-FORMS.client=f=>{
+FORMS.client=async f=>{
  const id=f.get('id'),start=f.get('start'),end=f.get('end');
  if(end<start){toast('Tanggal selesai tidak boleh sebelum tanggal mulai');return}
  const swv=(f.get('sw')||'').trim();if(swv&&!isValidShareUrl(swv)){toast('Link smartwatch harus diawali http:// atau https://');return}
- let c;
- if(id){c=findClientById(id)}else{c={id:'cl'+(store.clients.length+1+Math.floor(Math.random()*900)),uid:nextClientUid(),hrmax:188,mp:360,renew:false,arch:null,reg:Date.now(),cond:'Prima',coach:appState.role==='coach'?ROLE_USER_IDS.coach:COACHES[0]};store.clients.push(c)}
- c.name=f.get('name').trim();c.pid=f.get('pid');c.start=start;c.end=end;c.pbNow=(f.get('pbNow')||'').trim();c.pbTarget=(f.get('pbTarget')||'').trim();c.sw=swv;
- if(appState.role==='coach')c.coach=ROLE_USER_IDS.coach;
- /* pemasukan otomatis: klien baru = transaksi masuk sebesar harga program (tercatat hari ini) */
- const pg=findProgramById(c.pid);let inc='';
- if(pg){
-  if(!id){store.tx.push({id:'t'+Date.now(),date:iso(TODAY),type:'in',pid:pg.id,cat:pg.name,coach:c.coach,desc:c.name,amt:pg.price,cid:c.id});inc=' Pemasukan program tercatat di Keuangan.'}
-  else{const x=store.tx.find(t=>t.cid===c.id);if(x){x.desc=c.name;x.coach=c.coach;if(x.pid!==pg.id){x.pid=pg.id;x.cat=pg.name;x.amt=pg.price;inc=' Pemasukan di Keuangan ikut diperbarui.'}}}
+ const name=f.get('name').trim(),pid=f.get('pid');
+ const coachId=appState.role==='coach'?ROLE_USER_IDS.coach:(id?(findClientById(id)||{}).coach:COACHES[0]);
+ let c,inc='';
+ if(isApiMode()){
+  c=await apiSaveClient({id,name,program_id:pid,start,coach_id:coachId});
+  c.end=end;c.pbNow=(f.get('pbNow')||'').trim();c.pbTarget=(f.get('pbTarget')||'').trim();if(swv)c.sw=swv;
+  const pg=findProgramById(pid);
+  if(pg&&!id){await apiSaveTransaction({date:iso(TODAY),type:'in',program_id:pg.id,category:pg.name,coach_id:c.coach,desc:name,amount:pg.price});inc=' Pemasukan program tercatat di Keuangan.'}
+ }else{
+  if(id){c=findClientById(id)}else{c={id:'cl'+(store.clients.length+1+Math.floor(Math.random()*900)),uid:nextClientUid(),hrmax:188,mp:360,renew:false,arch:null,reg:Date.now(),cond:'Prima',coach:coachId};store.clients.push(c)}
+  c.name=name;c.pid=pid;c.start=start;c.end=end;c.pbNow=(f.get('pbNow')||'').trim();c.pbTarget=(f.get('pbTarget')||'').trim();c.sw=swv;
+  if(appState.role==='coach')c.coach=ROLE_USER_IDS.coach;
+  /* pemasukan otomatis: klien baru = transaksi masuk sebesar harga program (tercatat hari ini) */
+  const pg=findProgramById(c.pid);
+  if(pg){
+   if(!id){store.tx.push({id:'t'+Date.now(),date:iso(TODAY),type:'in',pid:pg.id,cat:pg.name,coach:c.coach,desc:c.name,amt:pg.price,cid:c.id});inc=' Pemasukan program tercatat di Keuangan.'}
+   else{const x=store.tx.find(t=>t.cid===c.id);if(x){x.desc=c.name;x.coach=c.coach;if(x.pid!==pg.id){x.pid=pg.id;x.cat=pg.name;x.amt=pg.price;inc=' Pemasukan di Keuangan ikut diperbarui.'}}}
+  }
  }
  logAct((id?'memperbarui klien ':'menambah klien ')+c.name);appState.modal=null;toast('Klien disimpan dan tersinkron.'+inc);render()};
 function invoiceCanvas(d){
@@ -127,9 +137,10 @@ FORMS.cdash=f=>{
  logAct('menerima link hasil latihan '+c.name+' ('+fmtD(dt)+')');
  toast(has?'Link tanggal '+fmtD(dt)+' terkirim ke coach':'Link tersimpan. Belum ada laporan latihan tanggal '+fmtD(dt)+', link tampil di Koreksi saat laporan masuk');
  appState.modal=appState.cview?null:{k:'cdash',id:c.id};render()};
-FORMS.cdmsg=f=>{
+FORMS.cdmsg=async f=>{
  const c=findClientById(f.get('cid')),t=(f.get('text')||'').trim();if(!c||!t)return;
- (store.msgs.dm[c.id]=store.msgs.dm[c.id]||[]).push({w:c.id,text:t,t:new Date()});
+ if(isApiMode())await apiSendPortalMessage(c.uid,c.id,t);
+ else (store.msgs.dm[c.id]=store.msgs.dm[c.id]||[]).push({w:c.id,text:t,t:new Date()});
  logAct('menerima pesan dari klien '+c.name);toast('Pesan terkirim ke tim');appState.focus={id:'f-cdmsg',pos:0};appState.modal=appState.cview?null:{k:'cdash',id:c.id};render()};
 ACT.cdtab=t=>{appState.cdTab=+t.dataset.v;render()};
 ACT.cdday=t=>{const i=document.getElementById('f-cddate');if(i){const c=findClientById(appState.cview)||null,v=iso(addD(TODAY,-(+t.dataset.v)));i.value=c&&v<c.start?c.start:v}};

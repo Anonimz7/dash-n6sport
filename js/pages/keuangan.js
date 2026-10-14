@@ -1,5 +1,6 @@
 /* js/pages/keuangan.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, money, perm } from '../core/access.js';
+import { apiSaveTransaction, isApiMode } from '../core/api.js';
 import { filterTransactions, monthly } from '../core/derived.js';
 import { TODAY, esc, fmtD, formatJuta, formatRupiah, iso, num, sum } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
@@ -30,4 +31,7 @@ PAGES.keuangan=()=>{
  return `<div class="stackv">${maskNote('keuangan')}${tabsBar(tabs)}${body}</div>`};
 ACT.asktx=t=>{if(perm('keuangan')!=='full')return;const x=store.tx.find(y=>y.id===t.dataset.v);if(!x)return;appState.modal={k:'confirm',text:'Hapus transaksi "'+x.desc+'" ('+fmtD(x.date)+', '+(x.type==='in'?'+':'-')+' '+formatRupiah(x.amt)+')? Angka keuangan, komisi, dan laporan ikut berubah.',yes:'deltx',arg:x.id,label:'Hapus transaksi'};render()};
 CONF.deltx=id=>{const x=store.tx.find(y=>y.id===id);if(!x||perm('keuangan')!=='full')return;store.tx=store.tx.filter(y=>y.id!==id);logAct('menghapus transaksi '+x.desc)};
-FORMS.expense=f=>{store.tx.push({id:'t'+Date.now(),date:f.get('date'),type:'out',cat:f.get('cat'),desc:f.get('desc').trim(),amt:num(f.get('amt'))});logAct('mencatat pengeluaran '+f.get('cat'));toast('Pengeluaran dicatat');render()};
+FORMS.expense=async f=>{const d={date:f.get('date'),type:'out',category:f.get('cat'),desc:f.get('desc').trim(),amount:num(f.get('amt'))};
+ if(isApiMode())await apiSaveTransaction(d);
+ else store.tx.push({id:'t'+Date.now(),date:d.date,type:'out',cat:d.category,desc:d.desc,amt:d.amount});
+ logAct('mencatat pengeluaran '+d.category);toast('Pengeluaran dicatat');render()};

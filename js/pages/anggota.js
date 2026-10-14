@@ -1,5 +1,6 @@
 /* js/pages/anggota.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId } from '../core/access.js';
+import { apiAddMember, isApiMode } from '../core/api.js';
 import { COACHES, ROLE } from '../core/constants.js';
 import { esc, first } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
@@ -33,6 +34,11 @@ FORMS.memedit=f=>{
  x.name=f.get('name').trim();x.login=lg;x.email=f.get('email').trim();x.wa=(f.get('wa')||'').trim();
  if(x.role==='coach'||x.role==='head'){x.role=f.get('role')||x.role;x.loc=(f.get('loc')||'').trim()}
  logAct('mengedit anggota '+x.name);appState.modal=null;toast('Data '+first(x.name)+' diperbarui');render()};
-FORMS.member=f=>{const id='u'+Date.now(),role=f.get('role');store.members.push({id,name:f.get('name').trim(),role,login:f.get('login').trim(),email:f.get('email').trim(),wa:'',loc:(f.get('loc')||'').trim()});if(role!=='admin'){COACHES.push(id);initCoach(id)}logAct('menambah anggota '+f.get('name'));appState.modal=null;toast('Anggota ditambahkan');render()};
+FORMS.member=async f=>{const role=f.get('role'),d={name:f.get('name').trim(),role,login:f.get('login').trim(),email:f.get('email').trim(),wa:'',loc:(f.get('loc')||'').trim()};
+ const m=isApiMode()?await apiAddMember(d):null;
+ const id=m?m.id:'u'+Date.now();
+ if(!m)store.members.push({id,...d});
+ if(role!=='admin'){COACHES.push(id);initCoach(id)}
+ logAct('menambah anggota '+d.name);appState.modal=null;toast('Anggota ditambahkan');render()};
 ACT.memdel=t=>{const m=store.members.find(x=>x.id===t.dataset.v);if(store.clients.some(c=>c.coach===m.id&&!c.arch)){toast('Pindahkan klien '+first(m.name)+' ke coach lain dulu');return}appState.modal={k:'confirm',text:'Hapus anggota '+m.name+'? Akunnya tidak bisa masuk lagi.',yes:'delmem',arg:m.id,label:'Hapus anggota'};render()};
 CONF.delmem=id=>{const m=store.members.find(x=>x.id===id);store.members=store.members.filter(x=>x.id!==id);const i=COACHES.indexOf(id);if(i>=0)COACHES.splice(i,1);store.book=store.book.filter(b=>b.coach!==id);logAct('menghapus anggota '+m.name)};

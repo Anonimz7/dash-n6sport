@@ -106,4 +106,61 @@ async function apiBoot() {
   }
 }
 
-export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode };
+export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode,
+  apiSaveClient, apiSaveTransaction, apiAddMember, apiSendTeamMessage, apiSendDm,
+  apiSendBroadcast, apiSendPortalMessage, apiSubmitCorrection, apiLog };
+
+// ---------- tulis (Fase C): panggil API lalu selaraskan store lokal ----------
+function upsert(arr, o) {
+  const i = arr.findIndex(x => x.id === o.id);
+  if (i >= 0) arr[i] = o; else arr.push(o);
+  return o;
+}
+// d: {id?, name, program_id, start, coach_id} -> client bentuk frontend (sudah di store)
+async function apiSaveClient(d) {
+  const body = { ...d };
+  delete body.id;
+  const raw = d.id ? await apiPatch('/clients/' + d.id, body) : await apiPost('/clients', body);
+  return upsert(store.clients, tClient(raw));
+}
+// d: {date, type, category, amount, desc, program_id?, coach_id?} -> tx bentuk frontend
+async function apiSaveTransaction(d) {
+  const t = tTx(await apiPost('/transactions', d));
+  return upsert(store.tx, t);
+}
+async function apiAddMember(d) {
+  const m = await apiPost('/members', d);
+  return upsert(store.members, m);
+}
+async function apiSendTeamMessage(text) {
+  const m = tMsg(await apiPost('/messages/team', { text }));
+  store.msgs.team.push(m);
+  return m;
+}
+async function apiSendDm(cid, text, w) {
+  const m = tMsg(await apiPost('/messages/dm/' + cid, { text }));
+  (store.msgs.dm[cid] = store.msgs.dm[cid] || []).push(m);
+  return m;
+}
+async function apiSendBroadcast(to, text, n) {
+  const b = await apiPost('/messages/broadcasts', { to, text });
+  const o = { ...tMsg(b), n: n || 0 };
+  store.msgs.bc.unshift(o);
+  return o;
+}
+// portal publik (tanpa token pun boleh)
+async function apiSendPortalMessage(uid, cid, text) {
+  const m = tMsg(await apiPost('/portal/' + uid + '/messages', { text }));
+  (store.msgs.dm[cid] = store.msgs.dm[cid] || []).push(m);
+  return m;
+}
+// -> {by, text, at:Date}
+async function apiSubmitCorrection(reportId, text) {
+  const r = await apiPost('/reports/' + reportId + '/correction', { text });
+  const c = r.correction || {};
+  return { by: c.by, text: c.text, at: c.at ? new Date(c.at) : new Date() };
+}
+// fire-and-forget (dipakai logAct)
+function apiLog(text) {
+  return apiPost('/activity', { text }).catch(() => null);
+}

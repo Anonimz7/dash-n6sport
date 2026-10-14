@@ -1,5 +1,6 @@
 /* js/pages/pesan.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, scope } from '../core/access.js';
+import { apiSendBroadcast, apiSendDm, apiSendTeamMessage, isApiMode } from '../core/api.js';
 import { COACHES, ROLE_USER_IDS } from '../core/constants.js';
 import { liveClients } from '../core/derived.js';
 import { ago, esc, first, hhmm } from '../core/helpers.js';
@@ -25,8 +26,21 @@ PAGES.pesan=()=>{
   body=`<section class="card"><header class="ch"><h3>Broadcast baru</h3></header><form data-form="bc" class="fg"><label class="field"><span>Penerima</span><select id="f-bcto" data-f="bcTo">${appState.role==='coach'?`<option value="all" ${v==='all'?'selected':''}>Semua klien saya</option>`:`<option value="all" ${v==='all'?'selected':''}>Semua klien aktif</option>${activePrograms().map(p=>`<option value="p:${p.id}" ${v==='p:'+p.id?'selected':''}>Paket ${esc(p.name)}</option>`).join('')}${COACHES.map(c=>`<option value="c:${c}" ${v==='c:'+c?'selected':''}>Klien ${esc(first(getMemberName(c)))}</option>`).join('')}`}</select></label><div class="field"><span>Jumlah penerima</span><b class="mono" style="padding:8px 0">${n} klien</b></div><label class="field full"><span>Pesan</span><textarea id="f-bctext" name="text" required placeholder="Tulis pengumuman untuk klien"></textarea></label><div class="row full"><button class="btn primary" type="submit" ${n?'':'disabled'}>${icon('send',15)} Kirim broadcast</button></div></form></section>
   <section class="card"><header class="ch"><h3>Riwayat broadcast</h3></header><div class="listv">${store.msgs.bc.map(b=>`<div class="li"><div><b>${esc(b.to)} · ${b.n} klien</b><small>${esc(b.text)}</small></div><span class="sub">${esc(first(getMemberName(b.by)))} · ${ago(b.t)}</span></div>`).join('')||'<p class="sub">Belum ada broadcast.</p>'}</div></section>`}
  return `<div class="stackv">${tabsBar(tabs)}${body}</div>`};
-FORMS.msg=(f,form)=>{const text=f.get('text').trim();if(!text)return;const m={w:meId(),text,t:new Date()};if(form.dataset.kind==='team')store.msgs.team.push(m);else{(store.msgs.dm[appState.chat]=store.msgs.dm[appState.chat]||[]).push(m)}logAct(form.dataset.kind==='team'?'menulis di ruang tim':'membalas '+findClientById(appState.chat).name);render()};
-FORMS.bc=f=>{const v=appState.bcTo,n=recips(v).length;let to='Semua klien aktif';if(v.startsWith('p:'))to='Paket '+findProgramById(v.slice(2)).name;if(v.startsWith('c:'))to='Klien '+first(getMemberName(v.slice(2)));if(appState.role==='coach')to='Klien saya';store.msgs.bc.unshift({id:'b'+Date.now(),to,n,text:f.get('text').trim(),t:new Date(),by:meId()});logAct('mengirim broadcast ke '+to);toast('Broadcast terkirim ke '+n+' klien');render()};
+FORMS.msg=async (f,form)=>{const text=f.get('text').trim();if(!text)return;
+ if(isApiMode()){
+  if(form.dataset.kind==='team')await apiSendTeamMessage(text);
+  else await apiSendDm(appState.chat,text);
+ }else{
+  const m={w:meId(),text,t:new Date()};
+  if(form.dataset.kind==='team')store.msgs.team.push(m);
+  else{(store.msgs.dm[appState.chat]=store.msgs.dm[appState.chat]||[]).push(m)}
+ }
+ logAct(form.dataset.kind==='team'?'menulis di ruang tim':'membalas '+findClientById(appState.chat).name);render()};
+FORMS.bc=async f=>{const v=appState.bcTo,n=recips(v).length;let to='Semua klien aktif';if(v.startsWith('p:'))to='Paket '+findProgramById(v.slice(2)).name;if(v.startsWith('c:'))to='Klien '+first(getMemberName(v.slice(2)));if(appState.role==='coach')to='Klien saya';
+ const text=f.get('text').trim();
+ if(isApiMode())await apiSendBroadcast(to,text,n);
+ else store.msgs.bc.unshift({id:'b'+Date.now(),to,n,text,t:new Date(),by:meId()});
+ logAct('mengirim broadcast ke '+to);toast('Broadcast terkirim ke '+n+' klien');render()};
 ACT.thread=t=>{appState.chat=t.dataset.v;render()};
 
 export { bubbles, msgForm, recips };

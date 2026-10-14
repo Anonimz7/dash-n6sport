@@ -1,5 +1,6 @@
 /* js/pages/koreksi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, scope } from '../core/access.js';
+import { apiSubmitCorrection, isApiMode } from '../core/api.js';
 import { COACHES, PLAN, ROLE_USER_IDS } from '../core/constants.js';
 import { getPendingCorrections, hrZone, inRange } from '../core/derived.js';
 import { DAYS, TODAY, addD, dIdx, esc, first, fmtD, hhmm, iso, parseDate } from '../core/helpers.js';
@@ -52,7 +53,10 @@ PAGES.koreksi=()=>{
  if(t===3){
   body=`${banner('Gunakan {nama} dan {jenis} di dalam teks. Keduanya diganti otomatis dengan nama depan klien dan jenis sesi.')}<div class="listv">${store.tpl.map((x,i)=>`<section class="card"><div class="fg"><label class="field"><span>Judul template</span><input id="f-tt${i}" value="${esc(x.title)}" data-set="store.tpl.${i}.title"></label><label class="field full"><span>Isi koreksi</span><textarea id="f-tx${i}" data-set="store.tpl.${i}.text">${esc(x.text)}</textarea></label></div><div class="row"><button class="btn sm danger" data-act="tpldel" data-v="${i}">${icon('trash',14)} Hapus</button></div></section>`).join('')}</div><div><button class="btn primary" data-act="tplnew">${icon('plus',15)} Program baru</button></div>`}
  return `<div class="stackv">${tabsBar(tabs)}${body}</div>`};
-FORMS.fix=(f,form)=>{const r=store.reports.find(x=>x.id===form.dataset.id);r.fix={by:meId(),text:f.get('text').trim(),at:new Date()};(store.msgs.dm[r.cid]=store.msgs.dm[r.cid]||[]).push({w:meId(),text:'Koreksi '+r.type+' '+fmtD(r.date)+': '+r.fix.text,t:r.fix.at});appState.editfix=null;logAct('mengirim koreksi untuk '+findClientById(r.cid).name);toast('Koreksi terkirim dan masuk ke dashboard '+first(findClientById(r.cid).name));render()};
+FORMS.fix=async (f,form)=>{const r=store.reports.find(x=>x.id===form.dataset.id),text=f.get('text').trim();
+ if(isApiMode())r.fix=await apiSubmitCorrection(r.id,text);
+ else r.fix={by:meId(),text,at:new Date()};
+ (store.msgs.dm[r.cid]=store.msgs.dm[r.cid]||[]).push({w:meId(),text:'Koreksi '+r.type+' '+fmtD(r.date)+': '+r.fix.text,t:r.fix.at});appState.editfix=null;logAct('mengirim koreksi untuk '+findClientById(r.cid).name);toast('Koreksi terkirim dan masuk ke dashboard '+first(findClientById(r.cid).name));render()};
 Object.assign(ACT,{
  kopen:t=>{const d=parseDate(t.dataset.d),mon=addD(TODAY,-dIdx(TODAY));appState.kweek=Math.max(0,Math.round((mon-addD(d,-dIdx(d)))/(7*864e5)));appState.kdate=t.dataset.d;appState.page='koreksi';appState.tab=d<mon?1:2;appState.modal=null;appState.nav=false;render(false)},
  kdate:t=>{appState.kdate=t.dataset.v;render()},

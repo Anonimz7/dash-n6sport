@@ -8,7 +8,9 @@ import { syncBoot, syncListen } from './core/sync.js';
 import { idPreview } from './pages/coach.js';
 import { clientFormSync } from './pages/klien.js';
 import { navigateTo, render, setPath, toast } from './ui/shell.js';
-import { apiBoot, isApiMode } from './core/api.js';
+import { apiBoot, apiLog, isApiMode } from './core/api.js';
+import { setLogSink } from './core/access.js';
+setLogSink(t => { if (isApiMode()) apiLog(t); });
 
 import './portal/cdash.js';
 import './portal/links.js';
@@ -35,7 +37,8 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('submit',e=>{
  const f=e.target.closest('form[data-form]');if(!f)return;
- e.preventDefault();const h=FORMS[f.dataset.form];if(h)h(new FormData(f),f);
+ e.preventDefault();const h=FORMS[f.dataset.form];
+ if(h)Promise.resolve(h(new FormData(f),f)).catch(err=>{console.error(err);toast('Gagal menyimpan: '+((err&&err.message)||err))});
 });
 document.addEventListener('input',e=>{
  const t=e.target;

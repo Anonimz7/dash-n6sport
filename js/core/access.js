@@ -10,6 +10,8 @@ const moneyJt=(n,m='keuangan')=>perm(m)==='full'?formatJuta(n):MASK;
 const meId=()=>ROLE_USER_IDS[appState.role];
 const meUser=()=>store.members.find(m=>m.id===meId());
 const scope=a=>appState.role==='coach'?a.filter(c=>c.coach===ROLE_USER_IDS.coach):a;
-const logAct=text=>{store.log.unshift({t:new Date(),who:meUser().name,text});store.log=store.log.slice(0,30);appState.syncAt=new Date()};
+const logAct=text=>{store.log.unshift({t:new Date(),who:meUser().name,text});store.log=store.log.slice(0,30);appState.syncAt=new Date();try{if(logSink)logSink(text)}catch(e){}};
+let logSink=null;
+const setLogSink=fn=>{logSink=fn};
 
-export { canAccess, logAct, meId, meUser, money, moneyJt, perm, scope };
+export { canAccess, logAct, meId, meUser, money, moneyJt, perm, scope, setLogSink };
