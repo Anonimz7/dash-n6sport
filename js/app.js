@@ -8,6 +8,7 @@ import { syncBoot, syncListen } from './core/sync.js';
 import { idPreview } from './pages/coach.js';
 import { clientFormSync } from './pages/klien.js';
 import { navigateTo, render, setPath, toast } from './ui/shell.js';
+import { apiBoot, isApiMode } from './core/api.js';
 
 import './portal/cdash.js';
 import './portal/links.js';
@@ -66,13 +67,19 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&appState.modal){app
 (function boot(){
  try{const v=JSON.parse(localStorage.getItem('gf-prefs')||'{}');if(v.role&&ROLE[v.role])appState.role=v.role;if(v.theme==='light'||v.theme==='dark')appState.theme=v.theme}catch(e){}
  try{const th=localStorage.getItem('nsr-theme');if(th==='light'||th==='dark'||th==='system')appState.theme=th}catch(e){}
- syncBoot();
- syncListen(()=>{try{ensurePage()}catch(e){}const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){a.addEventListener('blur',()=>render(),{once:true})}else{render()}toast('Data diperbarui dari portal lain')});
  if(appState.role==='coach'){appState.sched=ROLE_USER_IDS.coach;appState.cal=ROLE_USER_IDS.coach;appState.share=ROLE_USER_IDS.coach}
- store.clients=store.clients.filter(c=>!c.arch||(TODAY-parseDate(c.arch))/864e5<7);
- const hm=location.hash.match(/^#c=([A-Za-z0-9-]+)/);if(hm){const k=findClientByUid(hm[1]);appState.cview=k?k.id:'x'}
+ const hm=location.hash.match(/^#c=([A-Za-z0-9-]+)/);
  window.addEventListener('hashchange',()=>{try{location.reload()}catch(e){}});
- applyTheme();ensurePage();render(false);
+ const appEl=document.getElementById('app');
+ if(appEl)appEl.innerHTML='<p class="sub" style="padding:48px;text-align:center">Memuat data…</p>';
+ // Fase B: coba muat dari API (mock); gagal -> fallback seed lokal
+ apiBoot().then(fromApi=>{
+  if(!fromApi)syncBoot();
+  syncListen(()=>{try{ensurePage()}catch(e){}const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){a.addEventListener('blur',()=>render(),{once:true})}else{render()}toast('Data diperbarui dari portal lain')});
+  store.clients=store.clients.filter(c=>!c.arch||(TODAY-parseDate(c.arch))/864e5<7);
+  if(hm){const k=findClientByUid(hm[1]);appState.cview=k?k.id:'x'}
+  applyTheme();ensurePage();render(false);
+ });
 })();
 
 // handle debug (dipakai test browser)

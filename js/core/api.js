@@ -1,0 +1,109 @@
+/* js/core/api.js — SATU-SATUNYA modul yang boleh fetch().
+   Fase B: baca dari mock API. Ganti API_BASE ke backend asli nanti;
+   translasi bentuk API -> bentuk store terpusat di sini. */
+import { buildSessionLogs } from './shared.js';
+import { store } from './store.js';
+
+// Basis URL backend. Mock: jalankan `python3 ~/workspace/dash-n6sport-api/mock_server.py 8090`
+const API_BASE = 'http://127.0.0.1:8090/api/v1';
+// Login otomatis untuk uji mock (backend asli: ganti dengan layar login)
+const MOCK_LOGIN = { login_id: 'bima', password: 'x' };
+
+let apiToken = null;
+let apiMode = false;
+const isApiMode = () => apiMode;
+
+async function req(method, path, body) {
+  const r = await fetch(API_BASE + path, {
+    method,
+    headers: { 'Content-Type': 'application/json', ...(apiToken ? { Authorization: 'Bearer ' + apiToken } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((j.error && j.error.message) || ('HTTP ' + r.status));
+  return j;
+}
+const apiGet = p => req('GET', p).then(j => j.data);
+const apiPost = (p, b) => req('POST', p, b).then(j => j.data);
+const apiPatch = (p, b) => req('PATCH', p, b).then(j => j.data);
+const apiDel = p => req('DELETE', p);
+
+// ---------- translasi: bentuk API -> bentuk store frontend ----------
+const D = s => (s ? new Date(s) : null);
+const tClient = c => {
+  const o = { ...c, pid: c.program_id, coach: c.coach_id, sw: c.share_url };
+  delete o.program_id; delete o.coach_id; delete o.share_url;
+  return o;
+};
+const tReport = (r, uidById) => {
+  const o = { ...r, cid: r.client_id, plan: r.plan_km, fix: null };
+  delete o.client_id; delete o.plan_km;
+  if (r.correction) o.fix = { by: r.correction.by, text: r.correction.text, at: r.correction.at ? new Date(r.correction.at) : null };
+  delete o.correction;
+  if (!o.missed && uidById[o.cid]) o.sw = 'https://numbersix.example/sw/' + uidById[o.cid] + '/' + o.date;
+  return o;
+};
+const tTx = t => {
+  const o = { ...t, pid: t.program_id, cat: t.category, coach: t.coach_id, amt: t.amount };
+  delete o.program_id; delete o.category; delete o.coach_id; delete o.amount;
+  return o;
+};
+const tBooking = b => ({ id: b.id, coach: b.coach_id, client: b.client_id, day: b.day, time: b.time });
+const tRequest = r => ({ ...r, at: D(r.date + 'T00:00:00') });
+const tMsg = m => ({ ...m, t: D(m.t) });
+const tActivity = a => ({ ...a, t: D(a.t) });
+
+// ---------- boot: login lalu muat semua koleksi ----------
+async function apiBoot() {
+  try {
+    const login = await req('POST', '/auth/login', MOCK_LOGIN);
+    apiToken = login.token;
+    const [members, programs, clients, tx, reqs, team, bcs, settings, tpl, activity, sched] = await Promise.all([
+      apiGet('/members'),
+      apiGet('/programs'),
+      apiGet('/clients?status=semua'),
+      apiGet('/transactions'),
+      apiGet('/requests'),
+      apiGet('/messages/team'),
+      apiGet('/messages/broadcasts'),
+      apiGet('/settings'),
+      apiGet('/correction-templates'),
+      apiGet('/activity'),
+      req('GET', '/schedule'),
+    ]);
+    const repLists = await Promise.all(clients.map(c => apiGet('/clients/' + c.id + '/reports').catch(() => [])));
+    const dmLists = await Promise.all(clients.map(c => apiGet('/messages/dm/' + c.id).catch(() => [])));
+    // isi store (bentuk frontend)
+    store.members = members;
+    store.programs = programs;
+    store.clients = clients.map(tClient);
+    const uidById = {};
+    store.clients.forEach(c => { uidById[c.id] = c.uid; });
+    store.reports = repLists.flat().map(r => tReport(r, uidById));
+    store.tx = tx.map(tTx);
+    store.reqs = reqs.map(tRequest);
+    const nAktif = store.clients.filter(c => !c.arch).length;
+    store.msgs = {
+      team: team.map(tMsg),
+      dm: Object.fromEntries(clients.map((c, i) => [c.id, dmLists[i].map(tMsg)])),
+      bc: bcs.map(b => ({ ...tMsg(b), n: b.n || nAktif })),
+    };
+    store.targets = settings.targets;
+    store.acl = settings.acl;
+    store.tpl = tpl;
+    store.log = activity.map(tActivity);
+    store.pattern = sched.patterns;
+    store.book = (sched.bookings || []).map(tBooking);
+    store.paid = {};
+    store.payInfo = {};
+    buildSessionLogs();
+    apiMode = true;
+    return true;
+  } catch (e) {
+    apiMode = false;
+    try { window.__apiErr = String((e && e.message) || e); } catch (x) {}
+    return false;
+  }
+}
+
+export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode };

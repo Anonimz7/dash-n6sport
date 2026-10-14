@@ -2,6 +2,7 @@
 import { COACHES } from './constants.js';
 import { TODAY, iso } from './helpers.js';
 import { appState, nextClientUid, store } from './store.js';
+import { isApiMode } from './api.js';
 
 const SYNC_KEY='nsr-sync-v1';
 let lastSyncPayload='';
@@ -9,6 +10,7 @@ const jsonReplacer=function(k,v){const o=this[k];return o instanceof Date?{$d:o.
 const jsonReviver=(k,v)=>v&&typeof v==='object'&&typeof v.$d==='string'?new Date(v.$d):v;
 function syncSnapshot(){store.coachIds=COACHES.slice();return JSON.stringify(store,jsonReplacer)}
 function syncPush(){
+ if(isApiMode())return; // mode API: persistensi via backend, bukan localStorage
  try{
   const j=syncSnapshot();if(j===lastSyncPayload)return;
   lastSyncPayload=j;appState.syncAt=new Date();
@@ -25,6 +27,7 @@ function syncLoad(raw){
  }catch(e){return false}
 }
 function syncBoot(){
+ if(isApiMode())return false;
  try{const raw=localStorage.getItem(SYNC_KEY);if(raw&&syncLoad(raw))return true}catch(e){}
  lastSyncPayload=syncSnapshot();return false;
 }

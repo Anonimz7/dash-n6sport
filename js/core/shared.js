@@ -101,10 +101,14 @@ const attOpen=(k,t)=>Date.now()>=attOpenAt(k,t).getTime();
 const ATTENDANCE_TONES={Hadir:'good',Izin:'warn',Alpha:'bad'};
 const attPill=c=>{const r=(store.attCoach[c]||{})[iso(TODAY)];return r&&r.in?pill('Hadir '+r.in,'good'):pill('Belum absen','warn')};
 store.logs=[];
-store.reports.filter(r=>!r.missed&&findClientById(r.cid)&&inRange(r.date,7)&&r.date!==iso(TODAY)).forEach((r,i)=>{
- const c=findClientById(r.cid);
- store.logs.push({id:'lg'+(i+1),cid:r.cid,coach:c.coach,date:r.date,train:r.type+' '+r.plan+' km',hr:r.hr,detail:'Rencana '+r.plan+' km. Aktual '+r.km+' km, pace '+mmss(r.pace)+'/km.',score:Math.max(60,Math.min(98,Math.round(60+Math.min(1.1,r.km/r.plan)*35))),at:new Date(parseDate(r.date).getTime()+20*36e5)});
-});
+function buildSessionLogs(){
+ store.logs=[];
+ store.reports.filter(r=>!r.missed&&findClientById(r.cid)&&inRange(r.date,7)&&r.date!==iso(TODAY)).forEach((r,i)=>{
+  const c=findClientById(r.cid);
+  store.logs.push({id:'lg'+(i+1),cid:r.cid,coach:c.coach,date:r.date,train:r.type+' '+r.plan+' km',hr:r.hr,detail:'Rencana '+r.plan+' km. Aktual '+r.km+' km, pace '+mmss(r.pace)+'/km.',score:Math.max(60,Math.min(98,Math.round(60+Math.min(1.1,r.km/r.plan)*35))),at:new Date(parseDate(r.date).getTime()+20*36e5)});
+ });
+}
+buildSessionLogs();
 const senderName=w=>w.startsWith('cl')?(findClientById(w)?.name||'Klien'):getMemberName(w);
 
-export { ATTENDANCE_TONES, ATT_MIN, LEVELS, SKILLS, attOpen, attOpenAt, attPill, attRate, clientAttRate, coachLevel, coachScore, compliance, locOf, senderName, sesStart, sessionsOn, skillAvg, skillParts, upcoming };
+export { ATTENDANCE_TONES, ATT_MIN, LEVELS, SKILLS, attOpen, attOpenAt, attPill, attRate, buildSessionLogs, clientAttRate, coachLevel, coachScore, compliance, locOf, senderName, sesStart, sessionsOn, skillAvg, skillParts, upcoming };
