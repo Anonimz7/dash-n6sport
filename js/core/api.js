@@ -5,7 +5,7 @@ import { buildSessionLogs } from './shared.js';
 import { store } from './store.js';
 
 // Basis URL backend. Mock: jalankan `python3 ~/workspace/dash-n6sport-api/mock_server.py 8090`
-const API_BASE = 'http://127.0.0.1:8090/api/v1';
+const API_BASE = 'https://api.denisbergkam.com/api/dbn6sport/v1';
 // Login otomatis untuk uji mock (backend asli: ganti dengan layar login)
 const MOCK_LOGIN = { login_id: 'bima', password: 'x' };
 
