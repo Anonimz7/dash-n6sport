@@ -13,7 +13,7 @@ const offOn=(coach,k)=>store.reqs.some(r=>r.status==='Disetujui'&&['izin_coach',
 const offSlot=(coach,k,t)=>store.reqs.some(r=>r.status==='Disetujui'&&r.type==='berhalangan'&&r.t1&&r.who===coach&&k>=r.date&&k<=(r.date2||r.date)&&t>=r.t1&&t<r.t2);
 const offInfo=(coach,k)=>store.reqs.filter(r=>r.who===coach&&['izin_coach','cuti','berhalangan'].includes(r.type)&&['Menunggu','Disetujui'].includes(r.status)&&k>=r.date&&k<=(r.date2||r.date));
 const offLbl=r=>r.type==='cuti'?'Cuti':r.type==='izin_coach'?'Izin':(r.t1?r.t1+'-'+r.t2:'Tidak mengajar');
-const calCell=(c,i)=>{const d=addD(TODAY,i),k=iso(d),dd=dIdx(d),pat=store.pattern[c],inf=offInfo(c,k),ap=offOn(c,k);
+const calCell=(c,i)=>{const d=addD(TODAY,i),k=iso(d),dd=dIdx(d),pat=store.pattern[c]||[],inf=offInfo(c,k),ap=offOn(c,k);
  const pend=!ap&&inf.some(r=>!r.t1&&r.status==='Menunggu'),part=inf.find(r=>r.t1);
  const free=ap?0:(pat[dd]||[]).filter(sl=>!offSlot(c,k,sl)&&!store.book.some(b=>b.coach===c&&b.day===dd&&b.time===sl)).length;
  const tip=inf.map(r=>offLbl(r)+' ('+r.status.toLowerCase()+')'+(r.detail?': '+r.detail:'')).join(' | ');
@@ -22,7 +22,7 @@ const calCell=(c,i)=>{const d=addD(TODAY,i),k=iso(d),dd=dIdx(d),pat=store.patter
  return `<div class="cd ${cls} ${part?'part':''} ${i===0?'today':''}" ${tip?`title="${esc(tip)}"`:''}><b>${d.getDate()}${inf.length?'<i class="dot"></i>':''}</b><span>${esc(line)}</span>${part?`<em>${esc(part.t1+'-'+part.t2)}${part.status==='Menunggu'?' ?':''}</em>`:''}</div>`};
 const offList=c=>{const t=iso(TODAY),a=store.reqs.filter(r=>r.who===c&&['izin_coach','cuti','berhalangan'].includes(r.type)&&['Menunggu','Disetujui'].includes(r.status)&&(r.date2||r.date)>=t).sort((x,y)=>x.date<y.date?-1:1);
  return a.length?`<div class="listv" style="margin-top:12px"><h4 style="margin:0;font-size:13px">Informasi coach tidak bisa mengajar</h4>${a.map(r=>`<div class="li"><div><b>${fmtD(parseDate(r.date))}${r.date2&&r.date2!==r.date?' - '+fmtD(parseDate(r.date2)):''} · ${esc(offLbl(r))}</b><small>${esc(r.detail||'')}</small></div>${pill(r.status==='Disetujui'?'Disetujui':'Menunggu',r.status==='Disetujui'?'good':'warn')}</div>`).join('')}</div>`:''};
-function freeSlots(days,coachId){const out=[];const nowS=hhmm(new Date());for(let i=0;i<days;i++){const d=addD(TODAY,i),k=iso(d),di=dIdx(d);(coachId?[coachId]:COACHES).forEach(c=>{if(offOn(c,k))return;(store.pattern[c][di]||[]).forEach(t=>{if(i===0&&t<=nowS)return;if(offSlot(c,k,t))return;if(!store.book.some(b=>b.coach===c&&b.day===di&&b.time===t))out.push({d:k,di,t,c})})})}return out}
+function freeSlots(days,coachId){const out=[];const nowS=hhmm(new Date());for(let i=0;i<days;i++){const d=addD(TODAY,i),k=iso(d),di=dIdx(d);(coachId?[coachId]:COACHES).forEach(c=>{if(offOn(c,k))return;((store.pattern[c]||[])[di]||[]).forEach(t=>{if(i===0&&t<=nowS)return;if(offSlot(c,k,t))return;if(!store.book.some(b=>b.coach===c&&b.day===di&&b.time===t))out.push({d:k,di,t,c})})})}return out}
 const getReportsOf=coachId=>store.reports.filter(r=>!r.missed&&(!coachId||findClientById(r.cid).coach===coachId));
 const getPendingCorrections=coachId=>getReportsOf(coachId).filter(r=>!r.fix);
 const holdOf=(cid,k)=>{const b=store.book.find(x=>x.client===cid&&x.day===dIdx(parseDate(k)));return !!(b&&b.hold)};

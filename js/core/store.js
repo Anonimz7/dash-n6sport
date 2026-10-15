@@ -51,7 +51,7 @@ function getClientStatus(c){if(c.arch)return'Arsip';if(c.cond==='Istirahat')retu
 store.pattern={};
 COACHES.forEach((c,i)=>{store.pattern[c]=[0,1,2,3,4,5,6].map(d=>d<5?(i%2?['05:30','06:30','17:30','18:30']:['06:30','07:30','16:30','17:30']):d===5?['05:30','06:30','07:30']:(i<3?['05:30','06:30']:[]))});
 store.book=[];
-store.clients.filter(c=>!c.arch).forEach((c,i)=>{for(let k=0;k<2;k++){const day=(i+k*2+1)%5;const sl=store.pattern[c.coach][day];for(let j=0;j<sl.length;j++){const t=sl[(i+k+j)%sl.length];if(!store.book.some(b=>b.coach===c.coach&&b.day===day&&b.time===t)){store.book.push({coach:c.coach,client:c.id,day,time:t});break}}}});
+store.clients.filter(c=>!c.arch).forEach((c,i)=>{for(let k=0;k<2;k++){const day=(i+k*2+1)%5;const sl=(store.pattern[c.coach]||[])[day]||[];for(let j=0;j<sl.length;j++){const t=sl[(i+k+j)%sl.length];if(!store.book.some(b=>b.coach===c.coach&&b.day===day&&b.time===t)){store.book.push({coach:c.coach,client:c.id,day,time:t});break}}}});
 store.reqs=[
  {id:'r1',type:'izin_coach',who:'u5',date:iso(addD(TODAY,3)),date2:iso(addD(TODAY,3)),detail:'Acara keluarga. Sesi pagi dialihkan ke Maya.',status:'Menunggu',at:minsAgo(95)},
  {id:'r2',type:'cuti',who:'u6',date:iso(addD(TODAY,9)),date2:iso(addD(TODAY,13)),detail:'Cuti tahunan.',status:'Disetujui',at:minsAgo(2800)},

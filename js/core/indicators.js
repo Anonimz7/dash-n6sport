@@ -11,7 +11,7 @@ function retensiPct(){const cs=store.clients.filter(c=>!c.arch),base=cs.filter(c
 function buildIndicators(){
  const k=iso(TODAY),live=liveClients(),st=s=>store.clients.filter(c=>getClientStatus(c)===s).length;
  const per=live.filter(c=>c.cond==='Perlu perhatian').length,ced=live.filter(c=>c.cond==='Cedera ringan').length,soon=st('Segera berakhir'),jeda=st('Jeda');
- const wkSlots=sum(COACHES.map(c=>sum(store.pattern[c].map(a=>a.length)))),fill=Math.round(store.book.length/Math.max(1,wkSlots)*100),free7=freeSlots(7).length;
+ const wkSlots=sum(COACHES.map(c=>sum((store.pattern[c]||[]).map(a=>a.length)))),fill=Math.round(store.book.length/Math.max(1,wkSlots)*100),free7=freeSlots(7).length;
  const offNow=COACHES.filter(c=>offOn(c,k)).length;
  const reps=store.reports.filter(r=>!r.missed),pend=reps.filter(r=>!r.fix).length,kPct=Math.round((reps.length-pend)/Math.max(1,reps.length)*100);
  const missed=store.reports.filter(r=>r.missed&&inRange(r.date,7)).length,rep7=store.reports.filter(r=>!r.missed&&inRange(r.date,7)).length;
