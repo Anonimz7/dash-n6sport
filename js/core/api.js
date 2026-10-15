@@ -30,14 +30,24 @@ function apiLogout() {
 }
 
 async function req(method, path, body) {
-  const r = await fetch(API_BASE + path, {
-    method,
-    headers: { 'Content-Type': 'application/json', ...(apiToken ? { Authorization: 'Bearer ' + apiToken } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.detail || (j.error && j.error.message) || ('HTTP ' + r.status));
-  return j;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const r = await fetch(API_BASE + path, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...(apiToken ? { Authorization: 'Bearer ' + apiToken } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: ctrl.signal,
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.detail || (j.error && j.error.message) || ('HTTP ' + r.status));
+    return j;
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw new Error('Timeout: server tidak merespons dalam 15 detik');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 const apiGet = p => req('GET', p).then(j => j.data);
 const apiPost = (p, b) => req('POST', p, b).then(j => j.data);
