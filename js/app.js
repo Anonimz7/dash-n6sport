@@ -117,7 +117,15 @@ function renderLogin(){
   try{
    await apiLogin(String(fd.get('login_id')).trim(), String(fd.get('password')));
    location.reload();
-  }catch(e){ err.textContent='Login gagal: '+(e.message||'periksa ID dan kata sandi'); }
+  }catch(e){
+   const m=String((e&&e.message)||e);
+   let t;
+   if(/Failed to fetch|NetworkError|Load failed/i.test(m)) t='Tidak dapat terhubung ke server. Periksa koneksi internet.';
+   else if(/tidak ditemukan/i.test(m)) t='ID login tidak ditemukan.';
+   else if(/password salah/i.test(m)) t='Kata sandi salah.';
+   else t='Login gagal: '+m;
+   err.textContent=t;
+  }
  });
 }
 

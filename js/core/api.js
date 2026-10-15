@@ -36,7 +36,7 @@ async function req(method, path, body) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error((j.error && j.error.message) || ('HTTP ' + r.status));
+  if (!r.ok) throw new Error(j.detail || (j.error && j.error.message) || ('HTTP ' + r.status));
   return j;
 }
 const apiGet = p => req('GET', p).then(j => j.data);
