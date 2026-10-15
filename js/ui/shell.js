@@ -32,9 +32,8 @@ function view(){
  <main class="main">
   <div class="top">
    <div class="tl"><span class="mlogo">${logo(26)}</span><div><p class="eyebrow">${eyebrow}</p><h1>${navLabel(appState.page)}</h1></div></div>
-   <div class="who"><span>Lihat sebagai</span>${renderSegmented('role',appState.role,[['owner','Pemilik'],['admin','Admin'],['head','Head Coach'],['coach','Coach']])}</div>
    ${bellBtn()}
-   <button class="rolechip" data-act="modal" data-v="more" aria-label="Menu dan peran"><span class="av">${esc(me.name[0])}</span>${ROLE[appState.role]}${icon('chev',14)}</button>
+   <button class="rolechip" data-act="modal" data-v="more" aria-label="Menu"><span class="av">${esc(me.name[0])}</span>${ROLE[appState.role]}${icon('chev',14)}</button>
   </div>
   <div class="row meta"><span class="sync"><i class="dot"></i><span>Tersinkron ${hhmm(appState.syncAt)}<span class="hm">. Portal Pemilik dan Coach memakai satu data.</span></span></span>${pill('Data contoh','info')}</div>
   ${body}
@@ -54,8 +53,7 @@ MODALS.more=()=>{
  const me=meUser();
  const keys=['beranda','klien','coach','koreksi','program','pesan','absensi','komisi','keuangan','laporan','anggota','setting','progress'].filter(k=>k==='setting'||canAccess(k));
  return sheet('Menu',`<div class="row"><span class="av">${esc(me.name[0])}</span><div><b>${esc(me.name)}</b><p class="sub">${ROLE[me.role]}</p></div><span class="sp"></span><button class="btn sm" data-act="logout">${icon('out',15)} Keluar</button></div>
- <div class="mgrid">${keys.map((k,i)=>`<button class="mt t${i%4}" data-act="nav" data-v="${k}" ${appState.page===k?'aria-current="page"':''}><span class="mi">${icon(NAVIC[k],22)}</span><span>${navLabel(k)}</span>${perm(k)==='mask'&&k!=='setting'?'<em class="tag">Sensor</em>':''}</button>`).join('')}</div>
- <div class="listv"><p class="sub">Lihat sebagai (demo peran)</p>${renderSegmented('role',appState.role,[['owner','Pemilik'],['admin','Admin'],['head','Head Coach'],['coach','Coach']])}</div>`)};
+ <div class="mgrid">${keys.map((k,i)=>`<button class="mt t${i%4}" data-act="nav" data-v="${k}" ${appState.page===k?'aria-current="page"':''}><span class="mi">${icon(NAVIC[k],22)}</span><span>${navLabel(k)}</span>${perm(k)==='mask'&&k!=='setting'?'<em class="tag">Sensor</em>':''}</button>`).join('')}</div>`)};
 function lockedPage(){return `<section class="card"><div class="lm" style="position:static;padding:30px 10px"><div>${icon('lock',22)}<b>Halaman ini disembunyikan</b><span>Peran ${ROLE[appState.role]} tidak memiliki akses ke modul ${NAVT[appState.page]}. Pemilik dapat mengubahnya di Setting, Hak Akses.</span></div></div></section>`}
 function checkPageAccess(){
  const info=[['owner','Pemilik','Tier 1. Akses penuh, termasuk keuangan, komisi, dan pengaturan hak akses.'],['admin','Admin','Tier 2. Mengelola operasional. Data keuangan disembunyikan atau disensor.'],['head','Head Coach','Tier 3. Memantau semua coach dan klien dengan akses terbatas.'],['coach','Coach','Portal Coach. Hanya klien dan jadwal milik sendiri, terhubung ke data Pemilik.']];

@@ -11,7 +11,7 @@ function ensurePage(){if(!(canAccess(appState.page)||appState.page==='setting'))
 Object.assign(ACT,{
  nav:t=>navigateTo(t.dataset.v),
  menu:()=>{appState.nav=!appState.nav;render()},
- role:t=>{appState.role=t.dataset.v;ensurePage();appState.tab=0;appState.modal=null;appState.nav=false;appState.q='';if(appState.role==='coach'){appState.sched=ROLE_USER_IDS.coach;appState.cal=ROLE_USER_IDS.coach;appState.share=ROLE_USER_IDS.coach;appState.kcoach='all'}savePreferences();render(false)},
+ role:t=>{/* dinonaktifkan untuk produksi: role hanya dari backend */},
  enter:t=>{appState.gate=false;ACT.role(t)},
  logout:()=>{appState.gate=true;appState.nav=false;render(false)},
  tab:t=>{appState.tab=+t.dataset.v;appState.editfix=null;render()},
