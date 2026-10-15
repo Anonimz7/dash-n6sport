@@ -38,7 +38,7 @@ function apiUser() {
 
 async function req(method, path, body) {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 15000);
+  const timer = setTimeout(() => ctrl.abort(), 10000);
   try {
     const r = await fetch(API_BASE + path, {
       method,
@@ -50,7 +50,7 @@ async function req(method, path, body) {
     if (!r.ok) throw new Error(j.detail || (j.error && j.error.message) || ('HTTP ' + r.status));
     return j;
   } catch (e) {
-    if (e && e.name === 'AbortError') throw new Error('Timeout: server tidak merespons dalam 15 detik');
+    if (e && e.name === 'AbortError') throw new Error('Timeout: server tidak merespons dalam 10 detik');
     throw e;
   } finally {
     clearTimeout(timer);

@@ -98,19 +98,19 @@ PAGES.coach=()=>{
  const tabs=appState.role==='coach'?['Jadwal coach','Bagikan jadwal kosong','Kalender 30 hari']:['Jadwal coach','Bagikan jadwal kosong','Kalender 30 hari','Daftar coach'];
  const t=Math.min(appState.tab,tabs.length-1);let body='';
  if(t<=2){
-  const c=myCoach('sched'),pat=store.pattern[c],list=appState.role==='coach'?[ROLE_USER_IDS.coach]:COACHES;
+  const c=myCoach('sched'),pat=store.pattern[c]||[],list=appState.role==='coach'?[ROLE_USER_IDS.coach]:COACHES;
   if(!appState.shareFrom||appState.shareFrom<iso(TODAY))appState.shareFrom=iso(TODAY);
   if(appState.pday==null)appState.pday=dIdx(TODAY);
   const di=appState.pday;
   const cellOf=(cc,p)=>{
-   const pt=store.pattern[cc][di],times=new Set();
+   const pt=((store.pattern[cc]||[])[di]||[]),times=new Set();
    SLOTS.filter(x=>periodOf(x)===p&&pt.includes(x)).forEach(x=>times.add(x));
    store.book.filter(b=>b.coach===cc&&b.day===di&&periodOf(b.time)===p).forEach(b=>times.add(b.time));
    const chips=[...times].sort().map(t=>{const bs=store.book.filter(x=>x.coach===cc&&x.day===di&&x.time===t);
     if(!bs.length)return `<button class="tc fr" data-act="modal" data-v="slot" data-id="${cc}|${di}|${t}"><span>${t}</span><em>Kosong</em></button>`;
     return bs.map(b=>{const cli=findClientById(b.client);return `<button class="tc bk" data-act="modal" data-v="slot" data-id="${cc}|${di}|${t}|${b.client}" title="${esc(cli.name)}${b.hold?' (komisi ditahan)':''}"><span>${t}</span><b>${esc(first(cli.name))}</b>${b.hold?'<i>ditahan</i>':''}</button>`}).join('')+`<button class="tc add" data-act="modal" data-v="slot" data-id="${cc}|${di}|${t}" title="Tambah klien lain di jam ${t}" aria-label="Gabung klien lain jam ${t}">+</button>`}).join('');
    return `<div class="tcs">${chips}<button class="tc add" data-act="modal" data-v="slot" data-id="${cc}|${di}|p:${p}" aria-label="Tambah sesi ${p} ${esc(getMemberName(cc))}">+ Jam</button></div>`};
-  const rowsT=list.map(cc=>{const bkd=store.book.filter(b=>b.coach===cc&&b.day===di).length,free=Math.max(0,store.pattern[cc][di].filter(s=>!store.book.some(b=>b.coach===cc&&b.day===di&&b.time===s)).length);
+  const rowsT=list.map(cc=>{const bkd=store.book.filter(b=>b.coach===cc&&b.day===di).length,free=Math.max(0,((store.pattern[cc]||[])[di]||[]).filter(s=>!store.book.some(b=>b.coach===cc&&b.day===di&&b.time===s)).length);
    return `<tr><td class="cn"><b>${esc(getMemberName(cc))}</b><small>${esc(locOf(cc))}</small><small>${bkd} terisi · ${free} kosong</small></td>${PERIODS.map(p=>`<td>${cellOf(cc,p)}</td>`).join('')}</tr>`}).join('');
   const start=dIdx(TODAY);const cells=[];
   for(let i=0;i<start;i++)cells.push('<div class="cd pad"></div>');

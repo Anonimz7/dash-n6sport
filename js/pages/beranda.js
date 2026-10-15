@@ -85,7 +85,7 @@ PAGES.beranda=()=>{
  const kom=showCommission?`<section class="card c4"><header class="ch"><h3>Komisi sesi hadir per program</h3><span class="sub">30 hari</span></header>${renderHBar(store.programs.map(p=>({l:p.name.replace(/ \d+ Minggu| Bulanan/,''),v:sum(getSessionAttendance(30).filter(x=>x.pid===p.id).map(x=>x.fee))})),v=>formatJuta(v))}</section>`:locked('Komisi sesi hadir per program','c4','Komisi disembunyikan untuk peran '+ROLE[appState.role]+'.');
  const perf=`<section class="card c4"><header class="ch"><h3>Performa coach</h3><span class="sub">Score kinerja</span></header>${renderPercentBar(COACHES.map(c=>({l:first(getMemberName(c)),v:coachScore(c).total})))}</section>`;
  const reqs=store.reqs.filter(r=>r.type!=='masalah'),done=reqs.filter(r=>r.status!=='Menunggu').length;
- const wkSlots=sum(COACHES.map(c=>sum(store.pattern[c].map(a=>a.length))));
+ const wkSlots=sum(COACHES.map(c=>sum((store.pattern[c]||[]).map(a=>a.length))));
  const active7=new Set(store.reports.filter(r=>!r.missed&&inRange(r.date,7)).map(r=>r.cid)).size;
  const ops=`<section class="card c4"><header class="ch"><h3>Progress operasional</h3><span class="sub">Minggu ini</span></header>${renderPercentBar([{l:'Koreksi',v:kPct},{l:'Izin diproses',v:Math.round(done/Math.max(1,reqs.length)*100)},{l:'Slot terisi',v:Math.round(store.book.length/wkSlots*100)},{l:'Klien lapor',v:Math.round(active7/Math.max(1,live.length)*100)}])}</section>`;
  const inn=sum(filterTransactions(30,'in').map(t=>t.amt)),out=sum(filterTransactions(30,'out').map(t=>t.amt));
