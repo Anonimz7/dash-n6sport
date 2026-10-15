@@ -8,7 +8,7 @@ import { syncBoot, syncListen } from './core/sync.js';
 import { idPreview } from './pages/coach.js';
 import { clientFormSync } from './pages/klien.js';
 import { navigateTo, render, setPath, toast } from './ui/shell.js';
-import { apiBoot, apiLog, isApiMode, hasToken, apiLogin, apiLogout } from './core/api.js';
+import { apiBoot, apiLog, isApiMode, hasToken, apiLogin, apiLogout, apiUser } from './core/api.js';
 import { setLogSink } from './core/access.js';
 
 // Handler logout: hapus token, kembali ke layar login
@@ -71,8 +71,12 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&appState.modal){appState.modal=null;render()}});
 (function boot(){
- try{const v=JSON.parse(localStorage.getItem('gf-prefs')||'{}');if(v.role&&ROLE[v.role])appState.role=v.role;if(v.theme==='light'||v.theme==='dark')appState.theme=v.theme}catch(e){}
- try{const th=localStorage.getItem('nsr-theme');if(th==='light'||th==='dark'||th==='system')appState.theme=th}catch(e){}
+ // Produksi: role dari user backend, bukan dari demo/prefs
+ try{
+   const u=apiUser();
+   if(u&&u.role&&ROLE[u.role])appState.role=u.role;
+   const th=localStorage.getItem('nsr-theme');if(th==='light'||th==='dark'||th==='system')appState.theme=th;
+ }catch(e){}
  if(appState.role==='coach'){appState.sched=ROLE_USER_IDS.coach;appState.cal=ROLE_USER_IDS.coach;appState.share=ROLE_USER_IDS.coach}
  const hm=location.hash.match(/^#c=([A-Za-z0-9-]+)/);
  window.addEventListener('hashchange',()=>{try{location.reload()}catch(e){}});

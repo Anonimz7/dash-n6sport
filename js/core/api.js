@@ -15,18 +15,25 @@ let apiMode = false;
 const isApiMode = () => apiMode;
 const hasToken = () => !!apiToken;
 
-// Login: kirim kredensial, simpan token.
+// Login: kirim kredensial, simpan token + info user.
 async function apiLogin(login_id, password) {
   const login = await req('POST', '/auth/login', { login_id, password });
   apiToken = login.token;
-  try { localStorage.setItem(TOKEN_KEY, apiToken); } catch (e) {}
+  try {
+    localStorage.setItem(TOKEN_KEY, apiToken);
+    if (login.user) localStorage.setItem('n6r-user', JSON.stringify(login.user));
+  } catch (e) {}
   return login;
 }
-// Logout: hapus token.
+// Logout: hapus token + info user.
 function apiLogout() {
   apiToken = null;
   apiMode = false;
-  try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+  try { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem('n6r-user'); } catch (e) {}
+}
+// Info user yang login (dari backend).
+function apiUser() {
+  try { return JSON.parse(localStorage.getItem('n6r-user') || 'null'); } catch (e) { return null; }
 }
 
 async function req(method, path, body) {
@@ -133,7 +140,7 @@ async function apiBoot() {
   }
 }
 
-export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode, hasToken, apiLogin, apiLogout,
+export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode, hasToken, apiLogin, apiLogout, apiUser,
   apiSaveClient, apiSaveTransaction, apiAddMember, apiSendTeamMessage, apiSendDm,
   apiSendBroadcast, apiSendPortalMessage, apiSubmitCorrection, apiLog };
 
