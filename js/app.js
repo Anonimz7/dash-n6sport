@@ -89,7 +89,8 @@ function bootData(){
   if(!fromApi){ renderApiError(); return; }
   syncListen(()=>{try{ensurePage()}catch(e){}const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){a.addEventListener('blur',()=>render(),{once:true})}else{render()}toast('Data diperbarui dari portal lain')});
   store.clients=store.clients.filter(c=>!c.arch||(TODAY-parseDate(c.arch))/864e5<7);
-  if(hm){const k=findClientByUid(hm[1]);appState.cview=k?k.id:'x'}
+  const hm2=location.hash.match(/^#c=([A-Za-z0-9-]+)/);
+  if(hm2){const k=findClientByUid(hm2[1]);appState.cview=k?k.id:'x'}
   applyTheme();ensurePage();render(false);
  });
 }
@@ -137,7 +138,7 @@ function renderLogin(){
   const fd=new FormData(f);
   try{
    await apiLogin(String(fd.get('login_id')).trim(), String(fd.get('password')));
-   location.reload();
+   bootData();
   }catch(e){
    const m=String((e&&e.message)||e);
    let t;
