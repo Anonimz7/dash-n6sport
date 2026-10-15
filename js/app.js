@@ -84,14 +84,35 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&appState.modal){app
 })();
 
 function bootData(){
- // Fase B: coba muat dari API (mock); gagal -> fallback seed lokal
+ // Muat dari API; gagal -> tampilkan pesan error yang jelas (tanpa fallback data lokal)
  apiBoot().then(fromApi=>{
-  if(!fromApi)syncBoot();
+  if(!fromApi){ renderApiError(); return; }
   syncListen(()=>{try{ensurePage()}catch(e){}const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){a.addEventListener('blur',()=>render(),{once:true})}else{render()}toast('Data diperbarui dari portal lain')});
   store.clients=store.clients.filter(c=>!c.arch||(TODAY-parseDate(c.arch))/864e5<7);
   if(hm){const k=findClientByUid(hm[1]);appState.cview=k?k.id:'x'}
   applyTheme();ensurePage();render(false);
  });
+}
+
+// Layar error API: jelaskan alasan, tawarkan coba lagi / logout
+function renderApiError(){
+ const raw=String(window.__apiErr||'');
+ let reason;
+ if(/Timeout/i.test(raw)) reason='Server tidak merespons dalam 15 detik. Kemungkinan koneksi lambat atau server sibuk.';
+ else if(/Failed to fetch|NetworkError|Load failed/i.test(raw)) reason='Tidak dapat terhubung ke server. Periksa koneksi internet.';
+ else if(/401/.test(raw)) reason='Sesi berakhir atau token tidak valid. Silakan login ulang.';
+ else reason='Gagal memuat data: '+raw;
+ const appEl=document.getElementById('app');
+ appEl.innerHTML=`<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px">
+ <div style="width:100%;max-width:380px;text-align:center">
+ <h1 style="font-size:20px;margin:0 0 8px">Gagal memuat data</h1>
+ <p class="sub" style="margin:0 0 20px">${reason}</p>
+ <div style="display:flex;gap:8px;justify-content:center">
+ <button class="btn primary" id="err-retry">Coba lagi</button>
+ <button class="btn" id="err-logout">Keluar</button>
+ </div></div></div>`;
+ document.getElementById('err-retry').onclick=()=>location.reload();
+ document.getElementById('err-logout').onclick=()=>{ apiLogout(); location.reload(); };
 }
 
 // Layar login
