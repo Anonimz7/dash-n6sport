@@ -124,7 +124,12 @@ async function apiBoot() {
     store.acl = settings.acl;
     store.tpl = tpl;
     store.log = activity.map(tActivity);
-    store.pattern = sched.patterns;
+    store.pattern = sched.patterns || {};
+    // Pastikan setiap coach punya entry (array kosong jika belum ada pattern)
+    // agar akses store.pattern[c] tidak undefined di DB fresh
+    store.members.filter(m => m.role === 'coach').forEach(mc => {
+      if (!store.pattern[mc.id]) store.pattern[mc.id] = [[], [], [], [], [], [], []];
+    });
     store.book = (sched.bookings || []).map(tBooking);
     store.paid = {};
     store.payInfo = {};
