@@ -35,7 +35,7 @@ function view(){
    ${bellBtn()}
    <button class="rolechip" data-act="modal" data-v="more" aria-label="Menu"><span class="av">${esc(me.name[0])}</span>${ROLE[appState.role]}${icon('chev',14)}</button>
   </div>
-  <div class="row meta"><span class="sync"><i class="dot"></i><span>Tersinkron ${hhmm(appState.syncAt)}<span class="hm">. Portal Pemilik dan Coach memakai satu data.</span></span></span>${pill('Data contoh','info')}</div>
+  <div class="row meta"><span class="sync"><i class="dot"></i><span>Tersinkron ${hhmm(appState.syncAt)}</span></span></div>
   ${body}
  </main></div>${renderBottomNav()}${appState.modal?renderModal():''}${appState.gate?checkPageAccess():''}`;
 }
