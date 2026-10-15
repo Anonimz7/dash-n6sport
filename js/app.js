@@ -8,8 +8,11 @@ import { syncBoot, syncListen } from './core/sync.js';
 import { idPreview } from './pages/coach.js';
 import { clientFormSync } from './pages/klien.js';
 import { navigateTo, render, setPath, toast } from './ui/shell.js';
-import { apiBoot, apiLog, isApiMode } from './core/api.js';
+import { apiBoot, apiLog, isApiMode, hasToken, apiLogin, apiLogout } from './core/api.js';
 import { setLogSink } from './core/access.js';
+
+// Handler logout: hapus token, kembali ke layar login
+ACT.logout = () => { apiLogout(); location.reload(); };
 setLogSink(t => { if (isApiMode()) apiLog(t); });
 
 import './portal/cdash.js';
@@ -75,6 +78,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&appState.modal){app
  window.addEventListener('hashchange',()=>{try{location.reload()}catch(e){}});
  const appEl=document.getElementById('app');
  if(appEl)appEl.innerHTML='<p class="sub" style="padding:48px;text-align:center">Memuat data…</p>';
+ // Belum login -> tampilkan layar login
+ if(!hasToken()){ renderLogin(); return; }
+ bootData();
+})();
+
+function bootData(){
  // Fase B: coba muat dari API (mock); gagal -> fallback seed lokal
  apiBoot().then(fromApi=>{
   if(!fromApi)syncBoot();
@@ -83,7 +92,34 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&appState.modal){app
   if(hm){const k=findClientByUid(hm[1]);appState.cview=k?k.id:'x'}
   applyTheme();ensurePage();render(false);
  });
-})();
+}
+
+// Layar login
+function renderLogin(){
+ const appEl=document.getElementById('app');
+ appEl.innerHTML=`<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px">
+ <form id="login-form" style="width:100%;max-width:340px" autocomplete="off">
+ <h1 style="font-size:22px;margin:0 0 4px">Number Six Running</h1>
+ <p class="sub" style="margin:0 0 20px">Masuk untuk mengelola</p>
+ <label class="sub" style="display:block;margin-bottom:4px">ID Login</label>
+ <input name="login_id" required autofocus style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:inherit;margin-bottom:12px" />
+ <label class="sub" style="display:block;margin-bottom:4px">Kata sandi</label>
+ <input name="password" type="password" required style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:inherit;margin-bottom:16px" />
+ <p id="login-err" class="sub" style="color:#e5484d;min-height:20px;margin:0 0 8px"></p>
+ <button type="submit" style="width:100%;padding:12px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-weight:700;font-size:15px">Masuk</button>
+ </form></div>`;
+ const f=document.getElementById('login-form');
+ f.addEventListener('submit',async ev=>{
+  ev.preventDefault();
+  const err=document.getElementById('login-err');
+  err.textContent='';
+  const fd=new FormData(f);
+  try{
+   await apiLogin(String(fd.get('login_id')).trim(), String(fd.get('password')));
+   location.reload();
+  }catch(e){ err.textContent='Login gagal: '+(e.message||'periksa ID dan kata sandi'); }
+ });
+}
 
 // handle debug (dipakai test browser)
 window.N6 = { navigateTo, setPath, render, version: '4.0.0-modular' };

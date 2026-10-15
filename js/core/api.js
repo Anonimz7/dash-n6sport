@@ -4,14 +4,30 @@
 import { buildSessionLogs } from './shared.js';
 import { store } from './store.js';
 
-// Basis URL backend. Mock: jalankan `python3 ~/workspace/dash-n6sport-api/mock_server.py 8090`
+// Basis URL backend.
 const API_BASE = 'https://api.denisbergkam.com/api/dbn6sport/v1';
-// Login otomatis untuk uji mock (backend asli: ganti dengan layar login)
-const MOCK_LOGIN = { login_id: 'bima', password: 'x' };
 
+// Token JWT disimpan di localStorage (bertahan antar refresh).
+const TOKEN_KEY = 'n6r-token';
 let apiToken = null;
+try { apiToken = localStorage.getItem(TOKEN_KEY) || null; } catch (e) {}
 let apiMode = false;
 const isApiMode = () => apiMode;
+const hasToken = () => !!apiToken;
+
+// Login: kirim kredensial, simpan token.
+async function apiLogin(login_id, password) {
+  const login = await req('POST', '/auth/login', { login_id, password });
+  apiToken = login.token;
+  try { localStorage.setItem(TOKEN_KEY, apiToken); } catch (e) {}
+  return login;
+}
+// Logout: hapus token.
+function apiLogout() {
+  apiToken = null;
+  apiMode = false;
+  try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+}
 
 async function req(method, path, body) {
   const r = await fetch(API_BASE + path, {
@@ -53,11 +69,10 @@ const tRequest = r => ({ ...r, at: D(r.date + 'T00:00:00') });
 const tMsg = m => ({ ...m, t: D(m.t) });
 const tActivity = a => ({ ...a, t: D(a.t) });
 
-// ---------- boot: login lalu muat semua koleksi ----------
+// ---------- boot: pakai token tersimpan; 401 -> butuh login ulang ----------
 async function apiBoot() {
+  if (!apiToken) { apiMode = false; return false; }
   try {
-    const login = await req('POST', '/auth/login', MOCK_LOGIN);
-    apiToken = login.token;
     const [members, programs, clients, tx, reqs, team, bcs, settings, tpl, activity, sched] = await Promise.all([
       apiGet('/members'),
       apiGet('/programs'),
@@ -100,13 +115,15 @@ async function apiBoot() {
     apiMode = true;
     return true;
   } catch (e) {
+    // token basi/invalid -> paksa login ulang
+    if (String((e && e.message) || e).includes('401')) apiLogout();
     apiMode = false;
     try { window.__apiErr = String((e && e.message) || e); } catch (x) {}
     return false;
   }
 }
 
-export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode,
+export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode, hasToken, apiLogin, apiLogout,
   apiSaveClient, apiSaveTransaction, apiAddMember, apiSendTeamMessage, apiSendDm,
   apiSendBroadcast, apiSendPortalMessage, apiSubmitCorrection, apiLog };
 
