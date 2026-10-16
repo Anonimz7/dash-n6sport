@@ -7,6 +7,7 @@ import { icon } from '../core/icons.js';
 import { ACT, CONF, FORMS, MODALS, PAGES } from '../core/registry.js';
 import { locOf } from '../core/shared.js';
 import { appState, findProgramById, getClientStatus, getMemberName, store } from '../core/store.js';
+import { apiDel, isApiMode } from '../core/api.js';
 import { activePrograms, banner, kpi, maskNote, perBar, perLbl, pill, sheet, tabsBar } from '../ui/components.js';
 import { copyToClipboard, render, toast } from '../ui/shell.js';
 
@@ -47,7 +48,7 @@ FORMS.prog=f=>{
  p.name=name;p.price=num(f.get('price'));p.unit=f.get('unit').trim();p.fee=num(f.get('fee'));p.peserta=+f.get('peserta')===2?2:1;
  const mm=p.unit.match(/(\d+)\s*(minggu|mgg)/i);p.wk=mm?+mm[1]:(p.wk||4);delete p.del;appState.syncAt=new Date();
  logAct((id?'mengubah program ':'menambah program ')+p.name);appState.modal=null;toast(id?'Program diperbarui':'Program ditambahkan');render()};
-CONF.delprog=id=>{const p=findProgramById(id);p.del=true;appState.syncAt=new Date();logAct('menghapus program '+p.name)};
+CONF.delprog=async id=>{const p=findProgramById(id);if(isApiMode()){try{await apiDel('/programs/'+id)}catch(e){toast('Gagal hapus: '+e.message);return}}p.del=true;appState.syncAt=new Date();logAct('menghapus program '+(p?p.name:id))};
 MODALS.bayar=m=>{
  const c=m.id,k=getCommissionData(appState.per),x=k.byCoach.find(y=>y.c===c);if(!x||perm('komisi')!=='full')return '';
  const M=v=>money(v,'komisi'),row=(a,b,bold)=>`<tr><td>${a}</td><td class="n">${bold?'<b>'+b+'</b>':b}</td></tr>`;

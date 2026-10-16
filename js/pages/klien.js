@@ -1,6 +1,6 @@
 /* js/pages/klien.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { canAccess, logAct, scope } from '../core/access.js';
-import { apiSaveClient, apiSaveTransaction, apiSendPortalMessage, isApiMode } from '../core/api.js';
+import { apiDel, apiSaveClient, apiSaveTransaction, apiSendPortalMessage, isApiMode } from '../core/api.js';
 import { COACHES, CONDC, ROLE_USER_IDS } from '../core/constants.js';
 import { TODAY, addD, esc, first, fmtD, formatRupiah, hhmm, iso, parseDate, slug } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
@@ -165,7 +165,7 @@ Object.assign(ACT,{
  restore:t=>{const c=findClientById(t.dataset.v);c.arch=null;logAct('memulihkan klien '+c.name);toast('Klien dipulihkan');render()},
  askdel:t=>{appState.modal={k:'confirm',text:'Hapus permanen '+findClientById(t.dataset.v).name+'? Data klien tidak dapat dikembalikan.',yes:'delcl',arg:t.dataset.v,label:'Hapus permanen'};render()}
 });
-CONF.delcl=id=>{const c=findClientById(id);store.clients=store.clients.filter(x=>x.id!==id);store.book=store.book.filter(b=>b.client!==id);store.reports=store.reports.filter(r=>r.cid!==id);logAct('menghapus klien '+c.name)};
+CONF.delcl=async id=>{const c=findClientById(id);if(isApiMode()){try{await apiDel('/clients/'+id)}catch(e){toast('Gagal hapus: '+e.message);return}}store.clients=store.clients.filter(x=>x.id!==id);store.book=store.book.filter(b=>b.client!==id);store.reports=store.reports.filter(r=>r.cid!==id);logAct('menghapus klien '+(c?c.name:id))};
 MODALS.cdash=m=>{const c=findClientById(m.id);return c?sheet('Dashboard klien',cdashBody(c)):''};
 FORMS.cdash=f=>{
  const c=findClientById(f.get('cid')),u=(f.get('url')||'').trim(),dt=f.get('date')||'';

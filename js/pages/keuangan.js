@@ -1,6 +1,6 @@
 /* js/pages/keuangan.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, money, perm } from '../core/access.js';
-import { apiSaveTransaction, isApiMode } from '../core/api.js';
+import { apiDel, apiSaveTransaction, isApiMode } from '../core/api.js';
 import { filterTransactions, monthly } from '../core/derived.js';
 import { TODAY, esc, fmtD, formatJuta, formatRupiah, iso, num, sum } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
@@ -30,7 +30,7 @@ PAGES.keuangan=()=>{
   body=`<div class="toolbar">${perBar()}<span class="sub">${rows.length} transaksi terbaru</span></div><div class="mlist">${rows.map(x=>`<div class="li"><div><b>${esc(x.desc)}</b><small>${fmtD(x.date)} · ${esc(x.cat)}</small></div><div class="row"><b class="mono">${x.type==='in'?'+':'-'} ${M(x.amt)}</b>${full?`<button class="btn sm danger" data-act="asktx" data-v="${x.id}">${icon('trash',14)} Hapus</button>`:''}</div></div>`).join('')}</div><div class="tw dt"><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Kategori</th><th>Keterangan</th><th class="n">Jumlah</th>${full?'<th>Aksi</th>':''}</tr></thead><tbody>${rows.map(x=>`<tr><td class="mono">${fmtD(x.date)}</td><td>${x.type==='in'?pill('Masuk','good'):pill('Keluar','bad')}</td><td>${esc(x.cat)}</td><td>${esc(x.desc)}</td><td class="n">${x.type==='in'?'+':'-'} ${M(x.amt)}</td>${full?`<td><button class="btn sm danger" data-act="asktx" data-v="${x.id}">${icon('trash',14)} Hapus</button></td>`:''}</tr>`).join('')}</tbody></table></div>`}
  return `<div class="stackv">${maskNote('keuangan')}${tabsBar(tabs)}${body}</div>`};
 ACT.asktx=t=>{if(perm('keuangan')!=='full')return;const x=store.tx.find(y=>y.id===t.dataset.v);if(!x)return;appState.modal={k:'confirm',text:'Hapus transaksi "'+x.desc+'" ('+fmtD(x.date)+', '+(x.type==='in'?'+':'-')+' '+formatRupiah(x.amt)+')? Angka keuangan, komisi, dan laporan ikut berubah.',yes:'deltx',arg:x.id,label:'Hapus transaksi'};render()};
-CONF.deltx=id=>{const x=store.tx.find(y=>y.id===id);if(!x||perm('keuangan')!=='full')return;store.tx=store.tx.filter(y=>y.id!==id);logAct('menghapus transaksi '+x.desc)};
+CONF.deltx=async id=>{const x=store.tx.find(y=>y.id===id);if(!x||perm('keuangan')!=='full')return;if(isApiMode()){try{await apiDel('/transactions/'+id)}catch(e){toast('Gagal hapus: '+e.message);return}}store.tx=store.tx.filter(y=>y.id!==id);logAct('menghapus transaksi '+x.desc)};
 FORMS.expense=async f=>{const d={date:f.get('date'),type:'out',category:f.get('cat'),desc:f.get('desc').trim(),amount:num(f.get('amt'))};
  if(isApiMode())await apiSaveTransaction(d);
  else store.tx.push({id:'t'+Date.now(),date:d.date,type:'out',cat:d.category,desc:d.desc,amt:d.amount});
