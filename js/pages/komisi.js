@@ -7,7 +7,7 @@ import { icon } from '../core/icons.js';
 import { ACT, CONF, FORMS, MODALS, PAGES } from '../core/registry.js';
 import { locOf } from '../core/shared.js';
 import { appState, findProgramById, getClientStatus, getMemberName, store } from '../core/store.js';
-import { apiDel, isApiMode } from '../core/api.js';
+import { apiDel, apiSaveProgram, isApiMode } from '../core/api.js';
 import { activePrograms, banner, kpi, maskNote, perBar, perLbl, pill, sheet, tabsBar } from '../ui/components.js';
 import { copyToClipboard, render, toast } from '../ui/shell.js';
 
@@ -41,12 +41,20 @@ MODALS.prog=m=>{
   <label class="field"><span>Komisi per sesi hadir (Rp)</span><input id="f-pgf" name="fee" type="number" min="0" step="any" required value="${p.fee}"></label>
   <label class="field"><span>Jumlah peserta</span><select name="peserta"><option value="1" ${+p.peserta===2?'':'selected'}>1 orang (individu)</option><option value="2" ${+p.peserta===2?'selected':''}>2 orang (paket, satu pembayaran)</option></select></label>
  <div class="row full"><button class="btn primary" type="submit">Simpan</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
-FORMS.prog=f=>{
+FORMS.prog=async f=>{
  if(appState.role!=='owner')return;
  const id=f.get('id'),name=f.get('name').trim();if(!name){toast('Nama program wajib diisi');return}
- let p=id&&findProgramById(id);if(!p){p={id:'p'+Date.now(),lvl:.7};store.programs.push(p)}
- p.name=name;p.price=num(f.get('price'));p.unit=f.get('unit').trim();p.fee=num(f.get('fee'));p.peserta=+f.get('peserta')===2?2:1;
- const mm=p.unit.match(/(\d+)\s*(minggu|mgg)/i);p.wk=mm?+mm[1]:(p.wk||4);delete p.del;appState.syncAt=new Date();
+ const data={name,price:num(f.get('price')),unit:f.get('unit').trim(),fee:num(f.get('fee')),peserta:+f.get('peserta')===2?2:1,wk:4,lvl:.7};
+ const mm=data.unit.match(/(\d+)\s*(minggu|mgg)/i);data.wk=mm?+mm[1]:4;
+ let p;
+ if(isApiMode()){
+   try{p=await apiSaveProgram(id?{...data,id}:data)}
+   catch(e){toast('Gagal simpan: '+e.message);return}
+ }else{
+   p=id&&findProgramById(id);if(!p){p={id:'p'+Date.now(),lvl:.7};store.programs.push(p)}
+   Object.assign(p,data);delete p.del;
+ }
+ appState.syncAt=new Date();
  logAct((id?'mengubah program ':'menambah program ')+p.name);appState.modal=null;toast(id?'Program diperbarui':'Program ditambahkan');render()};
 CONF.delprog=async id=>{const p=findProgramById(id);if(isApiMode()){try{await apiDel('/programs/'+id)}catch(e){toast('Gagal hapus: '+e.message);return}}p.del=true;appState.syncAt=new Date();logAct('menghapus program '+(p?p.name:id))};
 MODALS.bayar=m=>{

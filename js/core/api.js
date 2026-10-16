@@ -149,7 +149,7 @@ async function apiBoot() {
 }
 
 export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode, hasToken, apiLogin, apiLogout, apiUser,
-  apiSaveClient, apiSaveTransaction, apiAddMember, apiSendTeamMessage, apiSendDm,
+  apiSaveClient, apiSaveTransaction, apiAddMember, apiSaveProgram, apiSendTeamMessage, apiSendDm,
   apiSendBroadcast, apiSendPortalMessage, apiSubmitCorrection, apiLog };
 
 // ---------- tulis (Fase C): panggil API lalu selaraskan store lokal ----------
@@ -173,6 +173,12 @@ async function apiSaveTransaction(d) {
 async function apiAddMember(d) {
   const m = await apiPost('/members', d);
   return upsert(store.members, m);
+}
+async function apiSaveProgram(d) {
+  const body = { ...d };
+  delete body.id;
+  const raw = d.id ? await apiPatch('/programs/' + d.id, body) : await apiPost('/programs', body);
+  return upsert(store.programs, raw);
 }
 async function apiSendTeamMessage(text) {
   const m = tMsg(await apiPost('/messages/team', { text }));
