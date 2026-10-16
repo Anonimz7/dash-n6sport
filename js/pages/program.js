@@ -3,7 +3,7 @@ import { DAYS, DAYSL, TODAY, addD, esc, first, fmtD, iso, mmss, num, parseDate, 
 import { icon, logo } from '../core/icons.js';
 import { ACT, HOOK, PAGES } from '../core/registry.js';
 import { apiPatch, isApiMode } from '../core/api.js';
-import { appState } from '../core/store.js';
+import { appState, store } from '../core/store.js';
 import { banner, kpi, renderSegmented, tabsBar } from '../ui/components.js';
 import { exportReport } from '../ui/pdf.js';
 import { copyToClipboard, render, toast } from '../ui/shell.js';
@@ -37,7 +37,7 @@ const progInit=()=>{if(!Array.isArray(appState.prog.cr)||appState.prog.cr.length
  if(!Array.isArray(P.presets)||!P.presets.length)P.presets=makePresets();if(!P.presets.some(x=>x.id===P.psId))P.psId=P.presets[0].id;
  if(P.age==null)P.age=34;if(P.coach==null)P.coach='';if(!P.target||!TARGET_LIST.some(x=>x[0]===P.target))P.target='42195';if(P.pbNow==null)P.pbNow=TARGET_DEFS[P.target][0];if(P.pbTarget==null)P.pbTarget=TARGET_DEFS[P.target][1];
  if(!P.phase)P.phase='umum';if(!P.sdate)P.sdate=d;if(!P.edate)P.edate=iso(addD(parseDate(P.sdate),P.weeks.length*7-1));if(P.title==null)P.title='';if(P.calcVol==null)P.calcVol=Math.max(...P.weeks);
- if(!P.fmt)P.fmt='pdf';if(!Array.isArray(P.tpls)||!P.tpls.length){try{if(window._savedTpls&&window._savedTpls.length)P.tpls=window._savedTpls;else if(isApiMode())P.tpls=[];else P.tpls=makeTemplates()}catch(e){P.tpls=isApiMode()?[]:makeTemplates()}}if(P.tpls.length>1){const seen=new Set(),rows=[];P.tpls.forEach(t=>t.rows.forEach(r=>{if(!seen.has(r.k)){seen.add(r.k);rows.push(r)}}));P.tpls=[{id:P.tpls[0].id,name:'Daftar program',rows}]}if(P.tpls.length&&!P.tpls.some(t=>t.id===P.tplId))P.tplId=P.tpls[0].id};
+ if(!P.fmt)P.fmt='pdf';if(!Array.isArray(P.tpls)||!P.tpls.length){try{if(window._savedTpls&&window._savedTpls.length)P.tpls=window._savedTpls;else if(isApiMode())P.tpls=[];else P.tpls=makeTemplates()}catch(e){P.tpls=isApiMode()?[]:makeTemplates()}}if(P.tpls.length&&!P.tpls.some(t=>t.id===P.tplId))P.tplId=P.tpls[0].id};
 const findTemplateIndex=()=>{const P=appState.prog;if(!P.tpls.length)return -1;let i=P.tpls.findIndex(t=>t.id===P.tplId);if(i<0){i=0;P.tplId=P.tpls[0].id}return i};
 const tpl=()=>{const i=findTemplateIndex();return i>=0?appState.prog.tpls[i]:null};
 const tgt=()=>TARGET_LIST.find(x=>x[0]===appState.prog.target)||TARGET_LIST[4];
@@ -89,7 +89,7 @@ PAGES.program=()=>{
  if(t===0){
   body=`${banner('Menu ini hanya untuk membuat program dan mencetaknya sebagai PDF atau JPG. Datanya tidak terhubung ke menu lain.','info')}
   <section class="card"><header class="ch"><h3>Identitas klien</h3></header><div class="fg">
-  <label class="field"><span>Nama</span><input id="f-pname" value="${esc(P.name)}" data-set="appState.prog.name" placeholder="Nama klien"></label>
+  <label class="field"><span>Nama klien</span><select id="f-pname" data-set="appState.prog.name" aria-label="Pilih klien"><option value="">Pilih klien...</option>${(store.clients||[]).filter(c=>!c.arch).map(c=>`<option value="${esc(c.name)}" ${P.name===c.name?'selected':''}>${esc(c.name)}</option>`).join('')}</select></label>
   <label class="field"><span>Nama coach</span><input id="f-pcoach" value="${esc(P.coach)}" data-set="appState.prog.coach" placeholder="Nama coach"></label>
   <label class="field"><span>Umur (tahun)</span><input id="f-page" type="number" min="10" max="90" value="${P.age}" data-set="appState.prog.age" data-num></label>
   <label class="field"><span>HR maksimal (bpm)</span><input id="f-phr" type="number" min="120" max="230" value="${P.hrmax}" data-set="appState.prog.hrmax" data-num></label></div>
