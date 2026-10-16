@@ -4,6 +4,7 @@ import { MODS, ROLE } from '../core/constants.js';
 import { esc } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
 import { ACT, FORMS, PAGES } from '../core/registry.js';
+import { apiPatch, isApiMode } from '../core/api.js';
 import { appState, store } from '../core/store.js';
 import { syncReset } from '../core/sync.js';
 import { banner, pill, renderSegmented, tabsBar } from '../ui/components.js';
@@ -19,9 +20,16 @@ PAGES.setting=()=>{
  if(t===3)body=`<section class="card"><header class="ch"><h3>Tema tampilan</h3></header>${renderSegmented('theme',appState.theme,[['light','Terang'],['dark','Gelap'],['system','Ikuti perangkat']])}<p class="sub">Warna mengikuti pilihan Anda di semua halaman, termasuk grafik dan laporan.</p></section>`;
  if(t===4){
   body=`${banner('Pemilik menentukan apa yang boleh dilihat tiap peran. Disensor berarti halaman tetap terbuka tetapi nominal keuangan dan komisi disembunyikan. Tersembunyi berarti modul hilang dari menu. Untuk Coach, Penuh berarti hanya data klien dan jadwal miliknya.')}
-  <div class="tw"><table class="acl"><thead><tr><th>Modul</th><th>Admin</th><th>Head Coach</th><th>Coach</th></tr></thead><tbody>${MODS.filter(m=>m[0]!=='setting').map(([k,l])=>`<tr><td><b>${l}</b></td>${['admin','head','coach'].map(r=>`<td><select id="f-acl-${r}-${k}" data-set="store.acl.${r}.${k}" aria-label="${l} untuk ${ROLE[r]}">${ACL_OPTIONS.map(([v,n])=>`<option value="${v}" ${store.acl[r][k]===v?'selected':''}>${n}</option>`).join('')}</select></td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
+  <div class="tw"><table class="acl"><thead><tr><th>Modul</th><th>Admin</th><th>Head Coach</th><th>Coach</th></tr></thead><tbody>${MODS.filter(m=>m[0]!=='setting').map(([k,l])=>`<tr><td><b>${l}</b></td>${['admin','head','coach'].map(r=>`<td><select id="f-acl-${r}-${k}" data-set="store.acl.${r}.${k}" aria-label="${l} untuk ${ROLE[r]}">${ACL_OPTIONS.map(([v,n])=>`<option value="${v}" ${store.acl[r][k]===v?'selected':''}>${n}</option>`).join('')}</select></td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="row"><button class="btn primary" data-act="aclsave">Simpan hak akses</button></div>`}
  return `<div class="stackv">${tabsBar(tabs)}${body}</div>`};
 ACT.syncreset=()=>syncReset();
+ACT.aclsave=async()=>{
+  if(!isApiMode()){toast('Tersimpan lokal');return}
+  try{
+    await apiPatch('/settings',{acl:store.acl});
+    toast('Hak akses disimpan');
+  }catch(e){toast('Gagal simpan: '+e.message)}
+};
 FORMS.profile=f=>{const m=meUser();m.name=f.get('name').trim();m.email=f.get('email').trim();m.wa=f.get('wa').trim();logAct('memperbarui profil');toast('Profil disimpan');render()};
 FORMS.pw=f=>{if(f.get('new').length<8){toast('Password baru minimal 8 karakter');return}if(f.get('new')!==f.get('new2')){toast('Konfirmasi password tidak sama');return}toast('Password diganti');render()};
 
