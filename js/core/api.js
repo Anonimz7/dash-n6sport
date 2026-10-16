@@ -125,8 +125,12 @@ async function apiBoot() {
     store.tpl = tpl;
     store.log = activity.map(tActivity);
     store.pattern = sched.patterns || {};
-    // Pastikan setiap coach punya entry (array kosong jika belum ada pattern)
+    // Pastikan setiap coach (termasuk COACHES hardcoded) punya entry
     // agar akses store.pattern[c] tidak undefined di DB fresh
+    const { COACHES } = await import('./constants.js');
+    COACHES.forEach(cid => {
+      if (!store.pattern[cid]) store.pattern[cid] = [[], [], [], [], [], [], []];
+    });
     store.members.filter(m => m.role === 'coach').forEach(mc => {
       if (!store.pattern[mc.id]) store.pattern[mc.id] = [[], [], [], [], [], [], []];
     });
