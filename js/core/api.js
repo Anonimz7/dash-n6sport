@@ -124,6 +124,10 @@ async function apiBoot() {
     store.targets = settings.targets;
     store.acl = settings.acl;
     store.tpl = tpl;
+    // Simpan custom program templates untuk dipakai progInit
+    if (settings.program_tpls) {
+      try { window._savedTpls = settings.program_tpls; } catch (e) {}
+    }
     store.log = activity.map(tActivity);
     store.pattern = sched.patterns || {};
     // Ganti COACHES hardcoded dengan coach asli dari DB agar notifikasi tidak dummy

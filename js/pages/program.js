@@ -2,10 +2,17 @@
 import { DAYS, DAYSL, TODAY, addD, esc, first, fmtD, iso, mmss, num, parseDate, parseHMS, slug, sum } from '../core/helpers.js';
 import { icon, logo } from '../core/icons.js';
 import { ACT, HOOK, PAGES } from '../core/registry.js';
+import { apiPatch, isApiMode } from '../core/api.js';
 import { appState } from '../core/store.js';
 import { banner, kpi, renderSegmented, tabsBar } from '../ui/components.js';
 import { exportReport } from '../ui/pdf.js';
 import { copyToClipboard, render, toast } from '../ui/shell.js';
+
+// Simpan custom program templates ke backend
+async function saveTpls(){
+  if(!isApiMode())return;
+  try{await apiPatch('/settings',{program_tpls:appState.prog.tpls})}catch(e){}
+}
 
 const TRAINING_PHASES=[['umum','Persiapan umum'],['khusus','Persiapan khusus'],['pra','Prakompetisi']];
 const PHASE_WEEK_INCREMENT={umum:6,khusus:8,pra:4};
@@ -30,7 +37,7 @@ const progInit=()=>{if(!Array.isArray(appState.prog.cr)||appState.prog.cr.length
  if(!Array.isArray(P.presets)||!P.presets.length)P.presets=makePresets();if(!P.presets.some(x=>x.id===P.psId))P.psId=P.presets[0].id;
  if(P.age==null)P.age=34;if(P.coach==null)P.coach='';if(!P.target||!TARGET_LIST.some(x=>x[0]===P.target))P.target='42195';if(P.pbNow==null)P.pbNow=TARGET_DEFS[P.target][0];if(P.pbTarget==null)P.pbTarget=TARGET_DEFS[P.target][1];
  if(!P.phase)P.phase='umum';if(!P.sdate)P.sdate=d;if(!P.edate)P.edate=iso(addD(parseDate(P.sdate),P.weeks.length*7-1));if(P.title==null)P.title='';if(P.calcVol==null)P.calcVol=Math.max(...P.weeks);
- if(!P.fmt)P.fmt='pdf';if(!Array.isArray(P.tpls)||!P.tpls.length)P.tpls=makeTemplates();if(P.tpls.length>1){const seen=new Set(),rows=[];P.tpls.forEach(t=>t.rows.forEach(r=>{if(!seen.has(r.k)){seen.add(r.k);rows.push(r)}}));P.tpls=[{id:P.tpls[0].id,name:'Daftar program',rows}]}if(!P.tpls.some(t=>t.id===P.tplId))P.tplId=P.tpls[0].id};
+ if(!P.fmt)P.fmt='pdf';if(!Array.isArray(P.tpls)||!P.tpls.length){try{if(window._savedTpls&&window._savedTpls.length)P.tpls=window._savedTpls;else P.tpls=makeTemplates()}catch(e){P.tpls=makeTemplates()}}if(P.tpls.length>1){const seen=new Set(),rows=[];P.tpls.forEach(t=>t.rows.forEach(r=>{if(!seen.has(r.k)){seen.add(r.k);rows.push(r)}}));P.tpls=[{id:P.tpls[0].id,name:'Daftar program',rows}]}if(!P.tpls.some(t=>t.id===P.tplId))P.tplId=P.tpls[0].id};
 const findTemplateIndex=()=>{const P=appState.prog;let i=P.tpls.findIndex(t=>t.id===P.tplId);if(i<0){i=0;P.tplId=P.tpls[0].id}return i};
 const tpl=()=>appState.prog.tpls[findTemplateIndex()];
 const tgt=()=>TARGET_LIST.find(x=>x[0]===appState.prog.target)||TARGET_LIST[4];
@@ -142,9 +149,9 @@ Object.assign(ACT,{
  pphase:t=>{const P=appState.prog;P.phase=t.dataset.v;P.inc=PHASE_WEEK_INCREMENT[P.phase]||P.inc;toast('Program: '+phaseName());render()},
  wkadd:()=>{const w=appState.prog.weeks;if(w.length>=5){toast('Maksimal 5 minggu');return}w.push(Math.round(w[w.length-1]*(1+appState.prog.inc/100)));syncEnd();render()},
  wkdel:()=>{if(appState.prog.weeks.length>1)appState.prog.weeks.pop();syncEnd();render()},
- ptnew:()=>{const P=appState.prog,t={id:'t'+Date.now(),name:'Program baru',rows:[{k:'Easy',day:1,share:100,int:85,hl:62,hh:72}]};P.tpls.push(t);P.tplId=t.id;render()},
- ptdup:()=>{const P=appState.prog,t=JSON.parse(JSON.stringify(tpl()));t.id='t'+Date.now();t.name+=' (salinan)';P.tpls.push(t);P.tplId=t.id;toast('Program diduplikat');render()},
- ptdel:()=>{const P=appState.prog;if(P.tpls.length<=1)return;P.tpls.splice(findTemplateIndex(),1);P.tplId=P.tpls[0].id;toast('Program dihapus');render()},
+ ptnew:()=>{const P=appState.prog,t={id:'t'+Date.now(),name:'Program baru',rows:[{k:'Easy',day:1,share:100,int:85,hl:62,hh:72}]};P.tpls.push(t);P.tplId=t.id;saveTpls();render()},
+ ptdup:()=>{const P=appState.prog,t=JSON.parse(JSON.stringify(tpl()));t.id='t'+Date.now();t.name+=' (salinan)';P.tpls.push(t);P.tplId=t.id;saveTpls();toast('Program diduplikat');render()},
+ ptdel:()=>{const P=appState.prog;if(P.tpls.length<=1)return;P.tpls.splice(findTemplateIndex(),1);P.tplId=P.tpls[0].id;saveTpls();toast('Program dihapus');render()},
  prnew:()=>{tpl().rows.push({k:'Program baru',day:3,share:0,int:90,hl:62,hh:72});render()},
  prdel:t=>{const r=tpl().rows;if(r.length>1)r.splice(+t.dataset.v,1);render()},
  blkadd:t=>{const d=appState.prog.sched[+t.dataset.w][+t.dataset.d];if(d.blocks.length<4)d.blocks.push(blankBlock());render()},
