@@ -3,6 +3,7 @@
    translasi bentuk API -> bentuk store terpusat di sini. */
 import { buildSessionLogs } from './shared.js';
 import { store } from './store.js';
+import { COACHES } from './constants.js';
 
 // Basis URL backend.
 const API_BASE = 'https://api.denisbergkam.com/api/dbn6sport/v1';
@@ -125,14 +126,12 @@ async function apiBoot() {
     store.tpl = tpl;
     store.log = activity.map(tActivity);
     store.pattern = sched.patterns || {};
-    // Pastikan setiap coach (termasuk COACHES hardcoded) punya entry
-    // agar akses store.pattern[c] tidak undefined di DB fresh
-    const { COACHES } = await import('./constants.js');
+    // Ganti COACHES hardcoded dengan coach asli dari DB agar notifikasi tidak dummy
+    COACHES.length = 0;
+    store.members.filter(m => m.role === 'coach' || m.role === 'head').forEach(m => COACHES.push(m.id));
+    // Pastikan setiap coach punya entry pattern
     COACHES.forEach(cid => {
       if (!store.pattern[cid]) store.pattern[cid] = [[], [], [], [], [], [], []];
-    });
-    store.members.filter(m => m.role === 'coach').forEach(mc => {
-      if (!store.pattern[mc.id]) store.pattern[mc.id] = [[], [], [], [], [], [], []];
     });
     store.book = (sched.bookings || []).map(tBooking);
     store.paid = {};
