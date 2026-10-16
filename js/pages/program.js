@@ -85,7 +85,7 @@ const renderTemplateSelector=id=>`<label class="field"><span>Program persentase<
 PAGES.program=()=>{
  progInit();ensureSched();
  const tabs=['Identitas klien','Susun program','Kalkulator intensitas','Custom program','Pratinjau & cetak'],t=Math.min(appState.tab,4),P=appState.prog,T=tpl(),ti=findTemplateIndex();let body='';
- const sum100=sum(T.rows.map(x=>x.share)),ndays=Math.round((parseDate(P.edate)-parseDate(P.sdate))/864e5)+1,c12=isCooper12Target();
+ const sum100=T?sum(T.rows.map(x=>x.share)):0,ndays=Math.round((parseDate(P.edate)-parseDate(P.sdate))/864e5)+1,c12=isCooper12Target();
  if(t===0){
   body=`${banner('Menu ini hanya untuk membuat program dan mencetaknya sebagai PDF atau JPG. Datanya tidak terhubung ke menu lain.','info')}
   <section class="card"><header class="ch"><h3>Identitas klien</h3></header><div class="fg">
