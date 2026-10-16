@@ -150,7 +150,7 @@ Object.assign(ACT,{
  pphase:t=>{const P=appState.prog;P.phase=t.dataset.v;P.inc=PHASE_WEEK_INCREMENT[P.phase]||P.inc;toast('Program: '+phaseName());render()},
  wkadd:()=>{const w=appState.prog.weeks;if(w.length>=5){toast('Maksimal 5 minggu');return}w.push(Math.round(w[w.length-1]*(1+appState.prog.inc/100)));syncEnd();render()},
  wkdel:()=>{if(appState.prog.weeks.length>1)appState.prog.weeks.pop();syncEnd();render()},
- ptnew:()=>{const P=appState.prog,t={id:'t'+Date.now(),name:'Program baru',rows:[{k:'Easy',day:1,share:100,int:85,hl:62,hh:72}]};P.tpls.push(t);P.tplId=t.id;saveTpls();render()},
+ ptnew:()=>{const P=appState.prog;let n=P.tpls.length+1;while(P.tpls.some(x=>x.name==='Template '+n))n++;const t={id:'t'+Date.now(),name:'Template '+n,rows:[{k:'Easy',day:1,share:100,int:85,hl:62,hh:72}]};P.tpls.push(t);P.tplId=t.id;saveTpls();render();toast('Template baru: '+t.name)},
  ptdup:()=>{const P=appState.prog,t=JSON.parse(JSON.stringify(tpl()));t.id='t'+Date.now();t.name+=' (salinan)';P.tpls.push(t);P.tplId=t.id;saveTpls();toast('Program diduplikat');render()},
  ptdel:()=>{const P=appState.prog;if(P.tpls.length<=1)return;P.tpls.splice(findTemplateIndex(),1);P.tplId=P.tpls[0].id;saveTpls();toast('Program dihapus');render()},
  prnew:()=>{const t=tpl();if(!t)return;t.rows.push({k:'Program baru',day:3,share:0,int:90,hl:62,hh:72});saveTpls();render()},
