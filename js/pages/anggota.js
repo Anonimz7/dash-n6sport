@@ -34,7 +34,7 @@ FORMS.memedit=f=>{
  x.name=f.get('name').trim();x.login=lg;x.email=f.get('email').trim();x.wa=(f.get('wa')||'').trim();
  if(x.role==='coach'||x.role==='head'){x.role=f.get('role')||x.role;x.loc=(f.get('loc')||'').trim()}
  logAct('mengedit anggota '+x.name);appState.modal=null;toast('Data '+first(x.name)+' diperbarui');render()};
-FORMS.member=async f=>{const role=f.get('role'),d={name:f.get('name').trim(),role,login:f.get('login').trim(),email:f.get('email').trim(),wa:'',loc:(f.get('loc')||'').trim()};
+FORMS.member=async f=>{const role=f.get('role'),d={name:f.get('name').trim(),role,login:f.get('login').trim(),email:f.get('email').trim(),wa:'',loc:(f.get('loc')||'').trim(),password:f.get('password')};
  const m=isApiMode()?await apiAddMember(d):null;
  const id=m?m.id:'u'+Date.now();
  if(!m)store.members.push({id,...d});
