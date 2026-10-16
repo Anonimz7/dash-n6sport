@@ -18,7 +18,7 @@ function view(){
  if(appState.cview)return clientPage();
  const eyebrow={owner:'Tier 1 · Pemilik',admin:'Tier 2 · Admin',head:'Tier 3 · Head Coach',coach:'Portal Coach'}[appState.role];
  const me=meUser();
- const groups=[['Operasional',['beranda','klien','coach','koreksi','program','pesan','absensi']],['Bisnis',['komisi','keuangan','laporan']],['Kelola',['anggota','setting','progress']]];
+ const groups=[['Operasional',['beranda','klien','coach','koreksi','program','pesan','absensi']],['Bisnis',['komisi','keuangan','laporan']],['Kelola',['anggota','setting']]];
  const unreadCount=unreadTotals();
  const side=groups.map(([g,keys])=>{const it=keys.filter(k=>k==='setting'||canAccess(k)).map(k=>`<button class="nav" data-act="nav" data-v="${k}" ${appState.page===k?'aria-current="page"':''}>${icon(NAVIC[k])}<span>${navLabel(k)}</span>${k==='pesan'&&unreadCount.all?`<i class="ub" aria-label="${unreadCount.all} pesan belum dibaca">${unreadCount.all>99?'99+':unreadCount.all}</i>`:''}${perm(k)==='mask'&&k!=='setting'?'<em class="tag">Terkunci</em>':''}</button>`).join('');return it?`<div class="ng"><p class="nl">${g}</p>${it}</div>`:''}).join('');
  const body=(canAccess(appState.page)||appState.page==='setting')?PAGES[appState.page]():lockedPage();
@@ -51,7 +51,7 @@ function renderBottomNav(){
  return `<nav class="bnav" aria-label="Menu utama">${prim.map(btn).join('')}<button data-act="modal" data-v="more" ${prim.includes(appState.page)?'':'aria-current="page"'} aria-label="Menu lainnya"><span class="ico">${icon('more',20)}</span><span>Lainnya</span></button></nav>`}
 MODALS.more=()=>{
  const me=meUser();
- const keys=['beranda','klien','coach','koreksi','program','pesan','absensi','komisi','keuangan','laporan','anggota','setting','progress'].filter(k=>k==='setting'||canAccess(k));
+ const keys=['beranda','klien','coach','koreksi','program','pesan','absensi','komisi','keuangan','laporan','anggota','setting'].filter(k=>k==='setting'||canAccess(k));
  return sheet('Menu',`<div class="row"><span class="av">${esc(me.name[0])}</span><div><b>${esc(me.name)}</b><p class="sub">${ROLE[me.role]}</p></div><span class="sp"></span><button class="btn sm" data-act="logout">${icon('out',15)} Keluar</button></div>
  <div class="mgrid">${keys.map((k,i)=>`<button class="mt t${i%4}" data-act="nav" data-v="${k}" ${appState.page===k?'aria-current="page"':''}><span class="mi">${icon(NAVIC[k],22)}</span><span>${navLabel(k)}</span>${perm(k)==='mask'&&k!=='setting'?'<em class="tag">Sensor</em>':''}</button>`).join('')}</div>`)};
 function lockedPage(){return `<section class="card"><div class="lm" style="position:static;padding:30px 10px"><div>${icon('lock',22)}<b>Halaman ini disembunyikan</b><span>Peran ${ROLE[appState.role]} tidak memiliki akses ke modul ${NAVT[appState.page]}. Pemilik dapat mengubahnya di Setting, Hak Akses.</span></div></div></section>`}
