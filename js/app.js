@@ -141,7 +141,8 @@ function renderLogin(){
   err.textContent='';
   const fd=new FormData(f);
   try{
-   await apiLogin(String(fd.get('login_id')).trim(), String(fd.get('password')));
+   const login=await apiLogin(String(fd.get('login_id')).trim(), String(fd.get('password')));
+   if(login&&login.user&&login.user.role&&ROLE[login.user.role])appState.role=login.user.role;
    bootData();
   }catch(e){
    const m=String((e&&e.message)||e);
