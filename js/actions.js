@@ -1,5 +1,6 @@
 /* js/actions.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { canAccess } from './core/access.js';
+import { apiLogout } from './core/api.js';
 import { ROLE_USER_IDS } from './core/constants.js';
 import { ACT, CONF } from './core/registry.js';
 import { appState } from './core/store.js';
@@ -13,7 +14,7 @@ Object.assign(ACT,{
  menu:()=>{appState.nav=!appState.nav;render()},
  role:t=>{/* dinonaktifkan untuk produksi: role hanya dari backend */},
  enter:t=>{appState.gate=false;ACT.role(t)},
- logout:()=>{appState.gate=true;appState.nav=false;render(false)},
+ logout:()=>{apiLogout();location.reload()},
  tab:t=>{appState.tab=+t.dataset.v;appState.editfix=null;render()},
  tp:t=>{appState.tp=t.dataset.v;render()},
  theme:t=>{appState.theme=t.dataset.v;applyTheme();savePreferences();render()},
