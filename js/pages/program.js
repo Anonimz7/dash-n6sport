@@ -90,7 +90,7 @@ PAGES.program=()=>{
   body=`${banner('Menu ini hanya untuk membuat program dan mencetaknya sebagai PDF atau JPG. Datanya tidak terhubung ke menu lain.','info')}
   <section class="card"><header class="ch"><h3>Identitas klien</h3></header><div class="fg">
   <label class="field"><span>Nama klien</span><select id="f-pname" data-set="appState.prog.name" aria-label="Pilih klien"><option value="">Pilih klien...</option>${(store.clients||[]).filter(c=>!c.arch).map(c=>`<option value="${esc(c.name)}" ${P.name===c.name?'selected':''}>${esc(c.name)}</option>`).join('')}</select></label>
-  <label class="field"><span>Nama coach</span><input id="f-pcoach" value="${esc(P.coach)}" data-set="appState.prog.coach" placeholder="Nama coach"></label>
+  <label class="field"><span>Nama coach</span><select id="f-pcoach" data-set="appState.prog.coach" aria-label="Pilih coach"><option value="">Pilih coach...</option>${(store.members||[]).filter(m=>['coach','head'].includes(m.role)).map(m=>`<option value="${esc(m.nama||m.name)}" ${P.coach===(m.nama||m.name)?'selected':''}>${esc(m.nama||m.name)}</option>`).join('')}</select></label>
   <label class="field"><span>Umur (tahun)</span><input id="f-page" type="number" min="10" max="90" value="${P.age}" data-set="appState.prog.age" data-num></label>
   <label class="field"><span>HR maksimal (bpm)</span><input id="f-phr" type="number" min="120" max="230" value="${P.hrmax}" data-set="appState.prog.hrmax" data-num></label></div>
   <p class="sub" style="margin-top:8px">HR maksimal terisi otomatis 220 dikurangi umur. Anda bisa mengubahnya.</p></section>
