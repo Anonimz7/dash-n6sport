@@ -1,6 +1,5 @@
 /* js/pages/komisi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, money, perm } from '../core/access.js';
-import { ROLE_USER_IDS } from '../core/constants.js';
 import { getCommissionData } from '../core/derived.js';
 import { MASK, TODAY, esc, first, fmtD, iso, num, parseDate, sum } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
