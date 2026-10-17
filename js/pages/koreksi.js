@@ -13,7 +13,7 @@ import { banner, kpi, pill, renderHBar, renderSegmented, tabsBar } from '../ui/c
 import { render, toast } from '../ui/shell.js';
 
 const weekDates=()=>{const mon=addD(TODAY,-dIdx(TODAY)-7*appState.kweek);return[0,1,2,3,4,5,6].map(i=>addD(mon,i))};
-const kCoachId=()=>appState.role==='coach'?ROLE_USER_IDS.coach:(appState.kcoach==='all'?null:appState.kcoach);
+const kCoachId=()=>appState.role==='coach'?meId():(appState.kcoach==='all'?null:appState.kcoach);
 const kReports=()=>{const id=kCoachId();return store.reports.filter(r=>{const c=findClientById(r.cid);return c&&(!id||c.coach===id)})};
 const kLinks=()=>{const id=kCoachId();return linkEntries().filter(r=>{const c=findClientById(r.cid);return c&&(!id||c.coach===id)})};
 const zonePill=(hr,mx)=>{const z=hrZone(hr,mx);return `<span class="pill"><i class="zdot" style="background:var(--z${z.z})"></i>Z${z.z}</span>`};

@@ -1,5 +1,5 @@
 /* js/pages/coach.js — diekstrak otomatis dari index.html (fase 4 refactor) */
-import { logAct, perm } from '../core/access.js';
+import { logAct, meId, perm } from '../core/access.js';
 import { apiAddBooking, apiSavePattern, isApiMode } from '../core/api.js';
 import { COACHES, PERIODS, ROLE_USER_IDS, SLOTS, periodOf } from '../core/constants.js';
 import { calCell, freeSlots, offList, offOn, offSlot } from '../core/derived.js';
@@ -15,7 +15,7 @@ import { copyToClipboard, render, toast } from '../ui/shell.js';
 function coachPicker(key){
  if(appState.role==='coach')return '';
  return `<label class="field" style="max-width:260px"><span>Coach</span><select data-f="${key}">${COACHES.map(c=>`<option value="${c}" ${appState[key]===c?'selected':''}>${esc(getMemberName(c))}</option>`).join('')}</select></label>`}
-const myCoach=key=>appState.role==='coach'?ROLE_USER_IDS.coach:appState[key];
+const myCoach=key=>appState.role==='coach'?meId():appState[key];
 function initCoach(id){
  store.pattern[id]=store.pattern[id]||[0,1,2,3,4,5,6].map(d=>d<5?['06:30','17:30']:[]);
  store.prof[id]=store.prof[id]||{rating:4.5,reviews:0,since:iso(TODAY)};
@@ -99,7 +99,7 @@ PAGES.coach=()=>{
  const tabs=appState.role==='coach'?['Jadwal coach','Bagikan jadwal kosong','Kalender 30 hari']:['Jadwal coach','Bagikan jadwal kosong','Kalender 30 hari','Daftar coach'];
  const t=Math.min(appState.tab,tabs.length-1);let body='';
  if(t<=2){
-  const c=myCoach('sched'),pat=store.pattern[c]||[],list=appState.role==='coach'?[ROLE_USER_IDS.coach]:COACHES;
+  const c=myCoach('sched'),pat=store.pattern[c]||[],list=appState.role==='coach'?[meId()]:COACHES;
   if(!appState.shareFrom||appState.shareFrom<iso(TODAY))appState.shareFrom=iso(TODAY);
   if(appState.pday==null)appState.pday=dIdx(TODAY);
   const di=appState.pday;

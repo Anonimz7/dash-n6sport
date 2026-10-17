@@ -1,5 +1,5 @@
 /* js/pages/klien.js — diekstrak otomatis dari index.html (fase 4 refactor) */
-import { canAccess, logAct, scope } from '../core/access.js';
+import { canAccess, logAct, meId, scope } from '../core/access.js';
 import { apiDel, apiSaveClient, apiSaveShareLink, apiSaveTransaction, apiSendPortalMessage, isApiMode } from '../core/api.js';
 import { COACHES, CONDC, ROLE_USER_IDS } from '../core/constants.js';
 import { TODAY, addD, esc, first, fmtD, formatRupiah, hhmm, iso, parseDate, slug } from '../core/helpers.js';
@@ -30,7 +30,7 @@ PAGES.klien=()=>{
  <div class="tw dt"><table><thead><tr><th>Nama</th><th>Paket</th><th>Mulai - selesai</th><th>Coach</th><th>Status</th>${canEdit?'<th>Aksi</th>':''}</tr></thead><tbody>${rows||`<tr><td colspan="${canEdit?6:5}" class="sub">Tidak ada klien yang cocok.</td></tr>`}</tbody></table></div><div class="mlist">${mlist||'<p class="sub">Tidak ada klien yang cocok.</p>'}</div></div>`};
 MODALS.client=m=>{
  const c=m.id?findClientById(m.id):{name:'',pid:activePrograms()[0].id,start:iso(TODAY),pbNow:'',pbTarget:''};
- const programOrDefault=findProgramById(c.pid)||activePrograms()[0],endV=c.end||iso(addD(parseDate(c.start),programOrDefault.wk*7)),coachV=COACHES.includes(c.coach)?c.coach:(appState.role==='coach'?ROLE_USER_IDS.coach:COACHES[0]);
+ const programOrDefault=findProgramById(c.pid)||activePrograms()[0],endV=c.end||iso(addD(parseDate(c.start),programOrDefault.wk*7)),coachV=COACHES.includes(c.coach)?c.coach:(appState.role==='coach'?meId():COACHES[0]);
  const pasangan=m.id?partnerOf(c):null,paketSemi=isSemi(programOrDefault),dataPasangan=pasangan||{name:'',pbNow:'',pbTarget:'',note:''};
  const tautanDash=k=>k&&k.uid?`<small class="mono" style="word-break:break-all">${esc(k.uid)} · ${esc(clientUrl(k))} <button type="button" class="btn sm ghost" data-act="clink" data-v="${k.id}" aria-label="Salin link dashboard ${esc(k.name)}">${icon('copy',13)}</button></small>`:'<small>Link dashboard dibuat otomatis setelah disimpan.</small>';
  return sheet(m.id?'Ubah klien':'Tambah klien',`<form data-form="client" class="fg"><input type="hidden" name="id" value="${m.id||''}">
@@ -65,7 +65,7 @@ function clientFormSync(t){
 FORMS.client=async f=>{
  const id=f.get('id'),start=f.get('start'),end=f.get('end');
  if(end<start){toast('Tanggal selesai tidak boleh sebelum tanggal mulai');return}
- const coachTerpilih=appState.role==='coach'?ROLE_USER_IDS.coach:f.get('coach');
+ const coachTerpilih=appState.role==='coach'?meId():f.get('coach');
  if(!COACHES.includes(coachTerpilih)){toast('Pilih nama coach');return}
  const pg=findProgramById(f.get('pid')),paketSemi=isSemi(pg),trimVal=k=>(f.get(k)||'').trim();
  const dataPeserta1={name:trimVal('name'),pbNow:trimVal('pbNow'),pbTarget:trimVal('pbTarget'),note:trimVal('note')};

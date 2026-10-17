@@ -1,5 +1,5 @@
 /* js/pages/komisi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
-import { logAct, money, perm } from '../core/access.js';
+import { logAct, meId, money, perm } from '../core/access.js';
 import { ROLE_USER_IDS } from '../core/constants.js';
 import { getCommissionData } from '../core/derived.js';
 import { MASK, TODAY, esc, first, fmtD, iso, num, parseDate, sum } from '../core/helpers.js';
@@ -14,7 +14,7 @@ import { copyToClipboard, render, toast } from '../ui/shell.js';
 const progPrice=p=>appState.role==='coach'?MASK:money(p.price,'komisi');
 PAGES.komisi=()=>{
  const tabs=['Ringkasan','Performa & pembayaran','Harga program & komisi'],t=Math.min(appState.tab,2),k=getCommissionData(appState.per),mine=appState.role==='coach';
- const coaches=mine?k.byCoach.filter(x=>x.c===ROLE_USER_IDS.coach):k.byCoach;
+ const coaches=mine?k.byCoach.filter(x=>x.c===meId()):k.byCoach;
  const tot=sum(coaches.map(x=>x.kom)),nses=sum(coaches.map(x=>x.nSes)),paid=sum(coaches.filter(x=>store.paid[x.c]).map(x=>x.kom));
  const M=v=>money(v,'komisi');let body='';
  if(t===0){

@@ -13,7 +13,7 @@ import { render, toast } from '../ui/shell.js';
 
 const whoName=r=>r.type==='izin_client'?(findClientById(r.who)?.name||'-'):getMemberName(r.who);
 function attList(){
- const isC=appState.role==='coach',sel=isC?ROLE_USER_IDS.coach:(appState.acoach||COACHES[0]),all=!isC&&sel==='all';
+ const isC=appState.role==='coach',sel=isC?meId():(appState.acoach||COACHES[0]),all=!isC&&sel==='all';
  const cos=all?COACHES.slice():[sel];
  let dk=appState.adate||iso(TODAY);if(parseDate(dk)>TODAY)dk=iso(TODAY);
  store.attSlot=store.attSlot||{};
@@ -43,27 +43,27 @@ PAGES.absensi=()=>{
  if(t===0){return `<div class="stackv">${tabsBar(['Daftar Hadir'].concat(REQUEST_TYPE_KEYS.map(k=>REQUEST_TYPE_LABELS[k])))}${attList()}</div>`}
  const type=REQUEST_TYPE_KEYS[t-1];
  let list=store.reqs.filter(r=>r.type===type);
- if(appState.role==='coach')list=list.filter(r=>type==='izin_client'?findClientById(r.who)?.coach===ROLE_USER_IDS.coach:r.who===ROLE_USER_IDS.coach);
- const mine=appState.role==='coach',all=store.reqs.filter(r=>!mine||(r.type==='izin_client'?findClientById(r.who)?.coach===ROLE_USER_IDS.coach:r.who===ROLE_USER_IDS.coach));
+ if(appState.role==='coach')list=list.filter(r=>type==='izin_client'?findClientById(r.who)?.coach===meId():r.who===meId());
+ const mine=appState.role==='coach',all=store.reqs.filter(r=>!mine||(r.type==='izin_client'?findClientById(r.who)?.coach===meId():r.who===meId()));
  return `<div class="stackv"><div class="kpis">${kpi('Menunggu keputusan',all.filter(r=>r.status==='Menunggu').length,'semua jenis')}${kpi('Disetujui',all.filter(r=>r.status==='Disetujui').length,'memengaruhi kalender')}${kpi('Ditolak',all.filter(r=>r.status==='Ditolak').length,'')}</div>
  ${tabsBar(['Daftar Hadir'].concat(REQUEST_TYPE_KEYS.map(k=>REQUEST_TYPE_LABELS[k])))}
  <div class="toolbar"><span class="sub">${list.length} pengajuan</span><span class="sp"></span><button class="btn primary" data-act="modal" data-v="req">${icon('plus',15)} ${type==='masalah'?'Laporkan masalah':'Ajukan '+REQUEST_TYPE_LABELS[type].toLowerCase()}</button></div>
  <div class="listv">${list.sort((a,b)=>b.at-a.at).map(r=>`<div class="li"><div><b>${esc(whoName(r))} ${r.sev?pill(r.sev,r.sev==='Tinggi'?'bad':'warn'):''}</b><small>${r.type==='masalah'?'':fmtD(r.date)+(r.date2&&r.date2!==r.date?' - '+fmtD(r.date2)+' · ':' · ')}${esc(r.detail)}</small></div><div class="acts">${pill(r.status,{Menunggu:'warn',Disetujui:'good',Ditolak:'bad',Selesai:'good'}[r.status])}${!mine&&r.status==='Menunggu'?(r.type==='masalah'?`<button class="btn sm" data-act="reqset" data-v="${r.id}" data-s="Selesai">Tandai selesai</button>`:`<button class="btn sm primary" data-act="reqset" data-v="${r.id}" data-s="Disetujui">Setujui</button><button class="btn sm" data-act="reqset" data-v="${r.id}" data-s="Ditolak">Tolak</button>`):''}</div></div>`).join('')||'<section class="card"><p class="sub">Belum ada pengajuan pada kategori ini.</p></section>'}</div></div>`};
 MODALS.req=()=>{
  const type=REQUEST_TYPE_KEYS[Math.max(0,Math.min(appState.tab,6)-1)],mine=appState.role==='coach';
- const whoOpts=type==='izin_client'?scope(liveClients()).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join(''):(mine?`<option value="${ROLE_USER_IDS.coach}">${esc(getMemberName(ROLE_USER_IDS.coach))}</option>`:COACHES.map(c=>`<option value="${c}">${esc(getMemberName(c))}</option>`).join(''));
+ const whoOpts=type==='izin_client'?scope(liveClients()).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join(''):(mine?`<option value="${meId()}">${esc(getMemberName(meId()))}</option>`:COACHES.map(c=>`<option value="${c}">${esc(getMemberName(c))}</option>`).join(''));
  const rs=type==='reschedule';
  return sheet(type==='masalah'?'Laporkan masalah':'Ajukan '+REQUEST_TYPE_LABELS[type].toLowerCase(),`<form data-form="req" class="fg"><input type="hidden" name="type" value="${type}">
  <label class="field"><span>${type==='izin_client'?'Klien':type==='masalah'?'Pelapor':'Coach'}</span><select name="who" ${mine&&type!=='izin_client'?'disabled':''}>${type==='masalah'?`<option value="${meId()}">${esc(meUser().name)}</option>`:whoOpts}</select></label>
  ${type==='masalah'?`<label class="field"><span>Tingkat</span><select name="sev"><option>Rendah</option><option selected>Sedang</option><option>Tinggi</option></select></label>`:`<label class="field"><span>${rs?'Jadwal lama (tanggal)':'Tanggal mulai'}</span><input id="f-rd1" name="date" type="date" value="${iso(TODAY)}" required></label><label class="field"><span>${rs?'Jadwal baru (tanggal)':'Tanggal selesai'}</span><input id="f-rd2" name="date2" type="date" value="${iso(TODAY)}" required></label>`}
  <label class="field full"><span>${type==='masalah'?'Jelaskan masalah':rs?'Detail sesi dan alasan':'Alasan'}</span><textarea id="f-rdet" name="detail" required placeholder="Tulis dengan singkat dan jelas"></textarea></label>
  <div class="row full"><button class="btn primary" type="submit">Kirim</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
-FORMS.req=f=>{const type=f.get('type'),who=appState.role==='coach'&&type!=='izin_client'?ROLE_USER_IDS.coach:f.get('who');store.reqs.push({id:'r'+Date.now(),type,who:type==='masalah'?meId():who,date:f.get('date')||iso(TODAY),date2:f.get('date2')||f.get('date')||iso(TODAY),detail:f.get('detail').trim(),sev:f.get('sev')||undefined,status:'Menunggu',at:new Date()});logAct('mengajukan '+REQUEST_TYPE_LABELS[type].toLowerCase());appState.modal=null;toast('Terkirim dan langsung tampil di portal Pemilik');render()};
+FORMS.req=f=>{const type=f.get('type'),who=appState.role==='coach'&&type!=='izin_client'?meId():f.get('who');store.reqs.push({id:'r'+Date.now(),type,who:type==='masalah'?meId():who,date:f.get('date')||iso(TODAY),date2:f.get('date2')||f.get('date')||iso(TODAY),detail:f.get('detail').trim(),sev:f.get('sev')||undefined,status:'Menunggu',at:new Date()});logAct('mengajukan '+REQUEST_TYPE_LABELS[type].toLowerCase());appState.modal=null;toast('Terkirim dan langsung tampil di portal Pemilik');render()};
 ACT.attcompact=()=>{appState.attCompact=!appState.attCompact;render()};
 ACT.cattset=async t=>{
  const k=t.dataset.d,co=t.dataset.co,tm=t.dataset.t,v=t.dataset.s;
  if(!['Hadir','Tidak hadir'].includes(v)||!COACHES.includes(co))return;
- if(appState.role==='coach'&&co!==ROLE_USER_IDS.coach){toast('Hanya bisa mengisi absensi Anda sendiri');return}
+ if(appState.role==='coach'&&co!==meId()){toast('Hanya bisa mengisi absensi Anda sendiri');return}
  if(parseDate(k)>TODAY||!attOpen(k,tm)){toast('Belum bisa diisi. Terbuka pukul '+hhmm(attOpenAt(k,tm))+' (jadwal selesai)');render();return}
  store.attSlot=store.attSlot||{};
  store.attSlot[k+'|'+co+'|'+tm]={s:v,by:meUser().name,at:hhmm(new Date())};

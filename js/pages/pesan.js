@@ -26,7 +26,7 @@ const threadMeta=(c,me)=>{const th=store.msgs.dm[c.id]||[],last=th[th.length-1],
   else{const sudahDibaca=waktuPesan(last)<=readAt(c.id,'dm:'+c.id);statusThread=sudahDibaca?'<small class="st rd">✓✓ Sudah dibaca klien</small>':'<small class="st un">✓ Belum dibaca klien</small>'}}
  return{last,u,st:statusThread,t:last?waktuPesan(last):0}};
 const msgForm=(kind,ph)=>`<form data-form="msg" data-kind="${kind}" class="row" style="flex-wrap:nowrap"><input id="f-msg-${kind}" name="text" placeholder="${ph}" required autocomplete="off" aria-label="${ph}"><button class="btn primary" type="submit" aria-label="Kirim">${icon('send',16)}</button></form>`;
-function recips(v){let l=liveClients();if(appState.role==='coach')l=l.filter(c=>c.coach===ROLE_USER_IDS.coach);if(v.startsWith('p:'))l=l.filter(c=>c.pid===v.slice(2));if(v.startsWith('c:'))l=l.filter(c=>c.coach===v.slice(2));return l}
+function recips(v){let l=liveClients();if(appState.role==='coach')l=l.filter(c=>c.coach===meId());if(v.startsWith('p:'))l=l.filter(c=>c.pid===v.slice(2));if(v.startsWith('c:'))l=l.filter(c=>c.coach===v.slice(2));return l}
 PAGES.pesan=()=>{
  const me=meId(),t=Math.min(appState.tab,2);let body='';if(t>1)appState.openMark=null;
  if(t===0){const batasBaca=openSince(me,'team');body=`<section class="card"><header class="ch"><h3>Ruang tim</h3><span class="sub">Pemilik, admin, head coach, dan semua coach</span></header>${bubbles(store.msgs.team,{since:batasBaca})}${msgForm('team','Tulis pesan untuk tim')}</section>`;markRead(me,'team')}

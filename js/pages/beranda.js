@@ -1,19 +1,19 @@
 /* js/pages/beranda.js — diekstrak otomatis dari index.html (fase 4 refactor) */
-import { logAct, meUser, money, perm, scope } from '../core/access.js';
+import { logAct, meId, meUser, money, perm, scope } from '../core/access.js';
 import { COACHES, CONDC, NAVT, ROLE, ROLE_USER_IDS } from '../core/constants.js';
 import { filterTransactions, freeSlots, getPendingCorrections, getSessionAttendance, inRange, liveClients, monthly } from '../core/derived.js';
 import { DAYS, DAYSL, TODAY, addD, ago, dIdx, esc, first, fmtD, formatJuta, iso, num, parseDate, sum } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
 import { TONE_LABEL, TONE_PILL_CLASS, buildIndicators, indCards, retensiPct } from '../core/indicators.js';
 import { ACT, FORMS, MODALS, PAGES } from '../core/registry.js';
-import { coachScore } from '../core/shared.js';
+import { attPill, coachScore } from '../core/shared.js';
 import { appState, findClientById, findProgramById, getClientEndDate, getClientStatus, getMemberName, store } from '../core/store.js';
 import { banner, donut, kpi, locked, meter, renderHBar, renderPercentBar, renderSegmented, sheet, statusPill } from '../ui/components.js';
 import { render, toast } from '../ui/shell.js';
 
 function hero(){
  const h=new Date().getHours(),g=h<11?'Selamat pagi':h<15?'Selamat siang':h<19?'Selamat sore':'Selamat malam';
- const co=appState.role==='coach'?ROLE_USER_IDS.coach:null;
+ const co=appState.role==='coach'?meId():null;
  const live=co?store.clients.filter(c=>c.coach===co&&!c.arch&&getClientStatus(c)!=='Selesai').length:liveClients().length;
  const ses=store.book.filter(b=>b.day===dIdx(TODAY)&&(!co||b.coach===co)).length;
  const pd=getPendingCorrections(co).length;
@@ -28,16 +28,18 @@ function condCard(cls,list){
  <ul class="legend">${keys.map((k,i)=>`<li><i style="background:var(${CONDC[k]})"></i>${k}<b>${cnt[i]}</b></li>`).join('')}</ul>
  <div class="row">${st.map(([s,n])=>`${statusPill(s)}<b class="mono">${n}</b>`).join(' ')}</div></section>`}
 function renderCoachHome(){
- const mine=store.clients.filter(c=>c.coach===ROLE_USER_IDS.coach&&!c.arch);
+ const myId=meId();
+ const mine=store.clients.filter(c=>c.coach===myId&&!c.arch);
  const lv=mine.filter(c=>getClientStatus(c)!=='Selesai');
- const pend=getPendingCorrections(ROLE_USER_IDS.coach).sort((a,b)=>a.date<b.date?-1:1);
- const today=store.book.filter(b=>b.coach===ROLE_USER_IDS.coach&&b.day===dIdx(TODAY)).sort((a,b)=>a.time<b.time?-1:1);
- const kom=sum(getSessionAttendance(30,ROLE_USER_IDS.coach).map(x=>x.fee));
- const fr=freeSlots(7,ROLE_USER_IDS.coach);
+ const pend=getPendingCorrections(myId).sort((a,b)=>a.date<b.date?-1:1);
+ const today=store.book.filter(b=>b.coach===myId&&b.day===dIdx(TODAY)).sort((a,b)=>a.time<b.time?-1:1);
+ const kom=sum(getSessionAttendance(30,myId).map(x=>x.fee));
+ const fr=freeSlots(7,myId);
  return `<div class="stackv">
  ${banner('Portal Coach. Anda hanya melihat klien dan jadwal milik sendiri. Absen, izin, dan jadwal Anda langsung muncul di portal Pemilik. Koreksi laporan klien dikerjakan Head Coach.')}
  <div class="kpis">${kpi('Klien saya',lv.length,'berjalan')}${kpi('Slot kosong',fr.length,'7 hari ke depan')}${kpi('Sesi hari ini',today.length,DAYSL[dIdx(TODAY)])}${kpi('Komisi 30 hari',perm('komisi')==='none'?'-':money(kom,'komisi'),'bagian Anda')}</div>
  <div class="dash">
+  <section class="card c6"><header class="ch"><h3>Absensi hari ini</h3><button class="btn sm" data-act="nav" data-v="absensi">Isi absensi</button></header><div style="margin-bottom:8px">${attPill(myId)}</div><p class="sub">Status kehadiran Anda hari ini.</p></section>
   <section class="card c6"><header class="ch"><h3>Sesi hari ini</h3><button class="btn sm" data-act="nav" data-v="coach">Jadwal saya</button></header>${today.length?`<div class="listv">${today.map(b=>`<div class="li"><div><b>${esc(findClientById(b.client).name)}</b><small>${findProgramById(findClientById(b.client).pid).name}</small></div><span class="pill info mono">${b.time}</span></div>`).join('')}</div>`:'<p class="sub">Tidak ada sesi terjadwal hari ini.</p>'}<p class="sub">Slot kosong 7 hari ke depan: <b class="mono">${fr.length}</b></p></section>
   ${condCard('c6',lv)}${activityCard('c12')}
  </div></div>`}
