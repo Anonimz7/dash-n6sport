@@ -48,7 +48,19 @@ async function req(method, path, body) {
       signal: ctrl.signal,
     });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.detail || (j.error && j.error.message) || ('HTTP ' + r.status));
+    if (!r.ok) {
+      let msg = 'HTTP ' + r.status;
+      if (j.detail) {
+        if (Array.isArray(j.detail)) {
+          msg = j.detail.map(e => (e.loc ? e.loc.join('.') + ': ' : '') + e.msg).join('; ');
+        } else if (typeof j.detail === 'string') {
+          msg = j.detail;
+        }
+      } else if (j.error && j.error.message) {
+        msg = j.error.message;
+      }
+      throw new Error(msg);
+    }
     return j;
   } catch (e) {
     if (e && e.name === 'AbortError') throw new Error('Timeout: server tidak merespons dalam 30 detik');
