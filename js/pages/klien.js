@@ -1,6 +1,6 @@
 /* js/pages/klien.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { canAccess, logAct, scope } from '../core/access.js';
-import { apiDel, apiSaveClient, apiSaveTransaction, apiSendPortalMessage, isApiMode } from '../core/api.js';
+import { apiDel, apiSaveClient, apiSaveShareLink, apiSaveTransaction, apiSendPortalMessage, isApiMode } from '../core/api.js';
 import { COACHES, CONDC, ROLE_USER_IDS } from '../core/constants.js';
 import { TODAY, addD, esc, first, fmtD, formatRupiah, hhmm, iso, parseDate, slug } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
@@ -167,13 +167,14 @@ Object.assign(ACT,{
 });
 CONF.delcl=async id=>{const c=findClientById(id);if(isApiMode()){try{await apiDel('/clients/'+id)}catch(e){toast('Gagal hapus: '+e.message);return}}store.clients=store.clients.filter(x=>x.id!==id);store.book=store.book.filter(b=>b.client!==id);store.reports=store.reports.filter(r=>r.cid!==id);logAct('menghapus klien '+(c?c.name:id))};
 MODALS.cdash=m=>{const c=findClientById(m.id);return c?sheet('Dashboard klien',cdashBody(c)):''};
-FORMS.cdash=f=>{
+FORMS.cdash=async f=>{
  const c=findClientById(f.get('cid')),u=(f.get('url')||'').trim(),dt=f.get('date')||'';
  if(!c)return;
  if(!isValidShareUrl(u)){toast('Link harus diawali http:// atau https://');return}
  if(!/^\d{4}-\d\d-\d\d$/.test(dt)||parseDate(dt)>TODAY||dt<c.start){toast('Pilih tanggal latihan dari tanggal mulai program sampai hari ini');return}
  store.swLinks=store.swLinks||[];const i=store.swLinks.findIndex(x=>x.cid===c.id&&x.date===dt),rec={cid:c.id,date:dt,url:u,at:new Date()};
  if(i>=0)store.swLinks[i]=rec;else store.swLinks.push(rec);
+ if(isApiMode()){try{await apiSaveShareLink(c.id,dt,u)}catch(e){console.error('Gagal simpan share link:',e)}}
  if(f.get('reg'))c.sw=u;
  const has=store.reports.some(r=>r.cid===c.id&&r.date===dt&&!r.missed);
  logAct('menerima link hasil latihan '+c.name+' ('+fmtD(dt)+')');

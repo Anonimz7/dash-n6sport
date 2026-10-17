@@ -1,5 +1,6 @@
 /* js/pages/absensi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, meUser, scope } from '../core/access.js';
+import { apiSaveAttendance, isApiMode } from '../core/api.js';
 import { COACHES, REQUEST_TYPE_KEYS, REQUEST_TYPE_LABELS, ROLE_USER_IDS } from '../core/constants.js';
 import { liveClients } from '../core/derived.js';
 import { TODAY, esc, first, fmtD, hhmm, iso, parseDate } from '../core/helpers.js';
@@ -59,13 +60,14 @@ MODALS.req=()=>{
  <div class="row full"><button class="btn primary" type="submit">Kirim</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
 FORMS.req=f=>{const type=f.get('type'),who=appState.role==='coach'&&type!=='izin_client'?ROLE_USER_IDS.coach:f.get('who');store.reqs.push({id:'r'+Date.now(),type,who:type==='masalah'?meId():who,date:f.get('date')||iso(TODAY),date2:f.get('date2')||f.get('date')||iso(TODAY),detail:f.get('detail').trim(),sev:f.get('sev')||undefined,status:'Menunggu',at:new Date()});logAct('mengajukan '+REQUEST_TYPE_LABELS[type].toLowerCase());appState.modal=null;toast('Terkirim dan langsung tampil di portal Pemilik');render()};
 ACT.attcompact=()=>{appState.attCompact=!appState.attCompact;render()};
-ACT.cattset=t=>{
+ACT.cattset=async t=>{
  const k=t.dataset.d,co=t.dataset.co,tm=t.dataset.t,v=t.dataset.s;
  if(!['Hadir','Tidak hadir'].includes(v)||!COACHES.includes(co))return;
  if(appState.role==='coach'&&co!==ROLE_USER_IDS.coach){toast('Hanya bisa mengisi absensi Anda sendiri');return}
  if(parseDate(k)>TODAY||!attOpen(k,tm)){toast('Belum bisa diisi. Terbuka pukul '+hhmm(attOpenAt(k,tm))+' (jadwal selesai)');render();return}
  store.attSlot=store.attSlot||{};
  store.attSlot[k+'|'+co+'|'+tm]={s:v,by:meUser().name,at:hhmm(new Date())};
+ if(isApiMode()){try{await apiSaveAttendance(k,co,tm,v,meUser().name,hhmm(new Date()))}catch(e){console.error('Gagal simpan absensi:',e)}}
  /* sinkron ke absensi harian coach (dipakai dashboard) */
  const recs=Object.keys(store.attSlot).filter(x=>x.startsWith(k+'|'+co+'|')).map(x=>({t:x.split('|')[2],s:store.attSlot[x].s}));
  const hd=recs.filter(r=>r.s==='Hadir').map(r=>r.t).sort();

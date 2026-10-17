@@ -1,5 +1,6 @@
 /* js/pages/coach.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, perm } from '../core/access.js';
+import { apiAddBooking, apiSavePattern, isApiMode } from '../core/api.js';
 import { COACHES, PERIODS, ROLE_USER_IDS, SLOTS, periodOf } from '../core/constants.js';
 import { calCell, freeSlots, offList, offOn, offSlot } from '../core/derived.js';
 import { DAYS, DAYSL, TODAY, addD, dIdx, esc, first, fmtD, hhmm, iso, parseDate, slug } from '../core/helpers.js';
@@ -147,14 +148,21 @@ MODALS.slot=m=>{
  return sheet('Isi sesi dengan klien',head+`<form data-form="slotadd" class="listv">${hid}<label class="field full"><span>ID klien</span><input id="f-slotuid" name="uid" data-idl data-coach="${c}" autocomplete="off" required placeholder="Tempel ID klien, contoh N6-1001"></label>${!isAdd&&store.book.some(x=>x.coach===c&&x.day===d&&x.time===tt)?`<p class="sub" style="margin:0">Jam ${tt} sudah berisi ${esc(store.book.filter(x=>x.coach===c&&x.day===d&&x.time===tt).map(x=>first(findClientById(x.client).name)).join(', '))}. Klien baru akan bergabung di sesi yang sama.</p>`:''}<div id="idprev" class="idprev">${idPreview('',c)}</div><div class="fg">${timeSel(isAdd?'':tt)}</div>${hold(false)}<div class="row"><button class="btn primary" type="submit">Simpan ke jadwal</button>${preset&&!isAdd?(open?`<button class="btn" type="button" data-act="slotclose" data-id="${m.id}">Tutup slot</button>`:`<button class="btn" type="button" data-act="slotopen" data-id="${m.id}">Buka sebagai slot kosong</button>`):''}<button class="btn" type="button" data-act="close">Batal</button></div></form>`);
 };
 const pickTime=f=>{const idp=String(f.get('id')||'').split('|'),ts=f.get('tsel')||idp[2]||'',t=ts==='custom'?(f.get('ctime')||''):ts;return /^\d\d:\d\d$/.test(t)?t:''};
-FORMS.slotadd=f=>{
+FORMS.slotadd=async f=>{
  const idp=String(f.get('id')||'').split('|'),c=f.get('c')||idp[0],d=+(f.get('d')??idp[1]),sl=pickTime(f),k=findClientByUid(f.get('uid'));
  if(!k||k.arch){toast('ID klien tidak ditemukan');return}
  if(!sl){toast('Pilih jam sesi atau isi jam manual');return}
  if(store.book.some(b=>b.coach===c&&b.day===d&&b.time===sl&&b.client===k.id)){toast(first(k.name)+' sudah ada di jam '+sl);return}
  if(k.coach!==c){store.book=store.book.filter(b=>b.client!==k.id);k.coach=c}
- if(SLOTS.includes(sl)&&!(store.pattern[c][d]||[]).includes(sl)){store.pattern[c]=store.pattern[c].slice();store.pattern[c][d]=[...store.pattern[c][d],sl].sort()}
- const rec={coach:c,client:k.id,day:d,time:sl};if(f.get('hold'))rec.hold=true;store.book.push(rec);
+ if(SLOTS.includes(sl)&&!(store.pattern[c][d]||[]).includes(sl)){
+   store.pattern[c]=store.pattern[c].slice();
+   store.pattern[c][d]=[...store.pattern[c][d],sl].sort();
+   if(isApiMode()){try{await apiSavePattern(c,d,store.pattern[c][d])}catch(e){console.error('Gagal simpan pola:',e)}}
+ }
+ const rec={coach:c,client:k.id,day:d,time:sl};if(f.get('hold'))rec.hold=true;
+ if(isApiMode()){
+   try{await apiAddBooking(rec)}catch(e){console.error('Gagal simpan booking:',e);store.book.push(rec)}
+ }else{store.book.push(rec)}
  logAct('mengisi jadwal '+first(getMemberName(c))+' '+DAYSL[d]+' '+sl+' dengan '+k.name);appState.modal=null;toast(first(k.name)+' masuk ke '+DAYSL[d]+' '+sl+'. Komisi otomatis saat sesi selesai.');render()};
 FORMS.slotsave=f=>{
  const idp=String(f.get('id')||'').split('|'),c=f.get('c')||idp[0],d=+(f.get('d')??idp[1]),b=store.book.find(x=>x.coach===c&&x.day===d&&x.time===idp[2]&&x.client===idp[3]);

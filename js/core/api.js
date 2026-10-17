@@ -60,6 +60,7 @@ async function req(method, path, body) {
 const apiGet = p => req('GET', p).then(j => j.data);
 const apiPost = (p, b) => req('POST', p, b).then(j => j.data);
 const apiPatch = (p, b) => req('PATCH', p, b).then(j => j.data);
+const apiPut = (p, b) => req('PUT', p, b).then(j => j.data || j);
 const apiDel = p => req('DELETE', p);
 
 // ---------- translasi: bentuk API -> bentuk store frontend ----------
@@ -91,7 +92,7 @@ const tActivity = a => ({ ...a, t: D(a.t) });
 async function apiBoot() {
   if (!apiToken) { apiMode = false; return false; }
   try {
-    const [members, programs, clients, tx, reqs, team, bcs, settings, tpl, activity, sched] = await Promise.all([
+    const [members, programs, clients, tx, reqs, team, bcs, settings, tpl, activity, sched, att, cprof, swl] = await Promise.all([
       apiGet('/members'),
       apiGet('/programs'),
       apiGet('/clients?status=semua'),
@@ -103,6 +104,9 @@ async function apiBoot() {
       apiGet('/correction-templates'),
       apiGet('/activity'),
       req('GET', '/schedule'),
+      apiGet('/attendance').catch(() => ({ data: [] })),
+      apiGet('/coach-profiles').catch(() => ({ data: [] })),
+      apiGet('/share-links').catch(() => ({ data: [] })),
     ]);
     const repLists = await Promise.all(clients.map(c => apiGet('/clients/' + c.id + '/reports').catch(() => [])));
     const dmLists = await Promise.all(clients.map(c => apiGet('/messages/dm/' + c.id).catch(() => [])));
@@ -138,6 +142,18 @@ async function apiBoot() {
       if (!store.pattern[cid]) store.pattern[cid] = [[], [], [], [], [], [], []];
     });
     store.book = (sched.bookings || []).map(tBooking);
+    // Absensi dari backend
+    store.attSlot = {};
+    ((att && att.data) || []).forEach(r => {
+      store.attSlot[r.date + '|' + r.coach_id + '|' + r.time] = { s: r.status, by: r.by_name, at: r.at };
+    });
+    // Profil coach dari backend
+    ((cprof && cprof.data) || []).forEach(p => {
+      store.prof[p.coach_id] = { rating: p.rating, reviews: p.reviews, since: p.since };
+      if (p.skills) store.skills[p.coach_id] = p.skills;
+    });
+    // Share links dari backend
+    store.swLinks = ((swl && swl.data) || []).map(r => ({ cid: r.client_id, date: r.date, url: r.url }));
     store.paid = {};
     store.payInfo = {};
     buildSessionLogs();
@@ -154,7 +170,8 @@ async function apiBoot() {
 
 export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode, hasToken, apiLogin, apiLogout, apiUser,
   apiSaveClient, apiSaveTransaction, apiAddMember, apiSaveProgram, apiSendTeamMessage, apiSendDm,
-  apiSendBroadcast, apiSendPortalMessage, apiSubmitCorrection, apiLog };
+  apiSendBroadcast, apiSendPortalMessage, apiSubmitCorrection, apiLog, apiSavePattern, apiAddBooking,
+  apiSaveAttendance, apiSaveCoachProfile, apiSaveShareLink };
 
 // ---------- tulis (Fase C): panggil API lalu selaraskan store lokal ----------
 function upsert(arr, o) {
@@ -177,6 +194,31 @@ async function apiSaveTransaction(d) {
 async function apiAddMember(d) {
   const m = await apiPost('/members', d);
   return upsert(store.members, m);
+}
+// Simpan pola jadwal coach ke backend
+async function apiSavePattern(coach_id, day, slots) {
+  await apiPut('/schedule/patterns', { coach_id, day, slots });
+  // update store lokal sudah dilakukan pemanggil
+}
+// Tambah booking via backend
+async function apiAddBooking(d) {
+  const raw = await apiPost('/bookings', {
+    coach_id: d.coach, client_id: d.client, day: d.day, time: d.time
+  });
+  const b = raw.data || raw;
+  return upsert(store.book, { id: b.id, coach: b.coach_id, client: b.client_id, day: b.day, time: b.time });
+}
+// Simpan absensi slot ke backend
+async function apiSaveAttendance(date, coach_id, time, status, by_name, at) {
+  await apiPost('/attendance', { date, coach_id, time, status, by_name, at });
+}
+// Simpan profil coach ke backend
+async function apiSaveCoachProfile(coach_id, patch) {
+  await apiPut('/coach-profiles/' + coach_id, patch);
+}
+// Simpan share link ke backend
+async function apiSaveShareLink(client_id, date, url) {
+  await apiPost('/share-links', { client_id, date, url });
 }
 async function apiSaveProgram(d) {
   const body = { ...d };
