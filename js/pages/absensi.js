@@ -76,7 +76,7 @@ ACT.cattset=async t=>{
  if(parseDate(k)>TODAY||!attOpen(k,tm)){toast('Belum bisa diisi. Terbuka pukul '+hhmm(attOpenAt(k,tm))+' (jadwal selesai)');render();return}
  store.attSlot=store.attSlot||{};
  store.attSlot[k+'|'+co+'|'+tm]={s:v,by:meUser().name,at:hhmm(new Date())};
- if(isApiMode()){try{await apiSaveAttendance(k,co,tm,v,meUser().name,hhmm(new Date()))}catch(e){console.error('Gagal simpan absensi:',e)}}
+ if(isApiMode()){try{await apiSaveAttendance(k,co,tm,v,meUser().name,hhmm(new Date()))}catch(e){console.error('Gagal simpan absensi:',e);toast('Gagal simpan ke server: '+(e.message||e));delete store.attSlot[k+'|'+co+'|'+tm];render();return}}
  /* sinkron ke absensi harian coach (dipakai dashboard) */
  const recs=Object.keys(store.attSlot).filter(x=>x.startsWith(k+'|'+co+'|')).map(x=>({t:x.split('|')[2],s:store.attSlot[x].s}));
  const hd=recs.filter(r=>r.s==='Hadir').map(r=>r.t).sort();
