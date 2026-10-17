@@ -1,6 +1,6 @@
 /* js/ui/shell.js — diekstrak otomatis dari index.html (fase 4 refactor) */
-import { canAccess, meUser, perm } from '../core/access.js';
-import { NAVIC, NAVT, ROLE, ROLE_USER_IDS } from '../core/constants.js';
+import { canAccess, meId, meUser, perm } from '../core/access.js';
+import { NAVIC, NAVT, ROLE } from '../core/constants.js';
 import { getPendingCorrections } from '../core/derived.js';
 import { $, esc, hhmm } from '../core/helpers.js';
 import { icon, logo } from '../core/icons.js';
@@ -45,7 +45,7 @@ function renderBottomNav(){
  for(const k of ['pesan','absensi','program','laporan','komisi','keuangan']){if(prim.length>=4)break;if(allow(k)&&!prim.includes(k))prim.push(k)}
  prim=prim.slice(0,4);
  const bl=k=>({klien:'Klien',coach:appState.role==='coach'?'Jadwal':'Coach',program:'Program'}[k]||NAVT[k]);
- const pendingKoreksi=canAccess('koreksi')?getPendingCorrections(appState.role==='coach'?ROLE_USER_IDS.coach:null).length+linkEntries().filter(r=>!r.fix&&(appState.role!=='coach'||findClientById(r.cid).coach===ROLE_USER_IDS.coach)).length:0;
+ const pendingKoreksi=canAccess('koreksi')?getPendingCorrections(appState.role==='coach'?meId():null).length+linkEntries().filter(r=>!r.fix&&(appState.role!=='coach'||findClientById(r.cid).coach===meId())).length:0;
  const unreadPesan=canAccess('pesan')?unreadTotals().all:0;
  const btn=k=>`<button data-act="nav" data-v="${k}" ${appState.page===k?'aria-current="page"':''} aria-label="${navLabel(k)}"><span class="ico">${icon(NAVIC[k],20)}${k==='koreksi'&&pendingKoreksi?`<em class="bdg">${pendingKoreksi>99?'99+':pendingKoreksi}</em>`:''}${k==='pesan'&&unreadPesan?`<em class="bdg">${unreadPesan>99?'99+':unreadPesan}</em>`:''}</span><span>${bl(k)}</span></button>`;
  return `<nav class="bnav" aria-label="Menu utama">${prim.map(btn).join('')}<button data-act="modal" data-v="more" ${prim.includes(appState.page)?'':'aria-current="page"'} aria-label="Menu lainnya"><span class="ico">${icon('more',20)}</span><span>Lainnya</span></button></nav>`}
