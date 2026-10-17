@@ -59,12 +59,13 @@ MODALS.req=()=>{
  <label class="field full"><span>${type==='masalah'?'Jelaskan masalah':rs?'Detail sesi dan alasan':'Alasan'}</span><textarea id="f-rdet" name="detail" required placeholder="Tulis dengan singkat dan jelas"></textarea></label>
  <div class="row full"><button class="btn primary" type="submit">Kirim</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
 FORMS.req=async f=>{
- const type=f.get('type'),who=appState.role==='coach'&&type!=='izin_client'?meId():f.get('who');
- const d={type,who:type==='masalah'?meId():who,date:f.get('date')||iso(TODAY),date2:f.get('date2')||f.get('date')||iso(TODAY),detail:f.get('detail').trim(),sev:f.get('sev')||undefined};
+ const type=f.get('type');
+ const d={type,date:f.get('date')||iso(TODAY),date2:f.get('date2')||f.get('date')||iso(TODAY),detail:f.get('detail').trim()};
  if(isApiMode()){
    try{await apiSaveRequest(d)}catch(e){console.error('Gagal simpan pengajuan:',e);toast('Gagal menyimpan: '+(e.message||e));return}
  }else{
-   store.reqs.push({id:'r'+Date.now(),...d,status:'Menunggu',at:new Date()});
+   const who=appState.role==='coach'&&type!=='izin_client'?meId():f.get('who');
+   store.reqs.push({id:'r'+Date.now(),type,who:type==='masalah'?meId():who,...d,sev:f.get('sev')||undefined,status:'Menunggu',at:new Date()});
  }
  logAct('mengajukan '+REQUEST_TYPE_LABELS[type].toLowerCase());appState.modal=null;toast('Terkirim dan langsung tampil di portal Pemilik');render()};
 ACT.attcompact=()=>{appState.attCompact=!appState.attCompact;render()};
