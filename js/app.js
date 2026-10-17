@@ -75,7 +75,9 @@ document.addEventListener('change',e=>{
   setPath(p,v);if(HOOK[p])HOOK[p]();
   if(t.hasAttribute('data-unitwk')){const mm=String(v).match(/(\d+)\s*(minggu|mgg)/i);if(mm)store.programs[+p.split('.')[2]].wk=+mm[1]}
   if(p.startsWith('store.programs')||p.startsWith('store.targets'))appState.syncAt=new Date();
-  appState.focus=null;render();
+  appState.focus=null;
+  // Skip render untuk input template program (disimpan via onchange)
+  if(!t.hasAttribute('data-norender'))render();
  }
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&appState.modal){appState.modal=null;render()}});
