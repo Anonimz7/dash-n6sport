@@ -168,7 +168,10 @@ async function apiBoot() {
       if (p.skills) store.skills[p.coach_id] = p.skills;
     });
     // Share links dari backend
-    store.swLinks = ((Array.isArray(swl) ? swl : (swl && swl.data)) || []).map(r => ({ cid: r.client_id, date: r.date, url: r.url }));
+    store.swLinks = ((Array.isArray(swl) ? swl : (swl && swl.data)) || []).map(r => ({
+      cid: r.client_id, date: r.date, url: r.url, id: r.id,
+      fix: r.fix_text ? { by: r.fix_by, text: r.fix_text, at: r.fix_at ? new Date(r.fix_at) : new Date() } : null
+    }));
     // Pembayaran komisi dari backend
     store.paid = {}; store.payInfo = {}; store.payIds = {};
     ((Array.isArray(compay) ? compay : (compay && compay.data)) || []).forEach(p => {
@@ -192,7 +195,7 @@ export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode, hasTok
   apiSaveClient, apiSaveTransaction, apiAddMember, apiSaveProgram, apiSendTeamMessage, apiSendDm,
   apiSendBroadcast, apiSendPortalMessage, apiSubmitCorrection, apiLog, apiSavePattern, apiAddBooking,
   apiSaveAttendance, apiSaveCoachProfile, apiSaveShareLink, apiSaveRequest, apiSaveTemplate,
-  apiPayCommission, apiCancelCommission };
+  apiPayCommission, apiCancelCommission, apiFixShareLink };
 
 // ---------- tulis (Fase C): panggil API lalu selaraskan store lokal ----------
 function upsert(arr, o) {
@@ -236,6 +239,10 @@ async function apiSaveAttendance(date, coach_id, time, status, by_name, at) {
 // Simpan profil coach ke backend
 async function apiSaveCoachProfile(coach_id, patch) {
   await apiPut('/coach-profiles/' + coach_id, patch);
+}
+// Simpan koreksi untuk share link ke backend
+async function apiFixShareLink(linkId, text) {
+  await apiPatch('/share-links/' + linkId, { fix_text: text });
 }
 // Simpan pembayaran komisi ke backend
 async function apiPayCommission(coach_id, period, amount, date, method, note) {

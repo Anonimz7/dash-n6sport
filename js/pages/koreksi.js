@@ -1,6 +1,6 @@
 /* js/pages/koreksi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, scope } from '../core/access.js';
-import { apiSaveTemplate, apiSubmitCorrection, isApiMode } from '../core/api.js';
+import { apiFixShareLink, apiSaveTemplate, apiSubmitCorrection, isApiMode } from '../core/api.js';
 import { COACHES, PLAN, ROLE_USER_IDS } from '../core/constants.js';
 import { getPendingCorrections, hrZone, inRange } from '../core/derived.js';
 import { DAYS, TODAY, addD, dIdx, esc, first, fmtD, hhmm, iso, parseDate } from '../core/helpers.js';
@@ -60,9 +60,17 @@ PAGES.koreksi=()=>{
 FORMS.fix=async (f,form)=>{const idData=form.dataset.id,tautanLink=idData.startsWith('sl|')?(store.swLinks||[]).find(x=>slId(x)===idData):null,r=tautanLink||store.reports.find(x=>x.id===idData);
  if(!r){toast('Data laporan tidak ditemukan');return}
  const rtype=tautanLink?planTypeOn(tautanLink.date):r.type,text=f.get('text').trim();
- /* entri link tidak punya laporan di server: koreksi disimpan lokal di data link (pola sama seperti note/grp di fase C) */
- if(isApiMode()&&!tautanLink)r.fix=await apiSubmitCorrection(r.id,text);
- else r.fix={by:meId(),text,at:new Date()};
+ if(isApiMode()){
+   try{
+     if(tautanLink){
+       // Koreksi untuk share link disimpan ke backend
+       await apiFixShareLink(tautanLink.id||tautanLink.cid+'|'+tautanLink.date, text);
+       r.fix={by:meId(),text,at:new Date()};
+     }else{
+       r.fix=await apiSubmitCorrection(r.id,text);
+     }
+   }catch(e){toast('Gagal menyimpan koreksi: '+((e&&e.message)||e));return}
+ }else r.fix={by:meId(),text,at:new Date()};
  (store.msgs.dm[r.cid]=store.msgs.dm[r.cid]||[]).push({w:meId(),text:'Koreksi '+rtype+' '+fmtD(r.date)+': '+r.fix.text,t:r.fix.at});appState.editfix=null;logAct('mengirim koreksi untuk '+findClientById(r.cid).name);toast('Koreksi terkirim dan masuk ke dashboard '+first(findClientById(r.cid).name));render()};
 Object.assign(ACT,{
  kopen:t=>{const d=parseDate(t.dataset.d),mon=addD(TODAY,-dIdx(TODAY));appState.kweek=Math.max(0,Math.round((mon-addD(d,-dIdx(d)))/(7*864e5)));appState.kdate=t.dataset.d;appState.page='koreksi';appState.tab=d<mon?1:2;appState.modal=null;appState.nav=false;render(false)},
