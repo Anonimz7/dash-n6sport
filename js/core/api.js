@@ -78,7 +78,8 @@ const apiDel = p => req('DELETE', p);
 // ---------- translasi: bentuk API -> bentuk store frontend ----------
 const D = s => (s ? new Date(s) : null);
 const tClient = c => {
-  const o = { ...c, pid: c.program_id, coach: c.coach_id, sw: c.share_url };
+  const o = { ...c, pid: c.program_id, coach: c.coach_id, sw: c.share_url,
+    reg: c.created_at ? new Date(c.created_at).getTime() : 0 };
   delete o.program_id; delete o.coach_id; delete o.share_url;
   return o;
 };
