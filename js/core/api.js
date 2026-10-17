@@ -156,16 +156,17 @@ async function apiBoot() {
     store.book = (sched.bookings || []).map(tBooking);
     // Absensi dari backend
     store.attSlot = {};
-    ((att && att.data) || []).forEach(r => {
+    // apiGet sudah unwrap .data, jadi att langsung array
+    ((Array.isArray(att) ? att : (att && att.data)) || []).forEach(r => {
       store.attSlot[r.date + '|' + r.coach_id + '|' + r.time] = { s: r.status, by: r.by_name, at: r.at };
     });
     // Profil coach dari backend
-    ((cprof && cprof.data) || []).forEach(p => {
+    ((Array.isArray(cprof) ? cprof : (cprof && cprof.data)) || []).forEach(p => {
       store.prof[p.coach_id] = { rating: p.rating, reviews: p.reviews, since: p.since };
       if (p.skills) store.skills[p.coach_id] = p.skills;
     });
     // Share links dari backend
-    store.swLinks = ((swl && swl.data) || []).map(r => ({ cid: r.client_id, date: r.date, url: r.url }));
+    store.swLinks = ((Array.isArray(swl) ? swl : (swl && swl.data)) || []).map(r => ({ cid: r.client_id, date: r.date, url: r.url }));
     store.paid = {};
     store.payInfo = {};
     buildSessionLogs();

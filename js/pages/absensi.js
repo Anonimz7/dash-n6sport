@@ -19,11 +19,7 @@ function attList(){
  store.attSlot=store.attSlot||{};
  const per=cos.map(co=>{
   const by={};sessionsOn(co,parseDate(dk)).forEach(r=>{(by[r.time]=by[r.time]||[]).push(r.c.name+' ('+((findProgramById(r.c.pid)||{}).name||'-')+')')});
-  return{co,slots:Object.keys(by).sort().map(t=>{
-    const key=dk+'|'+co+'|'+t;
-    const rec=store.attSlot[key]||null;
-    if(!rec&&Object.keys(store.attSlot).length)console.log('[attList] no match for',key,'available:',Object.keys(store.attSlot).slice(0,5));
-    return{co,t,names:by[t],rec,ok:attOpen(dk,t)}})}});
+  return{co,slots:Object.keys(by).sort().map(t=>({co,t,names:by[t],rec:store.attSlot[dk+'|'+co+'|'+t]||null,ok:attOpen(dk,t)}))}});
  const all_=[].concat(...per.map(x=>x.slots));
  const done=all_.filter(x=>x.rec).length,open=all_.filter(x=>!x.rec&&x.ok).length,lock=all_.filter(x=>!x.rec&&!x.ok).length;
  const item=x=>{
