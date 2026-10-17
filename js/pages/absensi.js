@@ -1,6 +1,6 @@
 /* js/pages/absensi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, meUser, scope } from '../core/access.js';
-import { apiSaveAttendance, isApiMode } from '../core/api.js';
+import { apiSaveAttendance, apiSaveRequest, isApiMode } from '../core/api.js';
 import { COACHES, REQUEST_TYPE_KEYS, REQUEST_TYPE_LABELS, ROLE_USER_IDS } from '../core/constants.js';
 import { liveClients } from '../core/derived.js';
 import { TODAY, esc, first, fmtD, hhmm, iso, parseDate } from '../core/helpers.js';
@@ -58,7 +58,15 @@ MODALS.req=()=>{
  ${type==='masalah'?`<label class="field"><span>Tingkat</span><select name="sev"><option>Rendah</option><option selected>Sedang</option><option>Tinggi</option></select></label>`:`<label class="field"><span>${rs?'Jadwal lama (tanggal)':'Tanggal mulai'}</span><input id="f-rd1" name="date" type="date" value="${iso(TODAY)}" required></label><label class="field"><span>${rs?'Jadwal baru (tanggal)':'Tanggal selesai'}</span><input id="f-rd2" name="date2" type="date" value="${iso(TODAY)}" required></label>`}
  <label class="field full"><span>${type==='masalah'?'Jelaskan masalah':rs?'Detail sesi dan alasan':'Alasan'}</span><textarea id="f-rdet" name="detail" required placeholder="Tulis dengan singkat dan jelas"></textarea></label>
  <div class="row full"><button class="btn primary" type="submit">Kirim</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
-FORMS.req=f=>{const type=f.get('type'),who=appState.role==='coach'&&type!=='izin_client'?meId():f.get('who');store.reqs.push({id:'r'+Date.now(),type,who:type==='masalah'?meId():who,date:f.get('date')||iso(TODAY),date2:f.get('date2')||f.get('date')||iso(TODAY),detail:f.get('detail').trim(),sev:f.get('sev')||undefined,status:'Menunggu',at:new Date()});logAct('mengajukan '+REQUEST_TYPE_LABELS[type].toLowerCase());appState.modal=null;toast('Terkirim dan langsung tampil di portal Pemilik');render()};
+FORMS.req=async f=>{
+ const type=f.get('type'),who=appState.role==='coach'&&type!=='izin_client'?meId():f.get('who');
+ const d={type,who:type==='masalah'?meId():who,date:f.get('date')||iso(TODAY),date2:f.get('date2')||f.get('date')||iso(TODAY),detail:f.get('detail').trim(),sev:f.get('sev')||undefined};
+ if(isApiMode()){
+   try{await apiSaveRequest(d)}catch(e){console.error('Gagal simpan pengajuan:',e);toast('Gagal menyimpan: '+(e.message||e));return}
+ }else{
+   store.reqs.push({id:'r'+Date.now(),...d,status:'Menunggu',at:new Date()});
+ }
+ logAct('mengajukan '+REQUEST_TYPE_LABELS[type].toLowerCase());appState.modal=null;toast('Terkirim dan langsung tampil di portal Pemilik');render()};
 ACT.attcompact=()=>{appState.attCompact=!appState.attCompact;render()};
 ACT.cattset=async t=>{
  const k=t.dataset.d,co=t.dataset.co,tm=t.dataset.t,v=t.dataset.s;
@@ -76,6 +84,14 @@ ACT.cattset=async t=>{
  else store.attCoach[co][k]={status:'Alpha'};
  logAct('mengonfirmasi absensi coach '+getMemberName(co)+' ('+v+') '+tm);
  toast('Absensi '+first(getMemberName(co))+' jam '+tm+': '+v);render()};
-ACT.reqset=t=>{const r=store.reqs.find(x=>x.id===t.dataset.v);r.status=t.dataset.s;logAct((r.status==='Disetujui'?'menyetujui ':r.status==='Ditolak'?'menolak ':'menyelesaikan ')+REQUEST_TYPE_LABELS[r.type].toLowerCase()+' '+whoName(r));toast(['izin_coach','cuti','berhalangan'].includes(r.type)&&r.status==='Disetujui'?'Disetujui. Kalender coach diperbarui':'Status diperbarui');render()};
+ACT.reqset=async t=>{
+ const r=store.reqs.find(x=>x.id===t.dataset.v);if(!r)return;
+ const st=t.dataset.s;
+ if(isApiMode()){
+   try{await apiPatch('/requests/'+r.id,{status:st});r.status=st}
+   catch(e){console.error('Gagal update status:',e);toast('Gagal menyimpan: '+(e.message||e));return}
+ }else{r.status=st}
+ logAct((st==='Disetujui'?'menyetujui ':st==='Ditolak'?'menolak ':'menyelesaikan ')+REQUEST_TYPE_LABELS[r.type].toLowerCase()+' '+whoName(r));
+ toast(['izin_coach','cuti','berhalangan'].includes(r.type)&&st==='Disetujui'?'Disetujui. Kalender coach diperbarui':'Status diperbarui');render()};
 
 export { attList, whoName };

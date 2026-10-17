@@ -171,7 +171,7 @@ async function apiBoot() {
 export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode, hasToken, apiLogin, apiLogout, apiUser,
   apiSaveClient, apiSaveTransaction, apiAddMember, apiSaveProgram, apiSendTeamMessage, apiSendDm,
   apiSendBroadcast, apiSendPortalMessage, apiSubmitCorrection, apiLog, apiSavePattern, apiAddBooking,
-  apiSaveAttendance, apiSaveCoachProfile, apiSaveShareLink };
+  apiSaveAttendance, apiSaveCoachProfile, apiSaveShareLink, apiSaveRequest, apiSaveTemplate };
 
 // ---------- tulis (Fase C): panggil API lalu selaraskan store lokal ----------
 function upsert(arr, o) {
@@ -215,6 +215,16 @@ async function apiSaveAttendance(date, coach_id, time, status, by_name, at) {
 // Simpan profil coach ke backend
 async function apiSaveCoachProfile(coach_id, patch) {
   await apiPut('/coach-profiles/' + coach_id, patch);
+}
+// Simpan template koreksi ke backend
+async function apiSaveTemplate(title, text) {
+  const raw = await apiPost('/correction-templates', { title, text });
+  return upsert(store.tpl, raw);
+}
+// Simpan pengajuan izin/cuti ke backend
+async function apiSaveRequest(d) {
+  const raw = await apiPost('/requests', d);
+  return upsert(store.reqs, tRequest(raw));
 }
 // Simpan share link ke backend
 async function apiSaveShareLink(client_id, date, url) {

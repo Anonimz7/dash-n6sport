@@ -7,6 +7,7 @@ import { icon } from '../core/icons.js';
 import { TONE_LABEL, TONE_PILL_CLASS, buildIndicators, indCards, retensiPct } from '../core/indicators.js';
 import { ACT, FORMS, MODALS, PAGES } from '../core/registry.js';
 import { attPill, coachScore } from '../core/shared.js';
+import { apiPatch, isApiMode } from '../core/api.js';
 import { appState, findClientById, findProgramById, getClientEndDate, getClientStatus, getMemberName, store } from '../core/store.js';
 import { banner, donut, kpi, locked, meter, renderHBar, renderPercentBar, renderSegmented, sheet, statusPill } from '../ui/components.js';
 import { render, toast } from '../ui/shell.js';
@@ -102,6 +103,12 @@ MODALS.targets=()=>sheet('Atur target indikator',`<form data-form="targets" clas
  <label class="field"><span>Target retensi (%)</span><input id="f-tret" name="retensi" type="number" min="0" max="100" value="${store.targets.retensi}"></label>
  <label class="field"><span>Target laporan dikoreksi (%)</span><input id="f-tkor" name="koreksi" type="number" min="0" max="100" value="${store.targets.koreksi}"></label>
  <div class="row full"><button class="btn primary" type="submit">Simpan target</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`);
-FORMS.targets=f=>{store.targets={rev:num(f.get('rev')),klien:num(f.get('klien')),retensi:num(f.get('retensi')),koreksi:num(f.get('koreksi'))};logAct('memperbarui target indikator');appState.modal=null;toast('Target disimpan');render()};
+FORMS.targets=async f=>{
+ const t={rev:num(f.get('rev')),klien:num(f.get('klien')),retensi:num(f.get('retensi')),koreksi:num(f.get('koreksi'))};
+ if(isApiMode()){
+   try{await apiPatch('/settings',{targets:t});store.targets=t}
+   catch(e){console.error('Gagal simpan target:',e);toast('Gagal menyimpan: '+(e.message||e));return}
+ }else{store.targets=t}
+ logAct('memperbarui target indikator');appState.modal=null;toast('Target disimpan');render()};
 
 export { FINANCE_METRICS, activityCard, condCard, growthCard, growthData, hero, niceStep, renderCoachHome, trendChart };

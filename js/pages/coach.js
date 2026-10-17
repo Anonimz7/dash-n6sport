@@ -1,6 +1,6 @@
 /* js/pages/coach.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, perm } from '../core/access.js';
-import { apiAddBooking, apiSavePattern, isApiMode } from '../core/api.js';
+import { apiAddBooking, apiDel, apiSavePattern, isApiMode } from '../core/api.js';
 import { COACHES, PERIODS, ROLE_USER_IDS, SLOTS, periodOf } from '../core/constants.js';
 import { calCell, freeSlots, offList, offOn, offSlot } from '../core/derived.js';
 import { DAYS, DAYSL, TODAY, addD, dIdx, esc, first, fmtD, hhmm, iso, parseDate, slug } from '../core/helpers.js';
@@ -176,7 +176,14 @@ Object.assign(ACT,{
  pday:t=>{appState.pday=+t.dataset.v;render()},
  slotopen:t=>{const[c,ds,sl]=t.dataset.id.split('|'),d=+ds;store.pattern[c]=store.pattern[c].slice();store.pattern[c][d]=[...store.pattern[c][d],sl].sort();logAct('membuka slot '+DAYSL[d]+' '+sl);render()},
  slotclose:t=>{const[c,ds,sl]=t.dataset.id.split('|'),d=+ds;store.pattern[c]=store.pattern[c].slice();store.pattern[c][d]=store.pattern[c][d].filter(x=>x!==sl);logAct('menutup slot '+DAYSL[d]+' '+sl);appState.modal=null;render()},
- slotdel:t=>{const[c,ds,sl,cid]=t.dataset.id.split('|'),b=store.book.find(x=>x.coach===c&&x.day===+ds&&x.time===sl&&x.client===cid);if(b){logAct('mengosongkan slot '+DAYSL[+ds]+' '+sl+' ('+findClientById(b.client).name+')');store.book=store.book.filter(x=>x!==b)}appState.modal=null;toast('Klien dikeluarkan dari sesi');render()},
+ slotdel:async t=>{
+  const[c,ds,sl,cid]=t.dataset.id.split('|'),b=store.book.find(x=>x.coach===c&&x.day===+ds&&x.time===sl&&x.client===cid);
+  if(b){
+    logAct('mengosongkan slot '+DAYSL[+ds]+' '+sl+' ('+findClientById(b.client).name+')');
+    if(isApiMode()&&b.id){try{await apiDel('/bookings/'+b.id)}catch(e){console.error('Gagal hapus booking:',e);toast('Gagal menghapus: '+(e.message||e));return}}
+    store.book=store.book.filter(x=>x!==b)
+  }
+  appState.modal=null;toast('Klien dikeluarkan dari sesi');render()},
 });
 Object.assign(ACT,{
  copyuid:t=>copyToClipboard(t.dataset.v,'ID klien '+t.dataset.v+' tersalin'),

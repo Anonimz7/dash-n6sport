@@ -1,6 +1,6 @@
 /* js/pages/koreksi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, scope } from '../core/access.js';
-import { apiSubmitCorrection, isApiMode } from '../core/api.js';
+import { apiSaveTemplate, apiSubmitCorrection, isApiMode } from '../core/api.js';
 import { COACHES, PLAN, ROLE_USER_IDS } from '../core/constants.js';
 import { getPendingCorrections, hrZone, inRange } from '../core/derived.js';
 import { DAYS, TODAY, addD, dIdx, esc, first, fmtD, hhmm, iso, parseDate } from '../core/helpers.js';
@@ -69,7 +69,11 @@ Object.assign(ACT,{
  kdate:t=>{appState.kdate=t.dataset.v;render()},
  kweek:t=>{appState.kweek=+t.dataset.v;const ds=weekDates();appState.kdate=iso(appState.kweek===0?TODAY:ds[6]);render()},
  editfix:t=>{appState.editfix=t.dataset.v||null;render()},
- tplnew:()=>{store.tpl.push({id:'t'+Date.now(),title:'Template baru',text:'Halo {nama}, '});render()},
+ tplnew:async ()=>{
+   if(isApiMode()){
+     try{await apiSaveTemplate('Template baru','Halo {nama}, ')}catch(e){toast('Gagal menyimpan: '+(e.message||e));return}
+   }else{store.tpl.push({id:'t'+Date.now(),title:'Template baru',text:'Halo {nama}, '})}
+   render()},
  tpldel:t=>{store.tpl.splice(+t.dataset.v,1);render()}
 });
 
