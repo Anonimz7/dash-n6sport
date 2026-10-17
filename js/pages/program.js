@@ -10,9 +10,11 @@ import { copyToClipboard, render, toast } from '../ui/shell.js';
 
 // Simpan custom program templates ke backend
 async function saveTpls(){
-  if(!isApiMode())return;
+  if(!isApiMode()){console.log('[saveTpls] skip (local mode)');return}
+  console.log('[saveTpls] saving',JSON.stringify(appState.prog.tpls[0].rows[0]));
   try{
     await apiPatch('/settings',{program_tpls:appState.prog.tpls});
+    console.log('[saveTpls] OK');
   }catch(e){
     console.error('[saveTpls] gagal:',e);
     toast('Gagal menyimpan template: '+((e&&e.message)||e));
