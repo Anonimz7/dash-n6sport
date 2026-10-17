@@ -176,8 +176,6 @@ async function apiBoot() {
       store.payInfo[p.coach_id] = { date: p.date, method: p.method, note: p.note || '', amt: p.amount, per: p.period };
       store.payIds[p.coach_id] = p.id;
     });
-    store.paid = {};
-    store.payInfo = {};
     buildSessionLogs();
     apiMode = true;
     return true;
