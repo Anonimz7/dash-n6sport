@@ -1,6 +1,6 @@
 /* js/pages/absensi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, meUser, scope } from '../core/access.js';
-import { apiSaveAttendance, apiSaveRequest, isApiMode } from '../core/api.js';
+import { apiPatch, apiSaveAttendance, apiSaveRequest, isApiMode } from '../core/api.js';
 import { COACHES, REQUEST_TYPE_KEYS, REQUEST_TYPE_LABELS, ROLE_USER_IDS } from '../core/constants.js';
 import { liveClients } from '../core/derived.js';
 import { TODAY, esc, first, fmtD, hhmm, iso, parseDate } from '../core/helpers.js';
