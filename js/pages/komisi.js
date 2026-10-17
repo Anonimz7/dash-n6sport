@@ -69,15 +69,18 @@ MODALS.bayar=m=>{
  <label class="chk full"><input type="checkbox" name="ok" required><span><b>Saya sudah memeriksa rincian komisi</b><small>Setelah dikonfirmasi, status coach berubah menjadi Dibayar dan tercatat di log.</small></span></label>
  <div class="row full"><button class="btn primary" type="submit">Konfirmasi pembayaran</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
 FORMS.bayar=async f=>{
+ console.log('[bayar] submit, apiMode=',isApiMode());
  const c=f.get('c'),x=getCommissionData(appState.per).byCoach.find(y=>y.c===c);
- if(!x||perm('komisi')!=='full')return;
+ if(!x||perm('komisi')!=='full'){console.log('[bayar] blocked: no data or no perm');return}
  const payData={date:f.get('date'),method:f.get('method'),note:(f.get('note')||'').trim(),amt:x.kom,per:perLbl()};
  if(isApiMode()){
    try{
+     console.log('[bayar] POST /commission-payments',c);
      const res=await apiPayCommission(c,perLbl(),x.kom,f.get('date'),f.get('method'),(f.get('note')||'').trim());
+     console.log('[bayar] OK',res);
      store.payIds[c]=res.id;
-   }catch(e){toast('Gagal menyimpan: '+(e.message||e));return}
- }
+   }catch(e){console.error('[bayar] FAIL',e);toast('Gagal menyimpan: '+(e.message||e));return}
+ }else{console.log('[bayar] skip API (local mode)')}
  store.paid[c]=true;store.payInfo[c]=payData;
  logAct('membayar komisi '+getMemberName(c)+' ('+money(x.kom,'komisi')+', '+f.get('method')+')');appState.modal=null;toast('Pembayaran komisi '+first(getMemberName(c))+' dicatat');render()};
 Object.assign(ACT,{
