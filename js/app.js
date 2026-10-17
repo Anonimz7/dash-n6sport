@@ -40,8 +40,17 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('submit',e=>{
  const f=e.target.closest('form[data-form]');if(!f)return;
- e.preventDefault();const h=FORMS[f.dataset.form];
- if(h)Promise.resolve(h(new FormData(f),f)).catch(err=>{console.error(err);toast('Gagal menyimpan: '+((err&&err.message)||err))});
+ e.preventDefault();
+ // Cegah double-submit: tandai form sedang diproses
+ if(f.dataset.busy==='1')return;
+ f.dataset.busy='1';
+ const btn=f.querySelector('button[type="submit"]');
+ const btnTxt=btn?btn.textContent:'';
+ if(btn){btn.disabled=true;btn.textContent='Menyimpan...'}
+ const h=FORMS[f.dataset.form];
+ const done=()=>{f.dataset.busy='';if(btn){btn.disabled=false;btn.textContent=btnTxt}};
+ if(h)Promise.resolve(h(new FormData(f),f)).catch(err=>{console.error(err);toast('Gagal menyimpan: '+((err&&err.message)||err))}).finally(done);
+ else done();
 });
 document.addEventListener('input',e=>{
  const t=e.target;
