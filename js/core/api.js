@@ -116,7 +116,7 @@ async function apiBoot() {
       apiGet('/correction-templates'),
       apiGet('/activity'),
       req('GET', '/schedule'),
-      apiGet('/attendance').catch(() => ({ data: [] })),
+      apiGet('/attendance').catch(e => { console.error('Gagal load attendance:', e); return { data: [] }; }),
       apiGet('/coach-profiles').catch(() => ({ data: [] })),
       apiGet('/share-links').catch(() => ({ data: [] })),
     ]);
