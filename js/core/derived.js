@@ -28,11 +28,18 @@ const getPendingCorrections=coachId=>getReportsOf(coachId).filter(r=>!r.fix);
 const holdOf=(cid,k)=>{const b=store.book.find(x=>x.client===cid&&x.day===dIdx(parseDate(k)));return !!(b&&b.hold)};
 function getSessionAttendance(days,coach){
  const out=[];
- Object.keys(store.attClient).forEach(key=>{
-  if(store.attClient[key]!=='Hadir')return;
-  const[k,cid]=key.split('|'),c=findClientById(cid);if(!c||(coach&&c.coach!==coach)||holdOf(cid,k))return;
+ // Komisi dari absensi coach (attSlot): setiap slot yang dikonfirmasi Hadir
+ Object.keys(store.attSlot||{}).forEach(key=>{
+  const rec=store.attSlot[key];
+  if(!rec||rec.s!=='Hadir')return;
+  const[k,cid,time]=key.split('|');
+  if(coach&&cid!==coach)return;
   const d=parseDate(k);if(d>TODAY||d<=addD(TODAY,-days))return;
-  out.push({date:k,cid,client:c.name,coach:c.coach,pid:c.pid,fee:(findProgramById(c.pid)||{}).fee||0});
+  // Cari booking untuk dapat program & fee: coach + day + time
+  const b=store.book.find(x=>x.coach===cid&&x.day===dIdx(d)&&x.time===time);
+  const c=b?findClientById(b.client):null;
+  const pid=c?c.pid:null;
+  out.push({date:k,cid,client:c?c.name:'-',coach:cid,pid,fee:(findProgramById(pid)||{}).fee||0});
  });
  return out;
 }
