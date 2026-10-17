@@ -105,7 +105,7 @@ const tActivity = a => ({ ...a, t: D(a.t) });
 async function apiBoot() {
   if (!apiToken) { apiMode = false; return false; }
   try {
-    const [members, programs, clients, tx, reqs, team, bcs, settings, tpl, activity, sched, att, cprof, swl] = await Promise.all([
+    const [members, programs, clients, tx, reqs, team, bcs, settings, tpl, activity, sched, att, cprof, swl, compay] = await Promise.all([
       apiGet('/members'),
       apiGet('/programs'),
       apiGet('/clients?status=semua'),
@@ -120,6 +120,7 @@ async function apiBoot() {
       apiGet('/attendance').catch(e => { console.error('Gagal load attendance:', e); return { data: [] }; }),
       apiGet('/coach-profiles').catch(() => ({ data: [] })),
       apiGet('/share-links').catch(() => ({ data: [] })),
+      apiGet('/commission-payments').catch(() => []),
     ]);
     const repLists = await Promise.all(clients.map(c => apiGet('/clients/' + c.id + '/reports').catch(() => [])));
     const dmLists = await Promise.all(clients.map(c => apiGet('/messages/dm/' + c.id).catch(() => [])));
@@ -168,6 +169,13 @@ async function apiBoot() {
     });
     // Share links dari backend
     store.swLinks = ((Array.isArray(swl) ? swl : (swl && swl.data)) || []).map(r => ({ cid: r.client_id, date: r.date, url: r.url }));
+    // Pembayaran komisi dari backend
+    store.paid = {}; store.payInfo = {}; store.payIds = {};
+    ((Array.isArray(compay) ? compay : (compay && compay.data)) || []).forEach(p => {
+      store.paid[p.coach_id] = true;
+      store.payInfo[p.coach_id] = { date: p.date, method: p.method, note: p.note || '', amt: p.amount, per: p.period };
+      store.payIds[p.coach_id] = p.id;
+    });
     store.paid = {};
     store.payInfo = {};
     buildSessionLogs();
@@ -185,7 +193,8 @@ async function apiBoot() {
 export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode, hasToken, apiLogin, apiLogout, apiUser,
   apiSaveClient, apiSaveTransaction, apiAddMember, apiSaveProgram, apiSendTeamMessage, apiSendDm,
   apiSendBroadcast, apiSendPortalMessage, apiSubmitCorrection, apiLog, apiSavePattern, apiAddBooking,
-  apiSaveAttendance, apiSaveCoachProfile, apiSaveShareLink, apiSaveRequest, apiSaveTemplate };
+  apiSaveAttendance, apiSaveCoachProfile, apiSaveShareLink, apiSaveRequest, apiSaveTemplate,
+  apiPayCommission, apiCancelCommission };
 
 // ---------- tulis (Fase C): panggil API lalu selaraskan store lokal ----------
 function upsert(arr, o) {
@@ -229,6 +238,14 @@ async function apiSaveAttendance(date, coach_id, time, status, by_name, at) {
 // Simpan profil coach ke backend
 async function apiSaveCoachProfile(coach_id, patch) {
   await apiPut('/coach-profiles/' + coach_id, patch);
+}
+// Simpan pembayaran komisi ke backend
+async function apiPayCommission(coach_id, period, amount, date, method, note) {
+  const raw = await apiPost('/commission-payments', { coach_id, period, amount, date, method, note });
+  return raw;
+}
+async function apiCancelCommission(paymentId) {
+  await apiDel('/commission-payments/' + paymentId);
 }
 // Simpan template koreksi ke backend
 async function apiSaveTemplate(title, text) {

@@ -6,7 +6,7 @@ import { icon } from '../core/icons.js';
 import { ACT, CONF, FORMS, MODALS, PAGES } from '../core/registry.js';
 import { locOf } from '../core/shared.js';
 import { appState, findProgramById, getClientStatus, getMemberName, store } from '../core/store.js';
-import { apiDel, apiSaveProgram, isApiMode } from '../core/api.js';
+import { apiCancelCommission, apiDel, apiPayCommission, apiSaveProgram, isApiMode } from '../core/api.js';
 import { activePrograms, banner, kpi, maskNote, perBar, perLbl, pill, sheet, tabsBar } from '../ui/components.js';
 import { copyToClipboard, render, toast } from '../ui/shell.js';
 
@@ -68,13 +68,30 @@ MODALS.bayar=m=>{
  <label class="field full"><span>Catatan (opsional)</span><input id="f-paynote" name="note" placeholder="Contoh: transfer BCA, bukti dikirim via WhatsApp"></label>
  <label class="chk full"><input type="checkbox" name="ok" required><span><b>Saya sudah memeriksa rincian komisi</b><small>Setelah dikonfirmasi, status coach berubah menjadi Dibayar dan tercatat di log.</small></span></label>
  <div class="row full"><button class="btn primary" type="submit">Konfirmasi pembayaran</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
-FORMS.bayar=f=>{const c=f.get('c'),x=getCommissionData(appState.per).byCoach.find(y=>y.c===c);if(!x||perm('komisi')!=='full')return;
- store.paid[c]=true;store.payInfo[c]={date:f.get('date'),method:f.get('method'),note:(f.get('note')||'').trim(),amt:x.kom,per:perLbl()};
+FORMS.bayar=async f=>{
+ const c=f.get('c'),x=getCommissionData(appState.per).byCoach.find(y=>y.c===c);
+ if(!x||perm('komisi')!=='full')return;
+ const payData={date:f.get('date'),method:f.get('method'),note:(f.get('note')||'').trim(),amt:x.kom,per:perLbl()};
+ if(isApiMode()){
+   try{
+     const res=await apiPayCommission(c,perLbl(),x.kom,f.get('date'),f.get('method'),(f.get('note')||'').trim());
+     store.payIds[c]=res.id;
+   }catch(e){toast('Gagal menyimpan: '+(e.message||e));return}
+ }
+ store.paid[c]=true;store.payInfo[c]=payData;
  logAct('membayar komisi '+getMemberName(c)+' ('+money(x.kom,'komisi')+', '+f.get('method')+')');appState.modal=null;toast('Pembayaran komisi '+first(getMemberName(c))+' dicatat');render()};
 Object.assign(ACT,{
  askprog:t=>{const p=findProgramById(t.dataset.v),n=store.clients.filter(c=>!c.arch&&c.pid===p.id&&getClientStatus(c)!=='Selesai').length;if(n){toast(n+' klien aktif masih memakai program ini');return}appState.modal={k:'confirm',text:'Hapus program '+p.name+'? Riwayat transaksi lama tetap tersimpan.',yes:'delprog',arg:p.id,label:'Hapus program'};render()},
  per:t=>{const v=t.dataset.v;appState.per=/^\d+$/.test(v)?+v:v;render()},
- paid:t=>{const c=t.dataset.v;if(!store.paid[c]){appState.modal={k:'bayar',id:c};render();return}store.paid[c]=false;delete store.payInfo[c];logAct('membatalkan pembayaran komisi '+getMemberName(c));toast('Pembayaran dibatalkan');render()},
+ paid:async t=>{
+   const c=t.dataset.v;
+   if(!store.paid[c]){appState.modal={k:'bayar',id:c};render();return}
+   if(isApiMode()&&store.payIds[c]){
+     try{await apiCancelCommission(store.payIds[c])}catch(e){toast('Gagal membatalkan: '+(e.message||e));return}
+     delete store.payIds[c];
+   }
+   store.paid[c]=false;delete store.payInfo[c];
+   logAct('membatalkan pembayaran komisi '+getMemberName(c));toast('Pembayaran dibatalkan');render()},
  copykom:()=>{const k=getCommissionData(appState.per);copyToClipboard(`Laporan komisi ${perLbl()}\n`+k.byCoach.map(x=>`${getMemberName(x.c)}: ${x.nSes} sesi hadir, komisi ${money(x.kom,'komisi')}`).join('\n'),'Laporan komisi tersalin')}
 });
 
