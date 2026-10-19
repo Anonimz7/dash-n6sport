@@ -1,15 +1,16 @@
 /* js/app.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { applyTheme, ensurePage } from './actions.js';
-import { ROLE, ROLE_USER_IDS } from './core/constants.js';
+import { ROLE } from './core/constants.js';
 import { TODAY, num, parseDate } from './core/helpers.js';
 import { ACT, FORMS, HOOK } from './core/registry.js';
 import { appState, fillTemplate, findClientById, findClientByUid, store } from './core/store.js';
 import { syncBoot, syncListen } from './core/sync.js';
 import { idPreview } from './pages/coach.js';
 import { clientFormSync } from './pages/klien.js';
+import { slId, planTypeOn } from './core/shared.js';
 import { navigateTo, render, setPath, toast } from './ui/shell.js';
 import { apiBoot, apiLog, isApiMode, hasToken, apiLogin, apiLogout, apiUser } from './core/api.js';
-import { setLogSink } from './core/access.js';
+import { meId, setLogSink } from './core/access.js';
 
 // Handler logout: hapus token, kembali ke layar login
 ACT.logout = () => { apiLogout(); location.reload(); };
@@ -64,8 +65,10 @@ document.addEventListener('change',e=>{
  if(t.hasAttribute('data-tsel')){const w=document.getElementById('ctw');if(w)w.hidden=t.value!=='custom';return}
  if(t.dataset.f){appState[t.dataset.f]=t.hasAttribute('data-n')?+t.value:t.value;render();return}
  if(t.hasAttribute('data-tpl')){
-  const form=t.closest('form'),r=store.reports.find(x=>x.id===form.dataset.id),tp=store.tpl.find(x=>x.id===t.value);
-  if(r&&tp){form.querySelector('textarea').value=fillTemplate(tp.text,findClientById(r.cid).name,r.type)}
+  const form=t.closest('form'),idData=form.dataset.id;
+  const tautan=idData.startsWith('sl|')?(store.swLinks||[]).find(x=>slId(x)===idData):null;
+  const r=tautan||store.reports.find(x=>x.id===idData),tp=store.tpl.find(x=>x.id===t.value);
+  if(r&&tp){const c=findClientById(r.cid);form.querySelector('textarea').value=fillTemplate(tp.text,c.name,tautan?planTypeOn(tautan.date):r.type)}
   return}
  if(t.hasAttribute('data-apply')){ACT.applyps(t);return}
  if(t.dataset.set){
@@ -88,7 +91,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&appState.modal){app
    if(u&&u.role&&ROLE[u.role])appState.role=u.role;
    const th=localStorage.getItem('nsr-theme');if(th==='light'||th==='dark'||th==='system')appState.theme=th;
  }catch(e){}
- if(appState.role==='coach'){appState.sched=ROLE_USER_IDS.coach;appState.cal=ROLE_USER_IDS.coach;appState.share=ROLE_USER_IDS.coach}
+ if(appState.role==='coach'){const mid=meId();appState.sched=mid;appState.cal=mid;appState.share=mid}
  const hm=location.hash.match(/^#c=([A-Za-z0-9-]+)/);
  window.addEventListener('hashchange',()=>{try{location.reload()}catch(e){}});
  const appEl=document.getElementById('app');

@@ -1,6 +1,6 @@
 /* js/pages/koreksi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, scope } from '../core/access.js';
-import { apiFixShareLink, apiSaveTemplate, apiSubmitCorrection, isApiMode } from '../core/api.js';
+import { apiFixShareLink, apiSaveTemplate, apiUpdateTemplate, apiDeleteTemplate, apiSubmitCorrection, isApiMode } from '../core/api.js';
 import { COACHES, PLAN, ROLE_USER_IDS } from '../core/constants.js';
 import { getPendingCorrections, hrZone, inRange } from '../core/derived.js';
 import { DAYS, TODAY, addD, dIdx, esc, first, fmtD, hhmm, iso, parseDate } from '../core/helpers.js';
@@ -55,7 +55,7 @@ PAGES.koreksi=()=>{
    return `<div class="rep"><div class="wkh"><div><b>${esc(c.name)}</b><p class="sub">${esc(findProgramById(c.pid).name)}</p></div><div class="row">${r.fix?pill('Dikoreksi','good'):pill('Menunggu','warn')}</div></div>
    ${fixBlock(r)}</div>`}).join('')||`<section class="card"><p class="sub">Tidak ada laporan pada tanggal ini.</p></section>`}</div>`}
  if(t===3){
-  body=`${banner('Gunakan {nama} dan {jenis} di dalam teks. Keduanya diganti otomatis dengan nama depan klien dan jenis sesi.')}<div class="listv">${store.tpl.map((x,i)=>`<section class="card"><div class="fg"><label class="field"><span>Judul template</span><input id="f-tt${i}" value="${esc(x.title)}" data-set="store.tpl.${i}.title"></label><label class="field full"><span>Isi koreksi</span><textarea id="f-tx${i}" data-set="store.tpl.${i}.text">${esc(x.text)}</textarea></label></div><div class="row"><button class="btn sm danger" data-act="tpldel" data-v="${i}">${icon('trash',14)} Hapus</button></div></section>`).join('')}</div><div><button class="btn primary" data-act="tplnew">${icon('plus',15)} Program baru</button></div>`}
+  body=`${banner('Gunakan {nama} dan {jenis} di dalam teks. Keduanya diganti otomatis dengan nama depan klien dan jenis sesi.')}<div class="listv">${store.tpl.map((x,i)=>`<section class="card"><div class="fg"><label class="field"><span>Judul template</span><input id="f-tt${i}" value="${esc(x.title)}" data-set="store.tpl.${i}.title" onchange="setTimeout(()=>window._saveCorrTpl&amp;&amp;window._saveCorrTpl(${i}),0)"></label><label class="field full"><span>Isi koreksi</span><textarea id="f-tx${i}" data-set="store.tpl.${i}.text" onchange="setTimeout(()=>window._saveCorrTpl&amp;&amp;window._saveCorrTpl(${i}),0)">${esc(x.text)}</textarea></label></div><div class="row"><button class="btn sm danger" data-act="tpldel" data-v="${i}">${icon('trash',14)} Hapus</button></div></section>`).join('')}</div><div><button class="btn primary" data-act="tplnew">${icon('plus',15)} Program baru</button></div>`}
  return `<div class="stackv">${tabsBar(tabs)}${body}</div>`};
 FORMS.fix=async (f,form)=>{const idData=form.dataset.id,tautanLink=idData.startsWith('sl|')?(store.swLinks||[]).find(x=>slId(x)===idData):null,r=tautanLink||store.reports.find(x=>x.id===idData);
  if(!r){toast('Data laporan tidak ditemukan');return}
@@ -82,7 +82,19 @@ Object.assign(ACT,{
      try{await apiSaveTemplate('Template baru','Halo {nama}, ')}catch(e){toast('Gagal menyimpan: '+(e.message||e));return}
    }else{store.tpl.push({id:'t'+Date.now(),title:'Template baru',text:'Halo {nama}, '})}
    render()},
- tpldel:t=>{store.tpl.splice(+t.dataset.v,1);render()}
+ tpldel:async t=>{
+   const i=+t.dataset.v,tp=store.tpl[i];if(!tp)return;
+   if(isApiMode()){
+     try{await apiDeleteTemplate(tp.id)}catch(e){toast('Gagal menghapus template: '+((e&&e.message)||e));return}
+   }else store.tpl.splice(i,1);
+   render()}
 });
+// Simpan edit template koreksi ke backend (dipanggil via onchange setelah data-set)
+async function saveCorrTpl(i){
+ const t=store.tpl[i];if(!t||!isApiMode())return;
+ try{await apiUpdateTemplate(t.id,t.title,t.text)}
+ catch(e){toast('Gagal menyimpan template: '+((e&&e.message)||e))}
+}
+if(typeof window!=='undefined')window._saveCorrTpl=saveCorrTpl;
 
 export { fixBlock, kCoachId, kLinks, kReports, renderCorrectionFilters, renderFixDetails, weekDates, zonePill };

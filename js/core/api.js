@@ -195,6 +195,7 @@ export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode, hasTok
   apiSaveClient, apiSaveTransaction, apiAddMember, apiSaveProgram, apiSendTeamMessage, apiSendDm,
   apiSendBroadcast, apiSendPortalMessage, apiSubmitCorrection, apiLog, apiSavePattern, apiAddBooking,
   apiSaveAttendance, apiSaveCoachProfile, apiSaveShareLink, apiSaveRequest, apiSaveTemplate,
+  apiUpdateTemplate, apiDeleteTemplate,
   apiPayCommission, apiCancelCommission, apiFixShareLink };
 
 // ---------- tulis (Fase C): panggil API lalu selaraskan store lokal ----------
@@ -256,6 +257,17 @@ async function apiCancelCommission(paymentId) {
 async function apiSaveTemplate(title, text) {
   const raw = await apiPost('/correction-templates', { title, text });
   return upsert(store.tpl, raw);
+}
+// Ubah template koreksi di backend
+async function apiUpdateTemplate(id, title, text) {
+  const raw = await apiPatch('/correction-templates/' + id, { title, text });
+  return upsert(store.tpl, raw);
+}
+// Hapus template koreksi di backend (idempotent: 204 walau id tidak ada)
+async function apiDeleteTemplate(id) {
+  await apiDel('/correction-templates/' + id);
+  const i = store.tpl.findIndex(t => t.id === id);
+  if (i >= 0) store.tpl.splice(i, 1);
 }
 // Simpan pengajuan izin/cuti ke backend
 async function apiSaveRequest(d) {
