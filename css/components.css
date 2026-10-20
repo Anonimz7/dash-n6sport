@@ -277,6 +277,14 @@ td small{display:block;color:var(--muted);font-size:12px}
 .idcard{display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
 .idcard small{color:var(--muted);font-size:12.5px}
 .idprev{min-height:20px}
+.aclist{display:flex;flex-direction:column;gap:6px}
+.acgrp{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.acitem{display:flex;flex-direction:column;gap:1px;align-items:flex-start;text-align:left;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--fg);font:inherit;cursor:pointer;width:100%}
+.acitem:hover{border-color:var(--accent)}
+.acitem .acn{font-weight:700;font-size:14px}
+.acitem small{color:var(--muted);font-size:12px}
+.acitem.dis{opacity:.55;cursor:default}
+.acitem.dis em{font-style:normal;font-size:11.5px;color:var(--warn);font-weight:700}
 .crow{display:flex;flex-direction:column;gap:12px}
 .crh{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .crh small{display:block}

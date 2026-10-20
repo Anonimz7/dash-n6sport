@@ -95,6 +95,35 @@ const idPreview=(uid,c)=>{
  const warn=k.coach!==c?`<p class="sub" style="color:var(--warn)">Klien ini milik ${esc(getMemberName(k.coach))}. Menyimpan akan memindahkan klien ke ${esc(getMemberName(c))}.</p>`:'';
  return `<div class="idcard"><b>${esc(k.name)}</b><small>${esc(findProgramById(k.pid).name)}</small><small>Lokasi: ${esc(locOf(c))}</small></div>${warn}`;
 };
+/* Picker klien untuk slotadd (keputusan user 2026-10-20): cari by nama/ID, HANYA klien coach ini
+   + klien yang belum punya coach. Klien coach lain tidak ditampilkan sama sekali (pindah coach
+   lewat menu Klien). Arsip & status Selesai disembunyikan. Pilihan wajib dari daftar (cid). */
+const slotClientPool=c=>store.clients.filter(k=>!k.arch&&getClientStatus(k)!=='Selesai'&&(k.coach===c||!COACHES.includes(k.coach)));
+const slotPickList=(q,c,d,tt)=>{
+ const query=String(q||'').trim().toLowerCase(),pool=slotClientPool(c);
+ const bare=s=>String(s||'').toLowerCase().replace(/[\s-]/g,'');
+ const match=k=>!query||k.name.toLowerCase().includes(query)||bare(k.uid).includes(bare(query));
+ const rank=k=>{if(!query)return 2;const nm=k.name.toLowerCase();return nm.startsWith(query)?0:nm.includes(query)?1:2};
+ const item=k=>{
+  const inSlot=tt&&!String(tt).startsWith('p:')&&store.book.some(b=>b.coach===c&&b.day===d&&b.time===tt&&b.client===k.id);
+  const sub=`<small>${esc(findProgramById(k.pid).name)} · ${esc(k.uid||'')}</small>`;
+  return inSlot?`<div class="acitem dis"><span class="acn">${esc(k.name)}</span>${sub}<em>Sudah di sesi ini</em></div>`
+   :`<button type="button" class="acitem" data-act="acpick" data-id="${k.id}"><span class="acn">${esc(k.name)}</span>${sub}</button>`};
+ const own=pool.filter(k=>k.coach===c&&match(k)).sort((a,b)=>rank(a)-rank(b)||a.name.localeCompare(b.name));
+ const free=pool.filter(k=>k.coach!==c&&match(k)).sort((a,b)=>rank(a)-rank(b)||a.name.localeCompare(b.name));
+ const total=own.length+free.length;
+ if(!total)return '<p class="sub" style="margin:6px 2px">Tidak ada klien yang cocok. Klien coach lain tidak ditampilkan — pindah coach dilakukan lewat menu Klien.</p>';
+ const MAX=8;let shown=0;
+ const take=arr=>{const s=arr.slice(0,Math.max(0,MAX-shown));shown+=s.length;return s};
+ const grp=(title,arr)=>arr.length?`<div class="acgrp">${title}</div>`+arr.map(item).join(''):'';
+ return grp('Klien '+esc(getMemberName(c)),take(own))+grp('Belum punya coach',take(free))
+  +(total>shown?`<p class="sub" style="margin:6px 2px">dan ${total-shown} klien lain — ketik nama untuk mempersempit.</p>`:'')};
+const slotPreview=(cid,c)=>{
+ const k=cid?findClientById(cid):null;
+ if(!k)return '<p class="sub">Pilih klien dari daftar — nama, paket, dan lokasi tampil di sini.</p>';
+ const note=!COACHES.includes(k.coach)?`<p class="sub" style="color:var(--warn)">Klien ini belum punya coach. Menyimpan akan menugaskannya ke ${esc(getMemberName(c))}.</p>`
+  :k.coach!==c?`<p class="sub" style="color:var(--warn)">Klien ini milik ${esc(getMemberName(k.coach))}. Menyimpan akan memindahkannya ke ${esc(getMemberName(c))}.</p>`:'';
+ return `<div class="idcard"><b>${esc(k.name)}</b><small class="mono">${esc(k.uid||'')}</small><small>${esc(findProgramById(k.pid).name)}</small><small>Lokasi: ${esc(locOf(c))}</small></div>${note}`};
 PAGES.coach=()=>{
  const tabs=appState.role==='coach'?['Jadwal coach','Bagikan jadwal kosong','Kalender 30 hari']:['Jadwal coach','Bagikan jadwal kosong','Kalender 30 hari','Daftar coach'];
  const t=Math.min(appState.tab,tabs.length-1);let body='';
@@ -145,12 +174,12 @@ MODALS.slot=m=>{
  const hold=on=>`<label class="chk"><input type="checkbox" name="hold" ${on?'checked':''}><span><b>Ada perubahan jadwal: tahan komisi</b><small>Bila dicentang, komisi sesi ini tidak otomatis masuk ke dashboard coach sampai Anda melepas centang.</small></span></label>`;
  const hid=`<input type="hidden" name="c" value="${c}"><input type="hidden" name="d" value="${d}"><input type="hidden" name="id" value="${m.id}">`;
  if(b&&cli)return sheet('Sesi terisi',head+`<div class="idcard"><b>${esc(cli.name)}</b><small class="mono">${esc(cli.uid)}</small><small>${esc(findProgramById(cli.pid).name)}</small><small>Lokasi: ${esc(locOf(c))}</small>${mates.length?`<small>Satu sesi dengan: ${esc(mates.map(x=>findClientById(x.client).name).join(', '))}</small>`:''}</div><form data-form="slotsave" class="listv" style="margin-top:12px">${hid}<div class="fg">${timeSel(b.time)}</div>${hold(b.hold)}<div class="row"><button class="btn primary" type="submit">Simpan</button><button class="btn danger" type="button" data-act="slotdel" data-id="${m.id}">Keluarkan dari sesi</button><button class="btn" type="button" data-act="close">Tutup</button></div></form>`);
- return sheet('Isi sesi dengan klien',head+`<form data-form="slotadd" class="listv">${hid}<label class="field full"><span>ID klien</span><input id="f-slotuid" name="uid" data-idl data-coach="${c}" autocomplete="off" required placeholder="Tempel ID klien, contoh N6-1001"></label>${!isAdd&&store.book.some(x=>x.coach===c&&x.day===d&&x.time===tt)?`<p class="sub" style="margin:0">Jam ${tt} sudah berisi ${esc(store.book.filter(x=>x.coach===c&&x.day===d&&x.time===tt).map(x=>first(findClientById(x.client).name)).join(', '))}. Klien baru akan bergabung di sesi yang sama.</p>`:''}<div id="idprev" class="idprev">${idPreview('',c)}</div><div class="fg">${timeSel(isAdd?'':tt)}</div>${hold(false)}<div class="row"><button class="btn primary" type="submit">Simpan ke jadwal</button>${preset&&!isAdd?(open?`<button class="btn" type="button" data-act="slotclose" data-id="${m.id}">Tutup slot</button>`:`<button class="btn" type="button" data-act="slotopen" data-id="${m.id}">Buka sebagai slot kosong</button>`):''}<button class="btn" type="button" data-act="close">Batal</button></div></form>`);
+ return sheet('Isi sesi dengan klien',head+`<form data-form="slotadd" class="listv">${hid}<label class="field full"><span>Nama klien</span><input id="f-slotname" name="q" data-acl data-coach="${c}" data-day="${d}" data-time="${tt}" autocomplete="off" placeholder="Ketik nama atau ID klien, lalu pilih dari daftar"></label><input type="hidden" name="cid" id="f-slotcid" value=""><div id="aclist" class="aclist">${slotPickList('',c,d,tt)}</div>${!isAdd&&store.book.some(x=>x.coach===c&&x.day===d&&x.time===tt)?`<p class="sub" style="margin:0">Jam ${tt} sudah berisi ${esc(store.book.filter(x=>x.coach===c&&x.day===d&&x.time===tt).map(x=>first(findClientById(x.client).name)).join(', '))}. Klien baru akan bergabung di sesi yang sama.</p>`:''}<div id="idprev" class="idprev">${slotPreview('',c)}</div><div class="fg">${timeSel(isAdd?'':tt)}</div>${hold(false)}<div class="row"><button class="btn primary" type="submit">Simpan ke jadwal</button>${preset&&!isAdd?(open?`<button class="btn" type="button" data-act="slotclose" data-id="${m.id}">Tutup slot</button>`:`<button class="btn" type="button" data-act="slotopen" data-id="${m.id}">Buka sebagai slot kosong</button>`):''}<button class="btn" type="button" data-act="close">Batal</button></div></form>`);
 };
 const pickTime=f=>{const idp=String(f.get('id')||'').split('|'),ts=f.get('tsel')||idp[2]||'',t=ts==='custom'?(f.get('ctime')||''):ts;return /^\d\d:\d\d$/.test(t)?t:''};
 FORMS.slotadd=async f=>{
- const idp=String(f.get('id')||'').split('|'),c=f.get('c')||idp[0],d=+(f.get('d')??idp[1]),sl=pickTime(f),k=findClientByUid(f.get('uid'));
- if(!k||k.arch){toast('ID klien tidak ditemukan');return}
+ const idp=String(f.get('id')||'').split('|'),c=f.get('c')||idp[0],d=+(f.get('d')??idp[1]),sl=pickTime(f),k=findClientById(f.get('cid'));
+ if(!k||k.arch){toast('Pilih klien dari daftar saran terlebih dahulu');return}
  if(!sl){toast('Pilih jam sesi atau isi jam manual');return}
  if(store.book.some(b=>b.coach===c&&b.day===d&&b.time===sl&&b.client===k.id)){toast(first(k.name)+' sudah ada di jam '+sl);return}
  if(k.coach!==c){store.book=store.book.filter(b=>b.client!==k.id);k.coach=c}
@@ -184,6 +213,12 @@ Object.assign(ACT,{
     store.book=store.book.filter(x=>x!==b)
   }
   appState.modal=null;toast('Klien dikeluarkan dari sesi');render()},
+ acpick:t=>{
+  const k=findClientById(t.dataset.id);if(!k)return;
+  const inp=document.getElementById('f-slotname'),hid=document.getElementById('f-slotcid'),p=document.getElementById('idprev'),l=document.getElementById('aclist');
+  if(inp)inp.value=k.name;if(hid)hid.value=k.id;
+  if(p)p.innerHTML=slotPreview(k.id,inp?inp.dataset.coach:'');
+  if(l)l.innerHTML='';if(inp)inp.focus()},
 });
 Object.assign(ACT,{
  copyuid:t=>copyToClipboard(t.dataset.v,'ID klien '+t.dataset.v+' tersalin'),
@@ -197,4 +232,4 @@ Object.assign(ACT,{
  seesched:t=>{appState.sched=t.dataset.v;appState.tab=0;render(false)}
 });
 
-export { coachPicker, idPreview, initCoach, myCoach, pickTime, shareCanvas };
+export { coachPicker, idPreview, initCoach, myCoach, pickTime, shareCanvas, slotPickList, slotPreview };

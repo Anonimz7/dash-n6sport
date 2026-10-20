@@ -5,7 +5,7 @@ import { TODAY, num, parseDate } from './core/helpers.js';
 import { ACT, FORMS, HOOK } from './core/registry.js';
 import { appState, fillTemplate, findClientById, findClientByUid, store } from './core/store.js';
 import { syncBoot, syncListen } from './core/sync.js';
-import { idPreview } from './pages/coach.js';
+import { slotPickList, slotPreview } from './pages/coach.js';
 import { clientFormSync } from './pages/klien.js';
 import { slId, planTypeOn } from './core/shared.js';
 import { navigateTo, render, setPath, toast } from './ui/shell.js';
@@ -55,7 +55,11 @@ document.addEventListener('submit',e=>{
 });
 document.addEventListener('input',e=>{
  const t=e.target;
- if(t.hasAttribute&&t.hasAttribute('data-idl')){const p=document.getElementById('idprev');if(p)p.innerHTML=idPreview(t.value,t.dataset.coach);return}
+ if(t.hasAttribute&&t.hasAttribute('data-acl')){
+  const l=document.getElementById('aclist');if(l)l.innerHTML=slotPickList(t.value,t.dataset.coach,+t.dataset.day,t.dataset.time);
+  const hid=document.getElementById('f-slotcid'),p=document.getElementById('idprev');
+  if(hid&&hid.value){const k=findClientById(hid.value);if(!k||k.name!==t.value){hid.value='';if(p)p.innerHTML=slotPreview('',t.dataset.coach)}}
+  return}
  if(t.hasAttribute&&t.hasAttribute('data-qm')){appState.mq=t.value;appState.focus={id:t.id,pos:t.selectionStart};render();return}
  if(t.hasAttribute&&t.hasAttribute('data-q')){appState.q=t.value;appState.focus={id:t.id,pos:t.selectionStart};render()}
 });
