@@ -113,11 +113,11 @@ const slotPickList=(q,c,d,tt)=>{
  const free=pool.filter(k=>k.coach!==c&&match(k)).sort((a,b)=>rank(a)-rank(b)||a.name.localeCompare(b.name));
  const total=own.length+free.length;
  if(!total)return '<p class="sub" style="margin:6px 2px">Tidak ada klien yang cocok. Klien coach lain tidak ditampilkan — pindah coach dilakukan lewat menu Klien.</p>';
- const MAX=8;let shown=0;
- const take=arr=>{const s=arr.slice(0,Math.max(0,MAX-shown));shown+=s.length;return s};
+ /* Tanpa potong: semua hasil dirender, wadah .aclist yang menggulir (tinggi ±5,5 baris).
+    Info jumlah menempel (sticky) di dasar daftar bila hasil lebih dari 5. */
  const grp=(title,arr)=>arr.length?`<div class="acgrp">${title}</div>`+arr.map(item).join(''):'';
- return grp('Klien '+esc(getMemberName(c)),take(own))+grp('Belum punya coach',take(free))
-  +(total>shown?`<p class="sub" style="margin:6px 2px">dan ${total-shown} klien lain — ketik nama untuk mempersempit.</p>`:'')};
+ return grp('Klien '+esc(getMemberName(c)),own)+grp('Belum punya coach',free)
+  +(total>5?`<p class="acfoot">${total} klien cocok — gulir daftar atau ketik nama untuk mempersempit.</p>`:'')};
 const slotPreview=(cid,c)=>{
  const k=cid?findClientById(cid):null;
  if(!k)return '<p class="sub">Pilih klien dari daftar — nama, paket, dan lokasi tampil di sini.</p>';
