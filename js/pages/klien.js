@@ -190,5 +190,10 @@ ACT.cdday=t=>{const i=document.getElementById('f-cddate');if(i){const c=findClie
 ACT.cdpaste=async()=>{const i=document.getElementById('f-cdurl');try{const v=(await navigator.clipboard.readText()||'').trim();if(i&&v){i.value=v;toast('Link ditempel')}else toast('Clipboard kosong')}catch(e){toast('Tempel manual: tekan lama di kolom link')}};
 ACT.openchat=t=>{if(!canAccess('pesan'))return;appState.chat=t.dataset.v;appState.page='pesan';appState.tab=1;appState.modal=null;appState.nav=false;render(false)};
 MODALS.confirm=m=>sheet('Konfirmasi',`<p>${esc(m.text)}</p><div class="row"><button class="btn primary" data-act="yes">${esc(m.label||'Ya, lanjutkan')}</button><button class="btn" data-act="close">Batal</button></div>`);
+MODALS.forcedel=m=>{
+ const akibat=m.kind==='member'
+  ?'Hapus paksa akan: menghapus pola jadwal & profil coach; menghapus booking & absensi coach ini; menghapus catatan pembayaran komisinya; melepaskan klien-kliennya menjadi tanpa coach (klien TIDAK ikut terhapus); transaksi & koreksi tetap disimpan, hanya dilepas dari anggota ini.'
+  :'Hapus paksa akan: melepaskan transaksi dari program ini (transaksi tetap disimpan); klien yang memakai program ini menjadi tanpa program (klien TIDAK ikut terhapus).';
+ return sheet('Masih ada data terkait',`<p>${esc(m.detail||'')}</p><p class="sub">${akibat}</p><p><b>Hapus paksa ${esc(m.name||'')}?</b> Tindakan ini tidak bisa dibatalkan.</p><div class="row"><button class="btn danger" data-act="forcedel">Hapus paksa</button><button class="btn" data-act="close">Batal</button></div>`)};
 
 export { clientFormSync, invoiceCanvas, kact };

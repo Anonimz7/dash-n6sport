@@ -58,7 +58,9 @@ FORMS.prog=async f=>{
  }
  appState.syncAt=new Date();
  logAct((id?'mengubah program ':'menambah program ')+p.name);appState.modal=null;toast(id?'Program diperbarui':'Program ditambahkan');render()};
-CONF.delprog=async id=>{const p=findProgramById(id);if(isApiMode()){try{await apiDel('/programs/'+id)}catch(e){toast('Gagal hapus: '+e.message);return}}p.del=true;appState.syncAt=new Date();logAct('menghapus program '+(p?p.name:id))};
+CONF.delprog=async id=>{const p=findProgramById(id);if(isApiMode()){try{await apiDel('/programs/'+id)}catch(e){
+ if(String(e.message||'').startsWith('Masih dipakai')){appState.modal={k:'forcedel',kind:'program',id,name:p?p.name:id,detail:e.message};render();return}
+ toast('Gagal hapus: '+e.message);return}}p.del=true;appState.syncAt=new Date();logAct('menghapus program '+(p?p.name:id))};
 MODALS.bayar=m=>{
  /* F1.4: modal bayar dibuka dari baris KLIEN (m.id = client_id) */
  const cl=m.id,k=getCommissionData(appState.per),x=k.byClient.find(y=>y.c===cl);if(!x||perm('komisi')!=='full')return '';
@@ -85,7 +87,7 @@ FORMS.bayar=async f=>{
  store.paidByClient[cl+'|'+perLbl()]=payData;
  logAct('membayar komisi '+getMemberName(x.coach)+' untuk klien '+x.cl.name+' ('+money(x.kom,'komisi')+', '+f.get('method')+')');appState.modal=null;toast('Pembayaran komisi untuk '+first(x.cl.name)+' dicatat');render()};
 Object.assign(ACT,{
- askprog:t=>{const p=findProgramById(t.dataset.v),n=store.clients.filter(c=>!c.arch&&c.pid===p.id&&getClientStatus(c)!=='Selesai').length;if(n){toast(n+' klien aktif masih memakai program ini');return}appState.modal={k:'confirm',text:'Hapus program '+p.name+'? Riwayat transaksi lama tetap tersimpan.',yes:'delprog',arg:p.id,label:'Hapus program'};render()},
+ askprog:t=>{const p=findProgramById(t.dataset.v);appState.modal={k:'confirm',text:'Hapus program '+p.name+'? Riwayat transaksi lama tetap tersimpan.',yes:'delprog',arg:p.id,label:'Hapus program'};render()},
  per:t=>{const v=t.dataset.v;appState.per=/^\d+$/.test(v)?+v:v;render()},
  paidcl:async t=>{
    const cl=t.dataset.v,per=perLbl(),rec=payOf(cl,per);

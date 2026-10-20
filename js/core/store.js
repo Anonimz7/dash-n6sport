@@ -20,7 +20,7 @@ store.programs=[
  {id:'p5',name:'Private 1-on-1 Bulanan',price:3500000,unit:'per bulan',wk:4,lvl:.85},
  {id:'p6',name:'Paket Berdua 8 Minggu',price:4000000,unit:'8 minggu',wk:8,lvl:.6,peserta:2,fee:60000}
 ];
-const findProgramById=id=>store.programs.find(p=>p.id===id);
+const findProgramById=id=>store.programs.find(p=>p.id===id)||{id:id||'',name:'(tanpa program)',price:0,unit:'',wk:0,lvl:0,fee:0,del:true};
 const nextClientUid=()=>'N6-'+(1001+Math.max(-1,...store.clients.map(c=>parseInt(String(c.uid||'').slice(3))-1001||0))+1);
 const findClientByUid=s=>{const k=String(s||'').trim().toUpperCase().replace(/\s+/g,'');return k?store.clients.find(c=>String(c.uid||'').toUpperCase()===k):null};
 const SEED_CLIENTS=[

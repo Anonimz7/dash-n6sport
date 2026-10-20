@@ -40,5 +40,7 @@ FORMS.member=async f=>{const role=f.get('role'),d={name:f.get('name').trim(),rol
  if(!m)store.members.push({id,...d});
  if(role!=='admin'){COACHES.push(id);initCoach(id)}
  logAct('menambah anggota '+d.name);appState.modal=null;toast('Anggota ditambahkan');render()};
-ACT.memdel=t=>{const m=store.members.find(x=>x.id===t.dataset.v);if(store.clients.some(c=>c.coach===m.id&&!c.arch)){toast('Pindahkan klien '+first(m.name)+' ke coach lain dulu');return}appState.modal={k:'confirm',text:'Hapus anggota '+m.name+'? Akunnya tidak bisa masuk lagi.',yes:'delmem',arg:m.id,label:'Hapus anggota'};render()};
-CONF.delmem=async id=>{const m=store.members.find(x=>x.id===id);if(isApiMode()){try{await apiDel('/members/'+id)}catch(e){toast('Gagal hapus: '+e.message);return}}store.members=store.members.filter(x=>x.id!==id);const i=COACHES.indexOf(id);if(i>=0)COACHES.splice(i,1);store.book=store.book.filter(b=>b.coach!==id);logAct('menghapus anggota '+(m?m.name:id))};
+ACT.memdel=t=>{const m=store.members.find(x=>x.id===t.dataset.v);if(!m)return;appState.modal={k:'confirm',text:'Hapus anggota '+m.name+'? Akunnya tidak bisa masuk lagi.',yes:'delmem',arg:m.id,label:'Hapus anggota'};render()};
+CONF.delmem=async id=>{const m=store.members.find(x=>x.id===id);if(isApiMode()){try{await apiDel('/members/'+id)}catch(e){
+ if(String(e.message||'').startsWith('Tidak bisa dihapus')){appState.modal={k:'forcedel',kind:'member',id,name:m?m.name:id,detail:e.message};render();return}
+ toast('Gagal hapus: '+e.message);return}}store.members=store.members.filter(x=>x.id!==id);const i=COACHES.indexOf(id);if(i>=0)COACHES.splice(i,1);store.book=store.book.filter(b=>b.coach!==id);logAct('menghapus anggota '+(m?m.name:id))};
