@@ -113,6 +113,10 @@ for(let m=5;m>=0;m--){
 store.targets={rev:45000000,klien:5,retensi:75,koreksi:90};
 store.paid={};
 store.payInfo={};
+/* F1.4: pembayaran komisi per klien+periode: '<client_id>|<label periode>' -> info bayar.
+   paidLegacy: record pembayaran era per-coach (tanpa client_id), tidak menandai klien. */
+store.paidByClient={};
+store.paidLegacy=[];
 store.msgs={
  team:[
   {w:'u1',text:'Pagi tim. Minggu ini koreksi laporan harian maksimal H+1.',t:minsAgo(190)},

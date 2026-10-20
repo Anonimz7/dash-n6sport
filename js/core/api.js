@@ -172,12 +172,16 @@ async function apiBoot() {
       cid: r.client_id, date: r.date, url: r.url, id: r.id,
       fix: r.fix_text ? { by: r.fix_by, text: r.fix_text, at: r.fix_at ? new Date(r.fix_at) : new Date() } : null
     }));
-    // Pembayaran komisi dari backend
+    // Pembayaran komisi dari backend — F1.4: per klien + periode.
+    // Record tanpa client_id = pembayaran legacy era per-coach: disimpan di
+    // paidLegacy dan TIDAK menandai klien mana pun (dulu: menandai coach-nya,
+    // sehingga semua klien coach itu ikut tampil Dibayar).
     store.paid = {}; store.payInfo = {}; store.payIds = {};
+    store.paidByClient = {}; store.paidLegacy = [];
     ((Array.isArray(compay) ? compay : (compay && compay.data)) || []).forEach(p => {
-      store.paid[p.coach_id] = true;
-      store.payInfo[p.coach_id] = { date: p.date, method: p.method, note: p.note || '', amt: p.amount, per: p.period };
-      store.payIds[p.coach_id] = p.id;
+      const info = { id: p.id, date: p.date, method: p.method, note: p.note || '', amt: p.amount, per: p.period, coach: p.coach_id };
+      if (p.client_id) store.paidByClient[p.client_id + '|' + p.period] = info;
+      else store.paidLegacy.push(info);
     });
     buildSessionLogs();
     apiMode = true;
@@ -245,9 +249,9 @@ async function apiSaveCoachProfile(coach_id, patch) {
 async function apiFixShareLink(linkId, text) {
   await apiPatch('/share-links/' + linkId, { fix_text: text });
 }
-// Simpan pembayaran komisi ke backend
-async function apiPayCommission(coach_id, period, amount, date, method, note) {
-  const raw = await apiPost('/commission-payments', { coach_id, period, amount, date, method, note });
+// Simpan pembayaran komisi ke backend (F1.4: dicatat per klien)
+async function apiPayCommission(coach_id, period, amount, date, method, note, client_id) {
+  const raw = await apiPost('/commission-payments', { coach_id, period, amount, date, method, note, client_id });
   return raw;
 }
 async function apiCancelCommission(paymentId) {

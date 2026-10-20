@@ -28,18 +28,31 @@ const getPendingCorrections=coachId=>getReportsOf(coachId).filter(r=>!r.fix);
 const holdOf=(cid,k)=>{const b=store.book.find(x=>x.client===cid&&x.day===dIdx(parseDate(k)));return !!(b&&b.hold)};
 function getSessionAttendance(days,coach){
  const out=[];
- // Komisi dari absensi coach (attSlot): setiap slot yang dikonfirmasi Hadir
+ // Komisi dari absensi coach (attSlot): setiap slot yang dikonfirmasi Hadir.
+ // F1.1: filter periode memakai inRange (sama seperti transaksi) — benar juga
+ // untuk periode 'bulan'/'kustom', bukan hanya angka hari.
+ // F1.3: satu entri PER KLIEN dalam slot (bukan booking pertama saja);
+ // kehadiran klien tidak diperiksa (keputusan user 2026-10-20: pemicu komisi
+ // adalah kehadiran coach; uang program klien sudah disetor).
  Object.keys(store.attSlot||{}).forEach(key=>{
   const rec=store.attSlot[key];
   if(!rec||rec.s!=='Hadir')return;
-  const[k,cid,time]=key.split('|');
-  if(coach&&cid!==coach)return;
-  const d=parseDate(k);if(d>TODAY||d<=addD(TODAY,-days))return;
-  // Cari booking untuk dapat program & fee: coach + day + time
-  const b=store.book.find(x=>x.coach===cid&&x.day===dIdx(d)&&x.time===time);
-  const c=b?findClientById(b.client):null;
-  const pid=c?c.pid:null;
-  out.push({date:k,cid,client:c?c.name:'-',coach:cid,pid,fee:(findProgramById(pid)||{}).fee||0});
+  const[k,coachId,time]=key.split('|');
+  if(coach&&coachId!==coach)return;
+  if(!inRange(k,days))return;
+  const d=parseDate(k);
+  // Semua booking yang cocok: coach + hari-dalam-seminggu + jam
+  const bs=store.book.filter(x=>x.coach===coachId&&x.day===dIdx(d)&&x.time===time);
+  if(!bs.length){out.push({date:k,cid:null,client:'-',coach:coachId,pid:null,fee:0});return}
+  const seen=new Set();
+  bs.forEach(b=>{
+   const c=findClientById(b.client);
+   if(!c||seen.has(c.id))return;
+   seen.add(c.id);
+   // Pengaman warisan: sesi sebelum tanggal mulai klien tidak dihitung untuknya
+   if(c.start&&k<c.start)return;
+   out.push({date:k,cid:c.id,client:c.name,coach:coachId,pid:c.pid,fee:(findProgramById(c.pid)||{}).fee||0});
+  });
  });
  return out;
 }
@@ -47,6 +60,20 @@ function getCommissionData(days){
  const ses=getSessionAttendance(days);
  const byCoach=COACHES.map(c=>{const sc=ses.filter(x=>x.coach===c),ks=sum(sc.map(x=>x.fee));return{c,kom:ks,komSes:ks,nSes:sc.length}});
  const byProg=activePrograms().map(p=>{const sp=ses.filter(x=>x.pid===p.id);return{p,kom:sum(sp.map(x=>x.fee)),nSes:sp.length}});
- return{byCoach,byProg}}
+ // F1.2: baris per klien — klien aktif selalu tampil (walau belum ada sesi);
+ // klien non-aktif (arsip/selesai) tampil bila punya sesi pada periode ini.
+ const byClient=store.clients.map(cl=>{
+  const sc=ses.filter(x=>x.cid===cl.id);
+  const aktif=!cl.arch&&getClientStatus(cl)!=='Selesai';
+  if(!aktif&&!sc.length)return null;
+  return{cl,c:cl.id,coach:cl.coach,pid:cl.pid,nSes:sc.length,kom:sum(sc.map(x=>x.fee)),fee:(findProgramById(cl.pid)||{}).fee||0};
+ }).filter(Boolean);
+ return{byCoach,byProg,byClient}}
+// F1.4: status bayar per KLIEN + label periode (bukan per coach lagi).
+// Kunci peta store.paidByClient: '<client_id>|<label periode>' — label persis
+// seperti perLbl() saat pembayaran dicatat. Record pembayaran tanpa client_id
+// (legacy era per-coach) tidak masuk peta ini dan tidak menandai klien mana pun.
+const payKey=(clientId,per)=>clientId+'|'+per;
+const payOf=(clientId,per)=>(store.paidByClient||{})[payKey(clientId,per)]||null;
 
-export { calCell, filterTransactions, freeSlots, getCommissionData, getPendingCorrections, getReportsOf, getSessionAttendance, holdOf, hrZone, inRange, liveClients, monthly, offInfo, offLbl, offList, offOn, offSlot };
+export { calCell, filterTransactions, freeSlots, getCommissionData, getPendingCorrections, getReportsOf, getSessionAttendance, holdOf, hrZone, inRange, liveClients, monthly, offInfo, offLbl, offList, offOn, offSlot, payKey, payOf };

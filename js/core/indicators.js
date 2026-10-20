@@ -1,7 +1,7 @@
 /* js/core/indicators.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { money, perm } from './access.js';
 import { COACHES, NAVT } from './constants.js';
-import { filterTransactions, freeSlots, getSessionAttendance, inRange, liveClients, monthly, offOn } from './derived.js';
+import { filterTransactions, freeSlots, getCommissionData, inRange, liveClients, monthly, offOn, payOf } from './derived.js';
 import { TODAY, esc, iso, sum } from './helpers.js';
 import { clientAttRate, locOf, unreadTotals } from './shared.js';
 import { findClientById, getClientStatus, store } from './store.js';
@@ -18,7 +18,8 @@ function buildIndicators(){
  const absen=COACHES.filter(c=>((store.attCoach[c]||{})[k]||{}).in).length;
  const reqW=store.reqs.filter(r=>r.status==='Menunggu'&&r.type!=='masalah').length,issue=store.reqs.filter(r=>r.status==='Menunggu'&&r.type==='masalah').length;
  const cAtt=Math.round(sum(COACHES.map(c=>clientAttRate(c,30)))/COACHES.length);
- const kom=sum(getSessionAttendance(30).map(x=>x.fee)),paidN=COACHES.filter(c=>store.paid[c]).length;
+ /* F1.5: komisi & status bayar dihitung per klien (label periode 30 hari) */
+ const klienKom=getCommissionData(30).byClient,kom=sum(klienKom.map(x=>x.kom)),paidN=klienKom.filter(x=>payOf(x.c,'30 hari')).length,unpaidN=klienKom.length-paidN;
  const inn=sum(filterTransactions(30,'in').map(t=>t.amt)),out=sum(filterTransactions(30,'out').map(t=>t.amt)),mo=monthly(),cur=mo[mo.length-1].inc;
  const dim=new Date(TODAY.getFullYear(),TODAY.getMonth()+1,0).getDate(),exp=store.targets.rev*TODAY.getDate()/dim;
  const noLoc=store.members.filter(m=>m.role!=='owner'&&m.role!=='admin'&&locOf(m.id)==='Lokasi belum diisi').length;
@@ -32,7 +33,7 @@ function buildIndicators(){
   {m:'koreksi',t:'Koreksi',tone:kPct>=store.targets.koreksi?'good':kPct>=store.targets.koreksi-20?'warn':'bad',rows:[['Menunggu koreksi',pend],['Sudah dikoreksi',kPct+'%'],['Target',store.targets.koreksi+'%']]},
   {m:'absensi',t:'Absensi',tone:(reqW||issue)?'warn':'good',rows:[['Coach hadir hari ini',absen+' / '+COACHES.length],['Izin menunggu',reqW],['Masalah dilaporkan',issue],['Kehadiran klien 30 hari',cAtt+'%']]},
   {m:'laporan',t:'Laporan',tone:missed>3?'warn':'good',rows:[['Laporan latihan 7 hari',rep7],['Tidak lapor 7 hari',missed],['Retensi klien',retensiPct()+'%']]},
-  {m:'komisi',t:'Komisi',tone:(COACHES.length-paidN)?'warn':'good',rows:[['Komisi 30 hari',M(kom,'komisi')],['Sudah dibayar',paidN+' coach'],['Belum dibayar',(COACHES.length-paidN)+' coach']]},
+  {m:'komisi',t:'Komisi',tone:unpaidN?'warn':'good',rows:[['Komisi 30 hari',M(kom,'komisi')],['Sudah dibayar',paidN+' klien'],['Belum dibayar',unpaidN+' klien']]},
   {m:'keuangan',t:'Keuangan',tone:inn-out<0?'bad':cur>=exp?'good':'warn',rows:[['Pemasukan 30 hari',M(inn,'keuangan')],['Pengeluaran 30 hari',M(out,'keuangan')],['Laba bersih',M(inn-out,'keuangan')],['Capaian bulan ini',Math.round(cur/Math.max(1,store.targets.rev)*100)+'% dari target']]}
  ].filter(c=>perm(c.m)!=='none');
  const al=[];
@@ -45,7 +46,7 @@ function buildIndicators(){
  if(per)al.push({lv:'warn',x:per+' klien perlu perhatian',m:'klien'});
  if(soon)al.push({lv:'warn',x:soon+' klien programnya segera berakhir (peluang perpanjang)',m:'klien'});
  if(absen<COACHES.length-offNow)al.push({lv:'info',x:(COACHES.length-offNow-absen)+' coach belum absen hari ini',m:'absensi'});
- if(perm('komisi')!=='none'&&paidN<COACHES.length)al.push({lv:'warn',x:(COACHES.length-paidN)+' komisi coach belum dibayar',m:'komisi'});
+ if(perm('komisi')!=='none'&&unpaidN)al.push({lv:'warn',x:unpaidN+' komisi klien belum dibayar',m:'komisi'});
  if(perm('keuangan')==='full'&&inn-out<0)al.push({lv:'bad',x:'Pengeluaran 30 hari melebihi pemasukan',m:'keuangan'});
  else if(perm('keuangan')==='full'&&cur<exp)al.push({lv:'warn',x:'Pendapatan bulan ini di bawah laju target',m:'keuangan'});
  if(!free7)al.push({lv:'warn',x:'Tidak ada slot kosong 7 hari ke depan',m:'coach'});
