@@ -154,6 +154,22 @@ function getCommissionData(days){
  // Komisi Bulanan Fase A: baris diurutkan terbaru -> terlama (tanggal mulai klien).
  byClient.sort((x,y)=>x.cl.start<y.cl.start?1:x.cl.start>y.cl.start?-1:(x.cl.name<y.cl.name?-1:1));
  return{byCoach,byProg,byClient}}
+// Paket Perbaikan Komisi (masalah 1-3): grup Performa per coach PENGHASIL.
+// Sumbernya data getCommissionData yang sama (byCoach + byClient.perCoach):
+// - SEMUA coach dari byCoach selalu hadir sebagai grup, walau tanpa perolehan
+//   (grup kosong digambar 0 sesi / Rp 0 / Belum dibayar oleh perender);
+// - tiap baris adalah satu segmen (klien x pelatih aktual): sesi titipan masuk
+//   grup coach PENGGANTI, bukan pemilik klien;
+// - klien tanpa sesi pada periode tampil sebagai satu segmen nol di grup
+//   pemiliknya (aturan F1: klien aktif langsung tampil sejak awal).
+const komCoachGroups=k=>{
+ const groups=new Map();
+ const ensure=c=>{if(!groups.has(c))groups.set(c,{coach:c,nSes:0,kom:0,rows:[]});return groups.get(c)};
+ (k.byCoach||[]).forEach(bc=>ensure(bc.c));
+ (k.byClient||[]).forEach(x=>{
+  const segs=x.perCoach&&x.perCoach.length?x.perCoach:[{coach:x.coach,nSes:0,kom:0}];
+  segs.forEach(g=>{const gr=ensure(g.coach);gr.rows.push({x,g});gr.nSes+=g.nSes;gr.kom+=g.kom})});
+ return[...groups.values()]};
 // F1.4: status bayar per KLIEN + label periode (bukan per coach lagi).
 // Kunci peta store.paidByClient: '<client_id>|<label periode>' — label persis
 // seperti perLbl() saat pembayaran dicatat. Record pembayaran tanpa client_id
@@ -167,4 +183,4 @@ const paySegOf=(clientId,coach,per)=>(store.paidSeg||{})[clientId+'|'+coach+'|'+
 // "per bulan") -> null dan Komisi memakai penyebut kalender seperti sebelumnya.
 const pkgSessions=p=>{if(!p||p.unit==null)return null;const m=String(p.unit).trim().match(/^(\d+)\s*(pertemuan)?$/i);return m?+m[1]:null};
 
-export { calCell, filterTransactions, freeSlots, getCommissionData, getPendingCorrections, getReportsOf, getSessionAttendance, holdOf, hrZone, inRange, komLbl, komRange, komisiSet, liveClients, monthly, offInfo, offLbl, offList, offOn, offSlot, payDateFor, payKey, payOf, paySegOf, pkgSessions, scheduledSessions };
+export { calCell, filterTransactions, freeSlots, getCommissionData, getPendingCorrections, getReportsOf, getSessionAttendance, holdOf, hrZone, inRange, komCoachGroups, komLbl, komRange, komisiSet, liveClients, monthly, offInfo, offLbl, offList, offOn, offSlot, payDateFor, payKey, payOf, paySegOf, pkgSessions, scheduledSessions };

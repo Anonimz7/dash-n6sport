@@ -1,6 +1,6 @@
 /* js/pages/komisi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, money, perm } from '../core/access.js';
-import { getCommissionData, komLbl, komRange, payDateFor, payOf, paySegOf, pkgSessions } from '../core/derived.js';
+import { getCommissionData, komCoachGroups, komLbl, komRange, payDateFor, payOf, paySegOf, pkgSessions } from '../core/derived.js';
 import { MASK, TODAY, esc, first, fmtD, iso, num, parseDate, sum } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
 import { ACT, CONF, FORMS, MODALS, PAGES } from '../core/registry.js';
@@ -19,7 +19,9 @@ const komPayBanner=(per,kurang)=>{const pd=payDateFor(komRange());return banner(
 PAGES.komisi=()=>{
  const tabs=['Ringkasan','Performa & pembayaran','Harga program & komisi'],t=Math.min(appState.tab,2),k=getCommissionData(komRange()),mine=appState.role==='coach';
  const coaches=mine?k.byCoach.filter(x=>x.c===meId()):k.byCoach;
- /* F1.2/F1.4: satuan tampil & bayar adalah per klien (rows), bukan per coach */
+ /* rows (per klien) kini hanya untuk agregat toolbar/banner; satuan TAMPIL
+    tab Performa adalah grup per coach penghasil (komCoachGroups, masalah 1-3),
+    sedangkan satuan BAYAR tetap per segmen klien x pelatih (paidSeg). */
  const rows=mine?k.byClient.filter(x=>x.coach===meId()):k.byClient;
  /* Komisi Bulanan Fase A: periode = bulan kalender terpilih; label bulan adalah
     kunci pembayaran (kompatibel catatan era "Bulan ini" Fase 1). */
@@ -31,14 +33,21 @@ PAGES.komisi=()=>{
   <div class="kpis">${kpi('Sesi hadir',nses,per)}${kpi('Total komisi',M(tot),'dibayarkan ke coach')}${kpi('Sudah dibayar',M(paid),'periode berjalan')}${kpi('Belum dibayar',M(tot-paid),'menunggu pembayaran')}</div>
   <div class="tw"><table><thead><tr><th>Program</th>${mine?'':'<th class="n">Harga program</th>'}<th class="n">Komisi per sesi hadir</th><th class="n">Sesi hadir</th><th class="n">Total komisi</th></tr></thead><tbody>${k.byProg.map(x=>`<tr><td>${esc(x.p.name)}</td>${mine?'':`<td class="n">${progPrice(x.p)}</td>`}<td class="n">${M(x.p.fee)}</td><td class="n">${x.nSes}</td><td class="n">${M(x.kom)}</td></tr>`).join('')}</tbody></table></div>`}
  if(t===1){
-  body=`<div class="toolbar">${komBar()}</div>${komPayBanner(per,tot-paid)}<div class="tw"><table><thead><tr><th>Coach</th><th>Klien</th><th>Program</th><th class="n">Sesi hadir</th><th class="n">Total komisi</th><th>Pembayaran</th>${mine?'':'<th>Aksi</th>'}</tr></thead><tbody>${rows.map(x=>{const segs=x.perCoach&&x.perCoach.length?x.perCoach:[{coach:x.coach,nSes:x.nSes,kom:x.kom}],split=segs.length>1;
- const payCell=segs.map(g=>{const sp=paySegOf(x.c,g.coach,per),lunas=sp&&sp.amt>=g.kom,seba=sp&&sp.amt<g.kom;
-  const status=lunas?pill('Dibayar','good'):seba?pill('Sebagian','warn'):pill('Belum dibayar','warn');
-  const detail=lunas?`<small class="sub" style="display:block;margin-top:4px">${fmtD(parseDate(sp.date))} · ${esc(sp.method)}</small>`:seba?`<small class="sub" style="display:block;margin-top:4px">Kurang ${M(g.kom-sp.amt)} · terbayar ${M(sp.amt)}</small>`:'';
-  return split?`<div style="margin-bottom:8px"><small class="sub" style="display:block">${esc(getMemberName(g.coach))}${g.coach!==x.coach?' (titipan)':''} · ${g.nSes} sesi · ${M(g.kom)}</small>${status}${detail}</div>`:status+detail}).join('');
- const aksi=perm('komisi')==='full'?segs.map(g=>{const sp=paySegOf(x.c,g.coach,per),lunas=sp&&sp.amt>=g.kom,nm=split?' '+esc(first(getMemberName(g.coach))):'';
-  return lunas?`<button class="btn sm" data-act="paidcl" data-v="${x.c}|${g.coach}">Batalkan${nm}</button>`:`<button class="btn sm primary" style="white-space:nowrap" data-act="modal" data-v="bayar" data-id="${x.c}|${g.coach}">${sp?'Bayar kekurangan':'Bayar komisi'}${nm}</button>${sp?` <button class="btn sm" data-act="paidcl" data-v="${x.c}|${g.coach}">Batalkan</button>`:''}`}).join(' '):'-';
- return `<tr><td>${esc(getMemberName(x.coach))}</td><td><b>${esc(x.cl.name)}</b></td><td>${esc((findProgramById(x.pid)||{}).name||'-')}</td><td class="n">${x.pkgTotal?x.cumSes+' / '+x.pkgTotal:x.nSes+' / '+x.nJadwal}</td><td class="n"><b>${M(x.kom)}</b></td><td>${payCell}</td>${mine?'':`<td>${aksi}</td>`}</tr>`}).join('')||`<tr><td colspan="${mine?6:7}" class="sub">Belum ada klien aktif.</td></tr>`}</tbody></table></div>${store.paidLegacy&&store.paidLegacy.length?banner(store.paidLegacy.length+' pembayaran lama (era per-coach) belum tertaut ke klien dan tidak menandai klien mana pun.','info'):''}`}
+  /* Paket Perbaikan Komisi (masalah 1-3): tampil per grup coach PENGHASIL
+     (komCoachGroups) — semua coach selalu tampil sejak awal; segmen titip
+     masuk grup coach pengganti dan kolom Coach selalu berlabel penghasil;
+     tampilan coach yang login = grupnya sendiri (termasuk titipannya). */
+  const groups=komCoachGroups(k).filter(gr=>!mine||gr.coach===meId());
+  const segPay=(x,g)=>{const sp=paySegOf(x.c,g.coach,per),lunas=sp&&sp.amt>=g.kom,seba=sp&&sp.amt>0&&sp.amt<g.kom;
+   const status=lunas?pill('Dibayar','good'):seba?pill('Sebagian','warn'):pill('Belum dibayar','warn');
+   const detail=lunas?`<small class="sub" style="display:block;margin-top:4px">${fmtD(parseDate(sp.date))} · ${esc(sp.method)}</small>`:seba?`<small class="sub" style="display:block;margin-top:4px">Kurang ${M(g.kom-sp.amt)} · terbayar ${M(sp.amt)}</small>`:'';
+   return status+detail};
+  const segAksi=(x,g)=>{if(perm('komisi')!=='full')return '-';const sp=paySegOf(x.c,g.coach,per),lunas=sp&&sp.amt>=g.kom;
+   return lunas?`<button class="btn sm" data-act="paidcl" data-v="${x.c}|${g.coach}">Batalkan</button>`:`<button class="btn sm primary" style="white-space:nowrap" data-act="modal" data-v="bayar" data-id="${x.c}|${g.coach}">${sp?'Bayar kekurangan':'Bayar komisi'}</button>${sp?` <button class="btn sm" data-act="paidcl" data-v="${x.c}|${g.coach}">Batalkan</button>`:''}`};
+  const grpStatus=gr=>{if(gr.kom<=0)return pill('Belum dibayar','warn');const pdg=gr.rows.reduce((a,{x,g})=>{const sp=paySegOf(x.c,g.coach,per);return a+(sp?Math.min(sp.amt,g.kom):0)},0);return pdg>=gr.kom?pill('Dibayar','good'):pdg>0?pill('Sebagian','warn'):pill('Belum dibayar','warn')};
+  const segRow=({x,g})=>`<tr><td>${esc(getMemberName(g.coach))}${g.coach!==x.coach?'<small class="sub" style="display:block">titipan</small>':''}</td><td><b>${esc(x.cl.name)}</b>${g.coach!==x.coach?`<small class="sub" style="display:block">klien ${esc(getMemberName(x.coach))}</small>`:''}</td><td>${esc((findProgramById(x.pid)||{}).name||'-')}</td><td class="n">${x.pkgTotal?x.cumSes+' / '+x.pkgTotal:x.nSes+' / '+x.nJadwal}</td><td class="n"><b>${M(g.kom)}</b>${g.coach!==x.coach||g.nSes!==x.nSes?`<small class="sub" style="display:block">${g.nSes} sesi oleh pelatih ini</small>`:''}</td><td>${segPay(x,g)}</td>${mine?'':`<td>${segAksi(x,g)}</td>`}</tr>`;
+  const grpRows=gr=>`<tr class="ghead" style="background:var(--bg2,#f4f4f5)"><td colspan="${mine?6:7}"><b>${esc(getMemberName(gr.coach))}</b> <span class="sub">· ${gr.nSes} sesi · ${M(gr.kom)}</span> ${grpStatus(gr)}</td></tr>`+(gr.rows.length?gr.rows.map(segRow).join(''):`<tr><td>${esc(getMemberName(gr.coach))}</td><td class="sub">Belum ada perolehan</td><td>-</td><td class="n">0</td><td class="n"><b>${M(0)}</b></td><td>${pill('Belum dibayar','warn')}</td>${mine?'':'<td>-</td>'}</tr>`);
+  body=`<div class="toolbar">${komBar()}</div>${komPayBanner(per,tot-paid)}<div class="tw"><table><thead><tr><th>Coach</th><th>Klien</th><th>Program</th><th class="n">Sesi hadir</th><th class="n">Total komisi</th><th>Pembayaran</th>${mine?'':'<th>Aksi</th>'}</tr></thead><tbody>${groups.map(grpRows).join('')||`<tr><td colspan="${mine?6:7}" class="sub">Belum ada data coach.</td></tr>`}</tbody></table></div>${store.paidLegacy&&store.paidLegacy.length?banner(store.paidLegacy.length+' pembayaran lama (era per-coach) belum tertaut ke klien dan tidak menandai klien mana pun.','info'):''}`}
  if(t===2){
   const ed=appState.role==='owner';
   body=`${banner('Komisi per sesi hadir dihitung otomatis: setiap klien yang diabsen Hadir oleh coach menambah komisi coach sebesar nominal di kartu program. Tidak ada komisi penjualan program.','info')}${ed?banner('Harga dan komisi bebas Anda atur. Tekan Edit pada baris program untuk mengubah nama, harga, komisi, dan durasinya di jendela pop up.'):banner('Tambah, ubah, dan hapus program hanya dapat dilakukan oleh Pemilik.')}
@@ -90,11 +99,11 @@ MODALS.bayar=m=>{
     Fase C: m.id bisa "client|coach" — pembayaran per SEGMEN pelatih aktual
     (sesi titipan dibayar ke coach pengganti, bukan pemilik klien). */
  const [cl,segCoach]=String(m.id||'').split('|'),k=getCommissionData(komRange()),x=k.byClient.find(y=>y.c===cl);if(!x||perm('komisi')!=='full')return '';
- const g=(x.perCoach||[]).find(y=>y.coach===segCoach)||{coach:x.coach,nSes:x.nSes,kom:x.kom},split=(x.perCoach||[]).length>1;
+ const g=(x.perCoach||[]).find(y=>y.coach===segCoach)||{coach:x.coach,nSes:x.nSes,kom:x.kom},split=!!segCoach||(x.perCoach||[]).length>1,multi=(x.perCoach||[]).length>1||g.coach!==x.coach;
  const pay=paySegOf(cl,g.coach,komLbl()),sudah=pay?pay.amt:0,kurang=Math.max(0,g.kom-sudah),belumSelesai=komRange().b>TODAY;
  const M=v=>money(v,'komisi'),row=(a,b,bold)=>`<tr><td>${a}</td><td class="n">${bold?'<b>'+b+'</b>':b}</td></tr>`;
  return sheet('Pembayaran komisi coach',`<div class="idcard"><b>${esc(x.cl.name)}</b><small>Klien dari coach ${esc(getMemberName(x.coach))}</small><small>Periode ${esc(komLbl())}</small><small>Lokasi: ${esc(locOf(g.coach))}</small></div>
- <div class="tw" style="margin-top:12px"><table><tbody>${row('Program',(findProgramById(x.pid)||{}).name||'-')}${split?row('Pelatih yang dibayar',esc(getMemberName(g.coach))+(g.coach!==x.coach?' (titipan)':'')):''}${row('Sesi hadir',x.pkgTotal?x.cumSes+' / '+x.pkgTotal+' sesi (progres paket) · '+(split?g.nSes+' sesi oleh pelatih ini':x.nSes+' sesi bulan ini'):(split?g.nSes+' sesi oleh pelatih ini (total klien '+x.nSes+' sesi)':x.nSes+' / '+x.nJadwal+' sesi'))}${row('Komisi per sesi hadir',M(x.fee))}${row(split?'Total komisi pelatih ini':'Total komisi',M(g.kom))}${sudah?row('Sudah dibayar',M(sudah)):''}${row('Dibayarkan sekarang',M(kurang),true)}</tbody></table></div>${belumSelesai?`<p class="sub" style="margin-top:10px">Bulan ${esc(komLbl())} belum berakhir — sesi setelah hari ini belum termasuk. Kekurangannya dapat dibayar menyusul; status akan tampil "Sebagian" sampai lunas.</p>`:''}
+ <div class="tw" style="margin-top:12px"><table><tbody>${row('Program',(findProgramById(x.pid)||{}).name||'-')}${split?row('Pelatih yang dibayar',esc(getMemberName(g.coach))+(g.coach!==x.coach?' (titipan)':'')):''}${row('Sesi hadir',x.pkgTotal?x.cumSes+' / '+x.pkgTotal+' sesi (progres paket) · '+(multi?g.nSes+' sesi oleh pelatih ini':x.nSes+' sesi bulan ini'):(multi?g.nSes+' sesi oleh pelatih ini (total klien '+x.nSes+' sesi)':x.nSes+' / '+x.nJadwal+' sesi'))}${row('Komisi per sesi hadir',M(x.fee))}${row(split?'Total komisi pelatih ini':'Total komisi',M(g.kom))}${sudah?row('Sudah dibayar',M(sudah)):''}${row('Dibayarkan sekarang',M(kurang),true)}</tbody></table></div>${belumSelesai?`<p class="sub" style="margin-top:10px">Bulan ${esc(komLbl())} belum berakhir — sesi setelah hari ini belum termasuk. Kekurangannya dapat dibayar menyusul; status akan tampil "Sebagian" sampai lunas.</p>`:''}
  <form data-form="bayar" class="fg" style="margin-top:12px"><input type="hidden" name="cl" value="${cl}"><input type="hidden" name="coach" value="${g.coach}">
  <label class="field"><span>Tanggal pembayaran</span><input id="f-paydate" name="date" type="date" required value="${iso(TODAY)}" max="${iso(TODAY)}"></label>
  <label class="field"><span>Metode pembayaran</span><select name="method"><option>Transfer bank</option><option>Tunai</option><option>E-wallet</option></select></label>
