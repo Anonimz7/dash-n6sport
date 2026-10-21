@@ -55,7 +55,10 @@ function getSessionAttendance(days,coach){
   // Komisi Bulanan Fase C: klien titipan ke coach ini pada tanggal+jam ini ikut
   // terhitung; pelatih aktual (penerima komisi) adalah coach pengganti.
   const titipan=(store.titip||[]).filter(t=>t.to===coachId&&t.date===k&&t.time===time);
-  if(!bs.length&&!titipan.length){out.push({date:k,cid:null,client:'-',coach:coachId,pid:null,fee:0});return}
+  // Sesi pengganti (undur terjadwal manual): catatan tanggal + jam untuk coach
+  // ini ikut terhitung; pelatihnya coach yang sama (yang izinnya digantikan).
+  const gnti=(store.makeup||[]).filter(t=>t.coach===coachId&&t.date===k&&t.time===time);
+  if(!bs.length&&!titipan.length&&!gnti.length){out.push({date:k,cid:null,client:'-',coach:coachId,pid:null,fee:0});return}
   const seen=new Set();
   bs.forEach(b=>{
    const c=findClientById(b.client);
@@ -76,6 +79,14 @@ function getSessionAttendance(days,coach){
    if(k>getClientEndDate(c))return;
    out.push({date:k,cid:c.id,client:c.name,coach:coachId,pid:c.pid,fee:(findProgramById(c.pid)||{}).fee||0,titip:true,from:t.from});
   });
+  gnti.forEach(t=>{
+   const c=findClientById(t.client);
+   if(!c||c.arch||seen.has(c.id))return;
+   seen.add(c.id);
+   if(c.start&&k<c.start)return;
+   if(k>getClientEndDate(c))return;
+   out.push({date:k,cid:c.id,client:c.name,coach:coachId,pid:c.pid,fee:(findProgramById(c.pid)||{}).fee||0,makeup:true});
+  });
  });
  return out;
 }
@@ -88,7 +99,7 @@ function scheduledSessions(c,a,b){
  const slots=store.book.filter(x=>x.client===c.id);
  if(!slots.length)return 0;
  const lo=parseDate(c.start),hi=parseDate(getClientEndDate(c));
- let n=0;
+ let n=0;const counted=new Set();
  for(let d=new Date(a);d<=b;d=addD(d,1)){
   if(d<lo||d>hi)continue;
   const k=iso(d),di=dIdx(d);
@@ -96,12 +107,22 @@ function scheduledSessions(c,a,b){
    if(s.day!==di)return;
    // Fase C: sesi yang dititipkan ke coach pengganti tetap terjadwal (digelar
    // oleh pengganti), jadi hari izin coach pemilik tidak mengeluarkannya.
-   if((store.titip||[]).some(t=>t.client===c.id&&t.date===k&&t.time===s.time)){n++;return}
+   if((store.titip||[]).some(t=>t.client===c.id&&t.date===k&&t.time===s.time)){counted.add(k+'|'+s.time);n++;return}
    if(c.coach&&offOn(c.coach,k))return;
    if(c.coach&&offSlot(c.coach,k,s.time))return;
-   n++;
+   counted.add(k+'|'+s.time);n++;
   });
  }
+ // Sesi pengganti (undur terjadwal manual): penempatannya terjadwal pada
+ // tanggal + jam pilihannya. Yang kebetulan sama persis dengan slot pola yang
+ // sudah terhitung di atas tidak dihitung dua kali.
+ (store.makeup||[]).forEach(t=>{
+  if(t.client!==c.id)return;
+  const kd=parseDate(t.date);
+  if(kd<a||kd>b||kd<lo||kd>hi)return;
+  if(counted.has(t.date+'|'+t.time))return;
+  n++;
+ });
  return n;
 }
 function getCommissionData(days){

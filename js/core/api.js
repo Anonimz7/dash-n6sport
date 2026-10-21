@@ -105,7 +105,7 @@ const tActivity = a => ({ ...a, t: D(a.t) });
 async function apiBoot() {
   if (!apiToken) { apiMode = false; return false; }
   try {
-    const [members, programs, clients, tx, reqs, team, bcs, settings, tpl, activity, sched, att, cprof, swl, compay, titip] = await Promise.all([
+    const [members, programs, clients, tx, reqs, team, bcs, settings, tpl, activity, sched, att, cprof, swl, compay, titip, makeup] = await Promise.all([
       apiGet('/members'),
       apiGet('/programs'),
       apiGet('/clients?status=semua'),
@@ -122,6 +122,7 @@ async function apiBoot() {
       apiGet('/share-links').catch(() => ({ data: [] })),
       apiGet('/commission-payments').catch(() => []),
       apiGet('/titip').catch(() => []),
+      apiGet('/makeup').catch(() => []),
     ]);
     const repLists = await Promise.all(clients.map(c => apiGet('/clients/' + c.id + '/reports').catch(() => [])));
     const dmLists = await Promise.all(clients.map(c => apiGet('/messages/dm/' + c.id).catch(() => [])));
@@ -183,6 +184,8 @@ async function apiBoot() {
     store.paidByClient = {}; store.paidLegacy = []; store.paidSeg = {};
     // Komisi Bulanan Fase C: titipan klien ke coach pengganti (per tanggal)
     store.titip = (Array.isArray(titip) ? titip : []).map(t => ({ id: t.id, client: t.client_id, date: t.date, from: t.from_coach, to: t.to_coach, time: t.time, req: t.request_id }));
+    // Sesi pengganti (undur terjadwal manual): catatan per tanggal + jam, coach sama
+    store.makeup = (Array.isArray(makeup) ? makeup : []).map(t => ({ id: t.id, client: t.client_id, coach: t.coach_id, date: t.date, time: t.time, req: t.request_id }));
     ((Array.isArray(compay) ? compay : (compay && compay.data)) || []).forEach(p => {
       const info = { id: p.id, date: p.date, method: p.method, note: p.note || '', amt: p.amount, per: p.period, coach: p.coach_id };
       if (p.client_id) {

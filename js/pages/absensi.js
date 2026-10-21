@@ -1,6 +1,6 @@
 /* js/pages/absensi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, meUser, scope } from '../core/access.js';
-import { apiPatch, apiPost, apiSaveAttendance, apiSaveClient, apiSaveRequest, isApiMode } from '../core/api.js';
+import { apiDel, apiPatch, apiPost, apiSaveAttendance, apiSaveClient, apiSaveRequest, isApiMode } from '../core/api.js';
 import { COACHES, REQUEST_TYPE_KEYS, REQUEST_TYPE_LABELS, ROLE_USER_IDS } from '../core/constants.js';
 import { liveClients, offOn } from '../core/derived.js';
 import { TODAY, addD, dIdx, esc, first, fmtD, hhmm, iso, parseDate } from '../core/helpers.js';
@@ -18,7 +18,7 @@ function attList(){
  let dk=appState.adate||iso(TODAY);if(parseDate(dk)>TODAY)dk=iso(TODAY);
  store.attSlot=store.attSlot||{};
  const per=cos.map(co=>{
-  const by={};sessionsOn(co,parseDate(dk)).forEach(r=>{(by[r.time]=by[r.time]||[]).push(r.c.name+' ('+((findProgramById(r.c.pid)||{}).name||'-')+')'+(r.titipFrom?' · Titipan dari '+first(getMemberName(r.titipFrom)):''))});
+  const by={};sessionsOn(co,parseDate(dk)).forEach(r=>{(by[r.time]=by[r.time]||[]).push(r.c.name+' ('+((findProgramById(r.c.pid)||{}).name||'-')+')'+(r.titipFrom?' · Titipan dari '+first(getMemberName(r.titipFrom)):r.makeup?' · Sesi pengganti':r.pengganti?' · Sesi pengganti (undur)':''))});
   return{co,slots:Object.keys(by).sort().map(t=>({co,t,names:by[t],rec:store.attSlot[dk+'|'+co+'|'+t]||null,ok:attOpen(dk,t)}))}});
  const all_=[].concat(...per.map(x=>x.slots));
  const done=all_.filter(x=>x.rec).length,open=all_.filter(x=>!x.rec&&x.ok).length,lock=all_.filter(x=>!x.rec&&!x.ok).length;
@@ -48,7 +48,7 @@ PAGES.absensi=()=>{
  return `<div class="stackv"><div class="kpis">${kpi('Menunggu keputusan',all.filter(r=>r.status==='Menunggu').length,'semua jenis')}${kpi('Disetujui',all.filter(r=>r.status==='Disetujui').length,'memengaruhi kalender')}${kpi('Ditolak',all.filter(r=>r.status==='Ditolak').length,'')}</div>
  ${tabsBar(['Daftar Hadir'].concat(REQUEST_TYPE_KEYS.map(k=>REQUEST_TYPE_LABELS[k])))}
  <div class="toolbar"><span class="sub">${list.length} pengajuan</span><span class="sp"></span><button class="btn primary" data-act="modal" data-v="req">${icon('plus',15)} ${type==='masalah'?'Laporkan masalah':'Ajukan '+REQUEST_TYPE_LABELS[type].toLowerCase()}</button></div>
- <div class="listv">${list.sort((a,b)=>b.at-a.at).map(r=>`<div class="li"><div><b>${esc(whoName(r))} ${r.sev?pill(r.sev,r.sev==='Tinggi'?'bad':'warn'):''}</b><small>${r.type==='masalah'?'':fmtD(r.date)+(r.date2&&r.date2!==r.date?' - '+fmtD(r.date2)+' · ':' · ')}${esc(r.detail)}</small></div><div class="acts">${pill(r.status,{Menunggu:'warn',Disetujui:'good',Ditolak:'bad',Selesai:'good'}[r.status])}${!mine&&r.status==='Menunggu'?(r.type==='masalah'?`<button class="btn sm" data-act="reqset" data-v="${r.id}" data-s="Selesai">Tandai selesai</button>`:`<button class="btn sm primary" data-act="reqset" data-v="${r.id}" data-s="Disetujui">Setujui</button><button class="btn sm" data-act="reqset" data-v="${r.id}" data-s="Ditolak">Tolak</button>`):''}</div></div>`).join('')||'<section class="card"><p class="sub">Belum ada pengajuan pada kategori ini.</p></section>'}</div></div>`};
+ <div class="listv">${list.sort((a,b)=>b.at-a.at).map(r=>`<div class="li"><div><b>${esc(whoName(r))} ${r.sev?pill(r.sev,r.sev==='Tinggi'?'bad':'warn'):''}</b><small>${r.type==='masalah'?'':fmtD(r.date)+(r.date2&&r.date2!==r.date?' - '+fmtD(r.date2)+' · ':' · ')}${esc(r.detail)}</small></div><div class="acts">${pill(r.status,{Menunggu:'warn',Disetujui:'good',Ditolak:'bad',Selesai:'good'}[r.status])}${!mine&&r.status==='Menunggu'?(r.type==='masalah'?`<button class="btn sm" data-act="reqset" data-v="${r.id}" data-s="Selesai">Tandai selesai</button>`:`<button class="btn sm primary" data-act="reqset" data-v="${r.id}" data-s="Disetujui">Setujui</button><button class="btn sm" data-act="reqset" data-v="${r.id}" data-s="Ditolak">Tolak</button>`):''}${!mine&&r.status==='Disetujui'&&['izin_coach','cuti','berhalangan'].includes(r.type)?`<button class="btn sm" data-act="requndo" data-v="${r.id}">Batalkan persetujuan</button>`:''}</div></div>`).join('')||'<section class="card"><p class="sub">Belum ada pengajuan pada kategori ini.</p></section>'}</div></div>`};
 MODALS.req=()=>{
  const type=REQUEST_TYPE_KEYS[Math.max(0,Math.min(appState.tab,6)-1)],mine=appState.role==='coach';
  const whoOpts=type==='izin_client'?scope(liveClients()).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join(''):(mine?`<option value="${meId()}">${esc(getMemberName(meId()))}</option>`:COACHES.map(c=>`<option value="${c}">${esc(getMemberName(c))}</option>`).join(''));
@@ -98,15 +98,57 @@ const undurHitung=r=>{
   for(let d=new Date(a);d<=z;d=addD(d,1)){
    const k=iso(d);if(k<c.start||k>getClientEndDate(c))continue;
    slots.forEach(s=>{if(s.day!==dIdx(d))return;
-    if(r.type==='berhalangan'&&r.t1){if(s.time>=r.t1&&s.time<r.t2){lost++;occ.push({date:k,time:s.time})}}
-    else{lost++;occ.push({date:k,time:s.time})}});
+    // Sesi yang hilang bisa jadi sesi PENGGANTI itu sendiri: catatan sesi
+    // pengganti pada tanggal+jam ini, atau sesi ekor hasil undur sebelumnya
+    // (tanggalnya melewati tanggal selesai asal klien).
+    const ganti=(store.makeup||[]).some(t=>t.client===c.id&&t.date===k&&t.time===s.time)||!!(c.end_orig&&k>c.end_orig);
+    if(r.type==='berhalangan'&&r.t1){if(s.time>=r.t1&&s.time<r.t2){lost++;occ.push({date:k,time:s.time,ganti})}}
+    else{lost++;occ.push({date:k,time:s.time,ganti})}});
   }
   if(!lost)return;
   const days=new Set(slots.map(s=>s.day));let add=0,d=addD(parseDate(getClientEndDate(c)),1),guard=0;
   while(add<lost&&guard++<370){if(days.has(dIdx(d))&&!offOn(r.who,iso(d)))add++;d=addD(d,1)}
-  out.push({c,lost,occ,endLama:getClientEndDate(c),endBaru:iso(addD(d,-1))});
+  // Penempatan bawaan sesi pengganti: kemunculan pola pertama setelah tanggal
+  // selesai saat ini (hari latihan klien, melompati libur coach) sejumlah sesi
+  // yang hilang. Pemilik boleh mengubah tanggal + jam tiap penempatan di modal.
+  const place=[];let pd=addD(parseDate(getClientEndDate(c)),1),pg=0;
+  while(place.length<lost&&pg++<370){
+   const pk=iso(pd);
+   if(!offOn(r.who,pk))slots.filter(s=>s.day===dIdx(pd)).sort((x,y)=>x.time<y.time?-1:1).forEach(s=>{if(place.length<lost)place.push({date:pk,time:s.time})});
+   pd=addD(pd,1);
+  }
+  out.push({c,lost,occ,place,lostGanti:occ.filter(o=>o.ganti).length,endLama:getClientEndDate(c),endBaru:iso(addD(d,-1))});
  });
  return out;
+};
+/* Hari libur penuh coach akibat izin LAIN yang sudah disetujui (mengecualikan
+   pengajuan r itu sendiri) — dipakai penempatan sesi pengganti & pemulihan. */
+const offSelain=(r,coach,k)=>store.reqs.some(q=>q.id!==r.id&&q.status==='Disetujui'&&['izin_coach','cuti','berhalangan'].includes(q.type)&&!q.t1&&q.who===coach&&k>=q.date&&k<=(q.date2||q.date));
+/* Dampak PEMBATALAN persetujuan izin: catatan titip & sesi pengganti milik
+   pengajuan ini terhapus; tanggal selesai klien yang digeser pengajuan ini
+   dipulihkan dengan berjalan mundur sejauh sesi hilangny (menghormati izin
+   lain yang masih disetujui). Bila mundur sampai tanggal asal, end_orig
+   dibersihkan (tuntas). */
+const pulihHitung=r=>{
+ const daftar=undurHitung(r);
+ const titipDihapus=(store.titip||[]).filter(t=>t.req===r.id);
+ const makeupDihapus=(store.makeup||[]).filter(t=>t.req===r.id);
+ const pulih=[];
+ daftar.filter(x=>x.c.end_orig).forEach(x=>{
+  const days=new Set(store.book.filter(b=>b.client===x.c.id).map(b=>b.day));
+  let cnt=0,d=parseDate(getClientEndDate(x.c)),t1=null,g=0;
+  while(cnt<x.lost&&g++<370){
+   if(days.has(dIdx(d))&&!offSelain(r,r.who,iso(d))){cnt++;t1=iso(d)}
+   if(cnt<x.lost)d=addD(d,-1);
+  }
+  if(!t1)return;
+  const e1=iso(addD(parseDate(t1),-1));
+  let sisa=0;for(let dd=addD(parseDate(x.c.end_orig),1);dd<=parseDate(e1);dd=addD(dd,1))if(days.has(dIdx(dd)))sisa++;
+  if(!sisa){pulih.push({c:x.c,lost:x.lost,dari:getClientEndDate(x.c),baru:x.c.end_orig,tuntas:true});return}
+  let d2=parseDate(e1),g2=0;while(!days.has(dIdx(d2))&&g2++<370)d2=addD(d2,-1);
+  pulih.push({c:x.c,lost:x.lost,dari:getClientEndDate(x.c),baru:iso(d2),tuntas:false});
+ });
+ return{titipDihapus,makeupDihapus,pulih};
 };
 const applyReq=async(r,st)=>{
  if(isApiMode()){await apiPatch('/requests/'+r.id,{status:st});r.status=st}
@@ -117,9 +159,11 @@ MODALS.undur=m=>{
  const daftar=undurHitung(r);
  const pengganti=COACHES.filter(c=>c!==r.who);
  return sheet('Izin coach — pilih tindak lanjut',`<p><b>${esc(whoName(r))}</b> — ${esc(REQUEST_TYPE_LABELS[r.type])} ${fmtD(parseDate(r.date))}${r.date2&&r.date2!==r.date?' s/d '+fmtD(parseDate(r.date2)):''}.</p>
- <p class="sub">Sesi klien berikut hilang pada masa izin ini. Sesuai aturan pemilik, pilih salah satu: <b>diundur</b> (tanggal selesai klien bergeser, coach tetap melatih sampai jumlah sesi terpenuhi) atau <b>dititipkan</b> ke coach pengganti (sesi tetap berjalan di tanggal yang sama; komisi sesi menjadi milik pengganti).</p>
- <div class="listv">${daftar.map(x=>`<div class="li"><div><b>${esc(x.c.name)}</b><small>${x.lost} sesi hilang · selesai ${fmtD(parseDate(x.endLama))} → <b>${fmtD(parseDate(x.endBaru))}</b> bila diundur</small></div></div>`).join('')}</div>
- <div class="row" style="margin-top:12px"><button class="btn primary" data-act="undurya" data-v="${r.id}">Setujui & geser tanggal (undur)</button><button class="btn" data-act="undurplain" data-v="${r.id}">Setujui tanpa geser</button></div>
+ <p class="sub">Sesi klien berikut hilang pada masa izin ini. Sesuai aturan pemilik, pilih salah satu: <b>diundur</b> (tanggal selesai klien bergeser, coach tetap melatih sampai jumlah sesi terpenuhi) atau <b>dititipkan</b> ke coach pengganti (sesi tetap berjalan di tanggal yang sama; komisi sesi menjadi milik pengganti). Tidak ada pilihan ketiga: sesi tidak boleh hangus.</p>
+ <div class="listv">${daftar.map(x=>`<div class="li" style="display:block"><div><b>${esc(x.c.name)}</b><small>${x.lost} sesi hilang · selesai ${fmtD(parseDate(x.endLama))} → <b>${fmtD(parseDate(x.endBaru))}</b> bila diundur${x.lostGanti?` · <b>termasuk ${x.lostGanti} sesi pengganti</b>`:''}</small></div>
+ <div style="margin-top:6px">${x.occ.map((o,i)=>{const p=x.place[i]||{date:x.endBaru,time:o.time};return `<div class="row" style="gap:6px;align-items:center;margin-top:4px"><span class="sub" style="min-width:190px">Pengganti ${fmtD(parseDate(o.date))} · ${esc(o.time)}${o.ganti?' (sesi pengganti)':''} →</span><input type="date" id="mk-d-${x.c.id}-${i}" value="${p.date}"><input type="time" id="mk-t-${x.c.id}-${i}" value="${p.time}"></div>`}).join('')}
+ <small class="sub">Tanggal + jam sesi pengganti boleh diubah (mis. kesepakatan dengan klien); bawaan = ekor pola otomatis.</small></div></div>`).join('')}</div>
+ <div class="row" style="margin-top:12px"><button class="btn primary" data-act="undurya" data-v="${r.id}">Setujui & geser tanggal (undur)</button><button class="btn" data-act="close">Batal</button></div>
  <div class="fg" style="margin-top:14px"><label class="field full"><span>Atau titipkan sesi ke coach pengganti</span><select id="f-titipcoach">${pengganti.map(c=>`<option value="${c}">${esc(getMemberName(c))}</option>`).join('')}</select></label>
  <div class="row full"><button class="btn primary" data-act="undurtitip" data-v="${r.id}">Setujui & titipkan sesi</button><button class="btn" data-act="close">Batal</button></div></div>`)};
 ACT.undurtitip=async t=>{
@@ -153,28 +197,83 @@ ACT.reqset=async t=>{
  catch(e){console.error('Gagal update status:',e);toast('Gagal menyimpan: '+(e.message||e));return}
  logAct((st==='Disetujui'?'menyetujui ':st==='Ditolak'?'menolak ':'menyelesaikan ')+REQUEST_TYPE_LABELS[r.type].toLowerCase()+' '+whoName(r));
  toast(['izin_coach','cuti','berhalangan'].includes(r.type)&&st==='Disetujui'?'Disetujui. Kalender coach diperbarui':'Status diperbarui');render()};
-ACT.undurplain=async t=>{
- const r=store.reqs.find(x=>x.id===t.dataset.v);if(!r)return;
- try{await applyReq(r,'Disetujui')}
- catch(e){toast('Gagal menyimpan: '+(e.message||e));return}
- appState.modal=null;
- logAct('menyetujui '+REQUEST_TYPE_LABELS[r.type].toLowerCase()+' '+whoName(r)+' (tanpa geser tanggal selesai)');
- toast('Disetujui tanpa menggeser tanggal selesai');render()};
 ACT.undurya=async t=>{
  const r=store.reqs.find(x=>x.id===t.dataset.v);if(!r)return;
  const daftar=undurHitung(r);
  try{await applyReq(r,'Disetujui')}
  catch(e){toast('Gagal menyimpan: '+(e.message||e));return}
- let gagal=0,totSesi=0;
+ store.makeup=store.makeup||[];
+ let gagal=0,totSesi=0,totCatat=0,balik=0;
  for(const x of daftar){
   totSesi+=x.lost;
+  // Penempatan tiap sesi hilang dibaca dari editor modal. Tanggal yang jatuh
+  // pada hari libur penuh coach (izin LAIN yang sudah disetujui) dikembalikan
+  // ke bawaan ekor pola — sesi pengganti tidak boleh jatuh di hari coach libur.
+  const places=x.occ.map((o,i)=>{
+   const bawaan=x.place[i]||{date:x.endBaru,time:o.time};
+   const de=document.getElementById('mk-d-'+x.c.id+'-'+i),te=document.getElementById('mk-t-'+x.c.id+'-'+i);
+   const p={date:(de&&de.value)||bawaan.date,time:(te&&te.value)||bawaan.time};
+   if(p.date!==bawaan.date&&offSelain(r,r.who,p.date)){balik++;return bawaan}
+   return p;
+  });
+  let endFinal=x.endBaru;places.forEach(p=>{if(p.date>endFinal)endFinal=p.date});
+  // Penempatan yang persis merupakan kemunculan pola di dalam masa program
+  // baru tidak butuh catatan — slot polanya tampil & terhitung sendiri.
+  // Sisanya menjadi catatan sesi pengganti (tanggal + jam pilihan pemilik).
+  for(const p of places){
+   const pola=store.book.some(b=>b.client===x.c.id&&b.day===dIdx(parseDate(p.date))&&b.time===p.time);
+   if(pola&&p.date>=x.c.start&&p.date<=endFinal)continue;
+   try{
+    if(isApiMode()){
+     const raw=await apiPost('/makeup',{client_id:x.c.id,coach_id:r.who,date:p.date,time:p.time,request_id:r.id});
+     store.makeup.push({id:raw.id,client:raw.client_id,coach:raw.coach_id,date:raw.date,time:raw.time,req:raw.request_id});
+    }else store.makeup.push({id:'mk'+Date.now()+'-'+totCatat,client:x.c.id,coach:r.who,date:p.date,time:p.time,req:r.id});
+    totCatat++;
+   }catch(e){gagal++}
+  }
   try{
-   if(isApiMode())await apiSaveClient({id:x.c.id,end:x.endBaru,end_orig:x.c.end_orig||x.endLama});
-   else{x.c.end=x.endBaru;if(!x.c.end_orig)x.c.end_orig=x.endLama}
+   if(isApiMode())await apiSaveClient({id:x.c.id,end:endFinal,end_orig:x.c.end_orig||x.endLama});
+   else{x.c.end=endFinal;if(!x.c.end_orig)x.c.end_orig=x.endLama}
   }catch(e){gagal++}
  }
  appState.modal=null;
- logAct('menyetujui '+REQUEST_TYPE_LABELS[r.type].toLowerCase()+' '+whoName(r)+' + menggeser tanggal selesai '+daftar.length+' klien ('+totSesi+' sesi diundur)');
- toast(gagal?'Disetujui, tapi '+gagal+' klien gagal digeser — periksa menu Klien':'Disetujui. Tanggal selesai '+daftar.length+' klien digeser (+'+totSesi+' sesi)');render()};
+ logAct('menyetujui '+REQUEST_TYPE_LABELS[r.type].toLowerCase()+' '+whoName(r)+' + menggeser tanggal selesai '+daftar.length+' klien ('+totSesi+' sesi diundur, '+totCatat+' sesi pengganti terjadwal manual)');
+ toast(gagal?'Disetujui, tapi '+gagal+' langkah gagal — periksa menu Klien':'Disetujui. '+totSesi+' sesi diganti di ekor program '+daftar.length+' klien'+(totCatat?' ('+totCatat+' ditempatkan manual)':'')+(balik?' — '+balik+' penempatan dikembalikan ke bawaan (hari libur coach)':''));render()};
+
+MODALS.requndo=m=>{
+ const r=store.reqs.find(x=>x.id===m.id);if(!r)return '';
+ const p=pulihHitung(r);
+ return sheet('Batalkan persetujuan izin?',`<p><b>${esc(whoName(r))}</b> — ${esc(REQUEST_TYPE_LABELS[r.type])} ${fmtD(parseDate(r.date))}${r.date2&&r.date2!==r.date?' s/d '+fmtD(parseDate(r.date2)):''} akan dikembalikan ke status <b>Menunggu</b> supaya bisa diputuskan ulang.</p>
+ <div class="listv">
+ ${p.titipDihapus.length?`<div class="li"><div><b>${p.titipDihapus.length} catatan titip dihapus</b><small>sesi kembali menjadi tanggungan coach pemilik klien</small></div></div>`:''}
+ ${p.makeupDihapus.length?`<div class="li"><div><b>${p.makeupDihapus.length} catatan sesi pengganti dihapus</b><small>penempatan manual hasil undur pengajuan ini dibatalkan</small></div></div>`:''}
+ ${p.pulih.map(x=>`<div class="li"><div><b>${esc(x.c.name)}</b><small>tanggal selesai ${fmtD(parseDate(x.dari))} → <b>${fmtD(parseDate(x.baru))}</b>${x.tuntas?' (kembali ke tanggal asal)':''}</small></div></div>`).join('')}
+ ${!p.titipDihapus.length&&!p.makeupDihapus.length&&!p.pulih.length?'<div class="li"><div><small>Tidak ada titip, sesi pengganti, atau geseran tanggal dari pengajuan ini — hanya status yang dikembalikan.</small></div></div>':''}
+ </div>
+ <div class="row" style="margin-top:12px"><button class="btn primary" data-act="requndoya" data-v="${r.id}">Ya, batalkan persetujuan</button><button class="btn" data-act="close">Kembali</button></div>`)};
+ACT.requndo=t=>{appState.modal={k:'requndo',id:t.dataset.v};render()};
+ACT.requndoya=async t=>{
+ const r=store.reqs.find(x=>x.id===t.dataset.v);if(!r)return;
+ const p=pulihHitung(r);
+ let gagal=0;
+ try{await applyReq(r,'Menunggu')}
+ catch(e){toast('Gagal menyimpan: '+(e.message||e));return}
+ for(const td of p.titipDihapus){
+  try{if(isApiMode())await apiDel('/titip/'+td.id);store.titip=store.titip.filter(x=>x.id!==td.id)}
+  catch(e){gagal++}
+ }
+ for(const mk of p.makeupDihapus){
+  try{if(isApiMode())await apiDel('/makeup/'+mk.id);store.makeup=store.makeup.filter(x=>x.id!==mk.id)}
+  catch(e){gagal++}
+ }
+ for(const x of p.pulih){
+  try{
+   if(isApiMode())await apiSaveClient({id:x.c.id,end:x.baru,end_orig:x.tuntas?null:x.c.end_orig});
+   else{x.c.end=x.baru;if(x.tuntas)x.c.end_orig=null}
+  }catch(e){gagal++}
+ }
+ appState.modal=null;
+ logAct('membatalkan persetujuan '+REQUEST_TYPE_LABELS[r.type].toLowerCase()+' '+whoName(r)+' (kembali Menunggu; '+p.titipDihapus.length+' titip & '+p.makeupDihapus.length+' sesi pengganti dihapus, '+p.pulih.length+' tanggal selesai dipulihkan)');
+ toast(gagal?'Persetujuan dibatalkan, tapi '+gagal+' langkah gagal — periksa data terkait':'Persetujuan dibatalkan. Pengajuan kembali Menunggu dan bisa diputuskan ulang.');render()};
 
 export { attList, whoName };
