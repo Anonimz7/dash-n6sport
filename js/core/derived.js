@@ -1,10 +1,19 @@
 /* js/core/derived.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { COACHES } from './constants.js';
 import { MONTHS, TODAY, addD, dIdx, esc, fmtD, hhmm, iso, parseDate, sum } from './helpers.js';
-import { findClientById, findProgramById, getClientStatus, store } from './store.js';
+import { appState, findClientById, findProgramById, getClientEndDate, getClientStatus, store } from './store.js';
 import { activePrograms, perRange, pill } from '../ui/components.js';
 
-const inRange=(k,days)=>{const d=parseDate(k);if(typeof days==='string'){const r=perRange();return d>=r.a&&d<=r.b}return d<=TODAY&&d>addD(TODAY,-days)};
+const inRange=(k,days)=>{const d=parseDate(k);if(days&&typeof days==='object')return d>=days.a&&d<=days.b;if(typeof days==='string'){const r=perRange();return d>=r.a&&d<=r.b}return d<=TODAY&&d>addD(TODAY,-days)};
+// Komisi Bulanan (Fase A): satuan periode Komisi = bulan kalender.
+// appState.komY/komM null = bulan berjalan. Rentang {a,b} dipakai getSessionAttendance
+// lewat cabang objek inRange; halaman lain tetap memakai appState.per lama.
+const komRange=()=>{const y=appState.komY==null?TODAY.getFullYear():appState.komY,m=appState.komM==null?TODAY.getMonth():appState.komM;return{a:new Date(y,m,1),b:new Date(y,m+1,0)}};
+const komLbl=()=>{const r=komRange();return MONTHS[r.a.getMonth()]+' '+r.a.getFullYear()};
+// Komisi Bulanan Fase B: pengaturan tanggal pembayaran (menu Pengaturan, kunci
+// settings 'komisi') — 'akhir' = hari terakhir bulan, atau tanggal 1..28.
+const komisiSet=()=>store.komisiSet&&store.komisiSet.tgl_bayar!==undefined?store.komisiSet:{tgl_bayar:'akhir'};
+const payDateFor=range=>{const t=komisiSet().tgl_bayar;if(t==='akhir'||t==null)return range.b;return new Date(range.a.getFullYear(),range.a.getMonth(),Math.min(+t||28,range.b.getDate()))};
 const filterTransactions=(days,type)=>store.tx.filter(t=>(!type||t.type===type)&&inRange(t.date,days));
 function monthly(){const o=[];for(let m=5;m>=0;m--){const b=new Date(TODAY.getFullYear(),TODAY.getMonth()-m,1),key=iso(b).slice(0,7);const inc=sum(store.tx.filter(t=>t.type==='in'&&t.date.startsWith(key)).map(t=>t.amt));const exp=sum(store.tx.filter(t=>t.type==='out'&&t.date.startsWith(key)).map(t=>t.amt));o.push({key,l:MONTHS[b.getMonth()],inc,exp})}return o}
 const liveClients=()=>store.clients.filter(c=>!c.arch&&getClientStatus(c)!=='Selesai');
@@ -43,7 +52,10 @@ function getSessionAttendance(days,coach){
   const d=parseDate(k);
   // Semua booking yang cocok: coach + hari-dalam-seminggu + jam
   const bs=store.book.filter(x=>x.coach===coachId&&x.day===dIdx(d)&&x.time===time);
-  if(!bs.length){out.push({date:k,cid:null,client:'-',coach:coachId,pid:null,fee:0});return}
+  // Komisi Bulanan Fase C: klien titipan ke coach ini pada tanggal+jam ini ikut
+  // terhitung; pelatih aktual (penerima komisi) adalah coach pengganti.
+  const titipan=(store.titip||[]).filter(t=>t.to===coachId&&t.date===k&&t.time===time);
+  if(!bs.length&&!titipan.length){out.push({date:k,cid:null,client:'-',coach:coachId,pid:null,fee:0});return}
   const seen=new Set();
   bs.forEach(b=>{
    const c=findClientById(b.client);
@@ -51,10 +63,46 @@ function getSessionAttendance(days,coach){
    seen.add(c.id);
    // Pengaman warisan: sesi sebelum tanggal mulai klien tidak dihitung untuknya
    if(c.start&&k<c.start)return;
+   // Komisi Bulanan Fase A: sesi setelah tanggal selesai klien juga tidak dihitung
+   // (sebelumnya bocor selama booking klien belum dihapus).
+   if(k>getClientEndDate(c))return;
    out.push({date:k,cid:c.id,client:c.name,coach:coachId,pid:c.pid,fee:(findProgramById(c.pid)||{}).fee||0});
+  });
+  titipan.forEach(t=>{
+   const c=findClientById(t.client);
+   if(!c||c.arch||seen.has(c.id))return;
+   seen.add(c.id);
+   if(c.start&&k<c.start)return;
+   if(k>getClientEndDate(c))return;
+   out.push({date:k,cid:c.id,client:c.name,coach:coachId,pid:c.pid,fee:(findProgramById(c.pid)||{}).fee||0,titip:true,from:t.from});
   });
  });
  return out;
+}
+// Komisi Bulanan Fase A: total sesi TERJADWAL klien dalam rentang [a,b] —
+// penyebut kolom "hadir / terjadwal". Diturunkan dari slot booking klien,
+// dibatasi masa program [mulai, selesai], dan mengeluarkan hari/jam izin-cuti
+// coach yang disetujui (penyesuaian C: sesi yang mustahil hadir tidak dihitung).
+function scheduledSessions(c,a,b){
+ if(!c||!c.start)return 0;
+ const slots=store.book.filter(x=>x.client===c.id);
+ if(!slots.length)return 0;
+ const lo=parseDate(c.start),hi=parseDate(getClientEndDate(c));
+ let n=0;
+ for(let d=new Date(a);d<=b;d=addD(d,1)){
+  if(d<lo||d>hi)continue;
+  const k=iso(d),di=dIdx(d);
+  slots.forEach(s=>{
+   if(s.day!==di)return;
+   // Fase C: sesi yang dititipkan ke coach pengganti tetap terjadwal (digelar
+   // oleh pengganti), jadi hari izin coach pemilik tidak mengeluarkannya.
+   if((store.titip||[]).some(t=>t.client===c.id&&t.date===k&&t.time===s.time)){n++;return}
+   if(c.coach&&offOn(c.coach,k))return;
+   if(c.coach&&offSlot(c.coach,k,s.time))return;
+   n++;
+  });
+ }
+ return n;
 }
 function getCommissionData(days){
  const ses=getSessionAttendance(days);
@@ -62,12 +110,21 @@ function getCommissionData(days){
  const byProg=activePrograms().map(p=>{const sp=ses.filter(x=>x.pid===p.id);return{p,kom:sum(sp.map(x=>x.fee)),nSes:sp.length}});
  // F1.2: baris per klien — klien aktif selalu tampil (walau belum ada sesi);
  // klien non-aktif (arsip/selesai) tampil bila punya sesi pada periode ini.
+ const isRange=!!(days&&typeof days==='object');
  const byClient=store.clients.map(cl=>{
   const sc=ses.filter(x=>x.cid===cl.id);
   const aktif=!cl.arch&&getClientStatus(cl)!=='Selesai';
-  if(!aktif&&!sc.length)return null;
-  return{cl,c:cl.id,coach:cl.coach,pid:cl.pid,nSes:sc.length,kom:sum(sc.map(x=>x.fee)),fee:(findProgramById(cl.pid)||{}).fee||0};
+  // Mode bulan: klien yang masa programnya sama sekali di luar bulan terpilih
+  // (belum mulai / sudah berakhir sebelum bulan itu) tidak ditampilkan.
+  const showable=isRange?(aktif&&cl.start<=iso(days.b)&&getClientEndDate(cl)>=iso(days.a)):aktif;
+  if(!showable&&!sc.length)return null;
+  // Fase C: rincian per pelatih AKTUAL — sesi titipan menjadi perolehan coach
+  // pengganti, sehingga pembayaran klien bisa dipecah per pelatih.
+  const perCoach={};sc.forEach(x=>{const g=perCoach[x.coach]||(perCoach[x.coach]={coach:x.coach,nSes:0,kom:0});g.nSes++;g.kom+=x.fee});
+  return{cl,c:cl.id,coach:cl.coach,pid:cl.pid,nSes:sc.length,nJadwal:isRange?scheduledSessions(cl,days.a,days.b):0,kom:sum(sc.map(x=>x.fee)),fee:(findProgramById(cl.pid)||{}).fee||0,perCoach:Object.values(perCoach)};
  }).filter(Boolean);
+ // Komisi Bulanan Fase A: baris diurutkan terbaru -> terlama (tanggal mulai klien).
+ byClient.sort((x,y)=>x.cl.start<y.cl.start?1:x.cl.start>y.cl.start?-1:(x.cl.name<y.cl.name?-1:1));
  return{byCoach,byProg,byClient}}
 // F1.4: status bayar per KLIEN + label periode (bukan per coach lagi).
 // Kunci peta store.paidByClient: '<client_id>|<label periode>' — label persis
@@ -75,5 +132,7 @@ function getCommissionData(days){
 // (legacy era per-coach) tidak masuk peta ini dan tidak menandai klien mana pun.
 const payKey=(clientId,per)=>clientId+'|'+per;
 const payOf=(clientId,per)=>(store.paidByClient||{})[payKey(clientId,per)]||null;
+// Fase C: status bayar per segmen pelatih aktual (client|coach|periode).
+const paySegOf=(clientId,coach,per)=>(store.paidSeg||{})[clientId+'|'+coach+'|'+per]||null;
 
-export { calCell, filterTransactions, freeSlots, getCommissionData, getPendingCorrections, getReportsOf, getSessionAttendance, holdOf, hrZone, inRange, liveClients, monthly, offInfo, offLbl, offList, offOn, offSlot, payKey, payOf };
+export { calCell, filterTransactions, freeSlots, getCommissionData, getPendingCorrections, getReportsOf, getSessionAttendance, holdOf, hrZone, inRange, komLbl, komRange, komisiSet, liveClients, monthly, offInfo, offLbl, offList, offOn, offSlot, payDateFor, payKey, payOf, paySegOf, scheduledSessions };

@@ -142,7 +142,7 @@ store.acl={
  head:{beranda:'full',klien:'full',coach:'full',koreksi:'full',program:'full',pesan:'full',absensi:'full',komisi:'none',keuangan:'none',laporan:'mask',anggota:'none',setting:'full',progress:'none'},
  coach:{beranda:'full',klien:'full',coach:'full',koreksi:'none',program:'full',pesan:'full',absensi:'full',komisi:'full',keuangan:'none',laporan:'none',anggota:'none',setting:'full',progress:'none'}
 };
-const appState={role:'owner',page:'beranda',tab:0,nav:false,modal:null,q:'',cf:'all',per:30,tp:'bulan',gate:false,theme:'system',
+const appState={role:'owner',page:'beranda',tab:0,nav:false,modal:null,q:'',cf:'all',per:30,komY:null,komM:null,tp:'bulan',gate:false,theme:'system',
  kcoach:'all',clcoach:'all',kweek:0,kdate:iso(TODAY),sched:'u4',cal:'u4',chat:'cl1',editfix:null,rep:'client',repPer:30,confirm:null,syncAt:new Date(),focus:null,openMark:null,share:'u4',shareDays:7,bcTo:'all',acoach:'all',adate:iso(TODAY),
  prog:{name:'Aditya Nugroho',coach:'Dimas Pratama',age:34,target:'42195',pbNow:'4:25:00',pbTarget:'4:00:00',title:'',phase:'umum',sdate:iso(TODAY),edate:iso(addD(TODAY,6)),hrmax:186,weeks:[36],start:36,inc:8,calcVol:48,detail:true,fmt:'pdf',tplId:'t1'}
 };

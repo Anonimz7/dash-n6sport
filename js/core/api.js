@@ -105,7 +105,7 @@ const tActivity = a => ({ ...a, t: D(a.t) });
 async function apiBoot() {
   if (!apiToken) { apiMode = false; return false; }
   try {
-    const [members, programs, clients, tx, reqs, team, bcs, settings, tpl, activity, sched, att, cprof, swl, compay] = await Promise.all([
+    const [members, programs, clients, tx, reqs, team, bcs, settings, tpl, activity, sched, att, cprof, swl, compay, titip] = await Promise.all([
       apiGet('/members'),
       apiGet('/programs'),
       apiGet('/clients?status=semua'),
@@ -121,6 +121,7 @@ async function apiBoot() {
       apiGet('/coach-profiles').catch(() => ({ data: [] })),
       apiGet('/share-links').catch(() => ({ data: [] })),
       apiGet('/commission-payments').catch(() => []),
+      apiGet('/titip').catch(() => []),
     ]);
     const repLists = await Promise.all(clients.map(c => apiGet('/clients/' + c.id + '/reports').catch(() => [])));
     const dmLists = await Promise.all(clients.map(c => apiGet('/messages/dm/' + c.id).catch(() => [])));
@@ -141,6 +142,8 @@ async function apiBoot() {
     };
     store.targets = settings.targets;
     store.acl = settings.acl;
+    // Komisi Bulanan Fase B: pengaturan tanggal bayar (default akhir bulan)
+    store.komisiSet = (settings.komisi && settings.komisi.tgl_bayar !== undefined) ? settings.komisi : { tgl_bayar: 'akhir' };
     store.tpl = tpl;
     // Simpan custom program templates untuk dipakai progInit
     if (settings.program_tpls) {
@@ -177,10 +180,28 @@ async function apiBoot() {
     // paidLegacy dan TIDAK menandai klien mana pun (dulu: menandai coach-nya,
     // sehingga semua klien coach itu ikut tampil Dibayar).
     store.paid = {}; store.payInfo = {}; store.payIds = {};
-    store.paidByClient = {}; store.paidLegacy = [];
+    store.paidByClient = {}; store.paidLegacy = []; store.paidSeg = {};
+    // Komisi Bulanan Fase C: titipan klien ke coach pengganti (per tanggal)
+    store.titip = (Array.isArray(titip) ? titip : []).map(t => ({ id: t.id, client: t.client_id, date: t.date, from: t.from_coach, to: t.to_coach, time: t.time, req: t.request_id }));
     ((Array.isArray(compay) ? compay : (compay && compay.data)) || []).forEach(p => {
       const info = { id: p.id, date: p.date, method: p.method, note: p.note || '', amt: p.amount, per: p.period, coach: p.coach_id };
-      if (p.client_id) store.paidByClient[p.client_id + '|' + p.period] = info;
+      if (p.client_id) {
+        // Komisi Bulanan Fase A (penyesuaian B): beberapa pembayaran untuk
+        // klien+periode yang sama (mis. bayar kekurangan) DIJUMLAHKAN —
+        // amt = total terbayar, ids = semua record (untuk pembatalan).
+        const key = p.client_id + '|' + p.period, ex = store.paidByClient[key];
+        if (ex) {
+          ex.amt += p.amount; ex.ids.push(p.id);
+          if ((p.date || '') >= (ex.date || '')) { ex.date = p.date; ex.method = p.method; ex.id = p.id; }
+        } else store.paidByClient[key] = { ...info, ids: [p.id] };
+        // Fase C: agregat per SEGMEN pelatih aktual (client|coach|periode) —
+        // dasar status bayar terpisah saat sesi klien dilatih coach titipan.
+        const skey = p.client_id + '|' + p.coach_id + '|' + p.period, sx = store.paidSeg[skey];
+        if (sx) {
+          sx.amt += p.amount; sx.ids.push(p.id);
+          if ((p.date || '') >= (sx.date || '')) { sx.date = p.date; sx.method = p.method; sx.id = p.id; }
+        } else store.paidSeg[skey] = { ...info, ids: [p.id] };
+      }
       else store.paidLegacy.push(info);
     });
     buildSessionLogs();

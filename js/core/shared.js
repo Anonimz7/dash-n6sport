@@ -103,8 +103,13 @@ function coachScore(id){
 function sessionsOn(id,date){
  const k=iso(date),di=dIdx(date);
  if(offOn(id,k))return[];
- return store.book.filter(b=>b.coach===id&&b.day===di&&findClientById(b.client)&&!findClientById(b.client).arch)
-  .filter(b=>!offSlot(id,k,b.time)).sort((a,b)=>a.time<b.time?-1:1).map(b=>({...b,date:k,c:findClientById(b.client),att:store.attClient[k+'|'+b.client]||null}));
+ const own=store.book.filter(b=>b.coach===id&&b.day===di&&findClientById(b.client)&&!findClientById(b.client).arch)
+  .filter(b=>!offSlot(id,k,b.time)).map(b=>({...b,date:k,c:findClientById(b.client),att:store.attClient[k+'|'+b.client]||null}));
+ // Komisi Bulanan Fase C: klien titipan untuk coach ini pada tanggal ini ikut
+ // tampil di Daftar Hadir pengganti (bertanda titipFrom = coach pemilik klien).
+ const titipan=(store.titip||[]).filter(t=>t.to===id&&t.date===k&&findClientById(t.client)&&!findClientById(t.client).arch)
+  .map(t=>({coach:id,client:t.client,day:di,time:t.time,date:k,c:findClientById(t.client),att:store.attClient[k+'|'+t.client]||null,titipFrom:t.from}));
+ return own.concat(titipan).sort((a,b)=>a.time<b.time?-1:1);
 }
 function upcoming(id,n){
  const out=[],nowS=hhmm(new Date());

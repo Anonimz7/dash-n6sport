@@ -2,6 +2,7 @@
 import { canAccess, logAct, meId, scope } from '../core/access.js';
 import { apiDel, apiSaveClient, apiSaveShareLink, apiSaveTransaction, apiSendPortalMessage, isApiMode } from '../core/api.js';
 import { COACHES, CONDC, ROLE_USER_IDS } from '../core/constants.js';
+import { scheduledSessions } from '../core/derived.js';
 import { TODAY, addD, esc, first, fmtD, formatRupiah, hhmm, iso, parseDate, slug } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
 import { ACT, CONF, FORMS, MODALS, PAGES } from '../core/registry.js';
@@ -39,6 +40,7 @@ MODALS.client=m=>{
  <div class="idcard full"><small>Harga program</small><b id="pricebox" class="mono" style="font-size:20px">${formatRupiah(programOrDefault.price)}</b><small id="priceunit">${esc(programOrDefault.unit||'')}</small><small id="semihint" data-semi ${paketSemi?'':'hidden'}>Paket 2 peserta: pembayaran <b>satu kali</b> sebesar <b class="mono" id="semitotal">${formatRupiah(programOrDefault.price)}</b> untuk kedua peserta. Masing-masing peserta punya ID dan link dashboard sendiri.</small></div>
  <label class="field"><span>Tanggal mulai</span><input name="start" type="date" required value="${c.start}" data-cform></label>
  <label class="field"><span>Tanggal selesai</span><input name="end" type="date" required value="${endV}" data-cform ${c.end?'data-touched="1"':''}></label>
+ ${c.end_orig?`<div class="full"><small class="sub">Diundur dari ${fmtD(parseDate(c.end_orig))} (+${scheduledSessions(c,addD(parseDate(c.end_orig),1),parseDate(c.end||c.end_orig))} sesi) — tanggal selesai digeser akibat izin/cuti coach.</small></div>`:''}
  <div class="peserta full fg" id="peserta1">
   <div class="full"><h4 id="p1title">${paketSemi?'Peserta 1':'Data klien'}</h4>${m.id?tautanDash(c):''}</div>
   <label class="field full"><span>Nama klien</span><input id="f-cname" name="name" required value="${esc(c.name)}"></label>
@@ -75,7 +77,7 @@ FORMS.client=async f=>{
  const api=isApiMode();
  /* buat klien: via API bila mode API (field tambahan grp/note/end diset lokal, pola sama seperti end/pbNow di fase C) */
  const buatKlienBaru=async nama=>{
-  if(api)return await apiSaveClient({name:nama,program_id:f.get('pid'),start,coach_id:coachTerpilih});
+  if(api)return await apiSaveClient({name:nama,program_id:f.get('pid'),start,end,coach_id:coachTerpilih});
   const k={id:uniqClientId(),uid:nextClientUid(),hrmax:188,mp:360,renew:false,arch:null,reg:Date.now(),cond:'Prima',coach:coachTerpilih,note:''};
   store.clients.push(k);return k;
  };
@@ -88,7 +90,7 @@ FORMS.client=async f=>{
   const coachLama=!isNew&&k.coach!==coachTerpilih;
   const grp=k.grp; /* apiSaveClient me-replace objek di store -> amankan field lokal dulu */
   let cur=k;
-  if(api&&k.id)cur=await apiSaveClient({id:k.id,name:o.name,program_id:f.get('pid'),start,coach_id:coachTerpilih});
+  if(api&&k.id)cur=await apiSaveClient({id:k.id,name:o.name,program_id:f.get('pid'),start,end,coach_id:coachTerpilih});
   Object.assign(cur,{name:o.name,pid:f.get('pid'),start,end,pbNow:o.pbNow,pbTarget:o.pbTarget,note:o.note,coach:coachTerpilih});
   if(grp)cur.grp=grp;else delete cur.grp;
   /* ganti coach: sesi lama di jadwal coach sebelumnya dilepas agar tidak dobel/yatim (sama seperti menu Jadwal coach) */

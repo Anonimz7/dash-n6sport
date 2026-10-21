@@ -1,13 +1,13 @@
 /* js/pages/absensi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, meUser, scope } from '../core/access.js';
-import { apiPatch, apiSaveAttendance, apiSaveRequest, isApiMode } from '../core/api.js';
+import { apiPatch, apiPost, apiSaveAttendance, apiSaveClient, apiSaveRequest, isApiMode } from '../core/api.js';
 import { COACHES, REQUEST_TYPE_KEYS, REQUEST_TYPE_LABELS, ROLE_USER_IDS } from '../core/constants.js';
-import { liveClients } from '../core/derived.js';
-import { TODAY, esc, first, fmtD, hhmm, iso, parseDate } from '../core/helpers.js';
+import { liveClients, offOn } from '../core/derived.js';
+import { TODAY, addD, dIdx, esc, first, fmtD, hhmm, iso, parseDate } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
 import { ACT, FORMS, MODALS, PAGES } from '../core/registry.js';
 import { ATT_MIN, attOpen, attOpenAt, locOf, sessionsOn } from '../core/shared.js';
-import { appState, findClientById, findProgramById, getMemberName, store } from '../core/store.js';
+import { appState, findClientById, findProgramById, getClientEndDate, getMemberName, store } from '../core/store.js';
 import { banner, kpi, pill, sheet, tabsBar } from '../ui/components.js';
 import { render, toast } from '../ui/shell.js';
 
@@ -18,7 +18,7 @@ function attList(){
  let dk=appState.adate||iso(TODAY);if(parseDate(dk)>TODAY)dk=iso(TODAY);
  store.attSlot=store.attSlot||{};
  const per=cos.map(co=>{
-  const by={};sessionsOn(co,parseDate(dk)).forEach(r=>{(by[r.time]=by[r.time]||[]).push(r.c.name+' ('+((findProgramById(r.c.pid)||{}).name||'-')+')')});
+  const by={};sessionsOn(co,parseDate(dk)).forEach(r=>{(by[r.time]=by[r.time]||[]).push(r.c.name+' ('+((findProgramById(r.c.pid)||{}).name||'-')+')'+(r.titipFrom?' · Titipan dari '+first(getMemberName(r.titipFrom)):''))});
   return{co,slots:Object.keys(by).sort().map(t=>({co,t,names:by[t],rec:store.attSlot[dk+'|'+co+'|'+t]||null,ok:attOpen(dk,t)}))}});
  const all_=[].concat(...per.map(x=>x.slots));
  const done=all_.filter(x=>x.rec).length,open=all_.filter(x=>!x.rec&&x.ok).length,lock=all_.filter(x=>!x.rec&&!x.ok).length;
@@ -85,14 +85,96 @@ ACT.cattset=async t=>{
  else store.attCoach[co][k]={status:'Alpha'};
  logAct('mengonfirmasi absensi coach '+getMemberName(co)+' ('+v+') '+tm);
  toast('Absensi '+first(getMemberName(co))+' jam '+tm+': '+v);render()};
+/* Komisi Bulanan Fase A — dukungan DIUNDUR (keputusan pemilik): sesi klien yang
+   hilang karena izin/cuti coach diganti di ekor masa program; tanggal selesai
+   klien digeser maju sejumlah sesi yang hilang. undurHitung menghitung dampak
+   per klien: sesi hilang dalam rentang pengajuan + tanggal selesai baru. */
+const undurHitung=r=>{
+ if(!['izin_coach','cuti','berhalangan'].includes(r.type))return[];
+ const out=[];
+ store.clients.filter(c=>c.coach===r.who&&!c.arch).forEach(c=>{
+  const slots=store.book.filter(b=>b.client===c.id);if(!slots.length)return;
+  const a=parseDate(r.date),z=parseDate(r.date2||r.date);let lost=0;const occ=[];
+  for(let d=new Date(a);d<=z;d=addD(d,1)){
+   const k=iso(d);if(k<c.start||k>getClientEndDate(c))continue;
+   slots.forEach(s=>{if(s.day!==dIdx(d))return;
+    if(r.type==='berhalangan'&&r.t1){if(s.time>=r.t1&&s.time<r.t2){lost++;occ.push({date:k,time:s.time})}}
+    else{lost++;occ.push({date:k,time:s.time})}});
+  }
+  if(!lost)return;
+  const days=new Set(slots.map(s=>s.day));let add=0,d=addD(parseDate(getClientEndDate(c)),1),guard=0;
+  while(add<lost&&guard++<370){if(days.has(dIdx(d))&&!offOn(r.who,iso(d)))add++;d=addD(d,1)}
+  out.push({c,lost,occ,endLama:getClientEndDate(c),endBaru:iso(addD(d,-1))});
+ });
+ return out;
+};
+const applyReq=async(r,st)=>{
+ if(isApiMode()){await apiPatch('/requests/'+r.id,{status:st});r.status=st}
+ else r.status=st;
+};
+MODALS.undur=m=>{
+ const r=store.reqs.find(x=>x.id===m.id);if(!r)return '';
+ const daftar=undurHitung(r);
+ const pengganti=COACHES.filter(c=>c!==r.who);
+ return sheet('Izin coach — pilih tindak lanjut',`<p><b>${esc(whoName(r))}</b> — ${esc(REQUEST_TYPE_LABELS[r.type])} ${fmtD(parseDate(r.date))}${r.date2&&r.date2!==r.date?' s/d '+fmtD(parseDate(r.date2)):''}.</p>
+ <p class="sub">Sesi klien berikut hilang pada masa izin ini. Sesuai aturan pemilik, pilih salah satu: <b>diundur</b> (tanggal selesai klien bergeser, coach tetap melatih sampai jumlah sesi terpenuhi) atau <b>dititipkan</b> ke coach pengganti (sesi tetap berjalan di tanggal yang sama; komisi sesi menjadi milik pengganti).</p>
+ <div class="listv">${daftar.map(x=>`<div class="li"><div><b>${esc(x.c.name)}</b><small>${x.lost} sesi hilang · selesai ${fmtD(parseDate(x.endLama))} → <b>${fmtD(parseDate(x.endBaru))}</b> bila diundur</small></div></div>`).join('')}</div>
+ <div class="row" style="margin-top:12px"><button class="btn primary" data-act="undurya" data-v="${r.id}">Setujui & geser tanggal (undur)</button><button class="btn" data-act="undurplain" data-v="${r.id}">Setujui tanpa geser</button></div>
+ <div class="fg" style="margin-top:14px"><label class="field full"><span>Atau titipkan sesi ke coach pengganti</span><select id="f-titipcoach">${pengganti.map(c=>`<option value="${c}">${esc(getMemberName(c))}</option>`).join('')}</select></label>
+ <div class="row full"><button class="btn primary" data-act="undurtitip" data-v="${r.id}">Setujui & titipkan sesi</button><button class="btn" data-act="close">Batal</button></div></div>`)};
+ACT.undurtitip=async t=>{
+ const r=store.reqs.find(x=>x.id===t.dataset.v);if(!r)return;
+ const sel=document.getElementById('f-titipcoach'),target=sel?sel.value:'';
+ if(!target){toast('Pilih coach pengganti dulu');return}
+ const daftar=undurHitung(r);
+ try{await applyReq(r,'Disetujui')}
+ catch(e){toast('Gagal menyimpan: '+(e.message||e));return}
+ store.titip=store.titip||[];
+ let gagal=0,tot=0;
+ for(const x of daftar){
+  for(const o of x.occ){
+   tot++;
+   try{
+    if(isApiMode()){
+     const raw=await apiPost('/titip',{client_id:x.c.id,date:o.date,from_coach:r.who,to_coach:target,time:o.time,request_id:r.id});
+     store.titip.push({id:raw.id,client:raw.client_id,date:raw.date,from:raw.from_coach,to:raw.to_coach,time:raw.time,req:raw.request_id});
+    }else store.titip.push({id:'tp'+Date.now()+'-'+tot,client:x.c.id,date:o.date,from:r.who,to:target,time:o.time,req:r.id});
+   }catch(e){gagal++}
+  }
+ }
+ appState.modal=null;
+ logAct('menyetujui '+REQUEST_TYPE_LABELS[r.type].toLowerCase()+' '+whoName(r)+' + menitipkan '+tot+' sesi ke '+getMemberName(target));
+ toast(gagal?'Disetujui, tapi '+gagal+' titipan gagal dibuat':'Disetujui. '+tot+' sesi dititipkan ke '+first(getMemberName(target)));render()};
 ACT.reqset=async t=>{
  const r=store.reqs.find(x=>x.id===t.dataset.v);if(!r)return;
  const st=t.dataset.s;
- if(isApiMode()){
-   try{await apiPatch('/requests/'+r.id,{status:st});r.status=st}
-   catch(e){console.error('Gagal update status:',e);toast('Gagal menyimpan: '+(e.message||e));return}
- }else{r.status=st}
+ if(st==='Disetujui'&&['izin_coach','cuti','berhalangan'].includes(r.type)&&undurHitung(r).length){appState.modal={k:'undur',id:r.id};render();return}
+ try{await applyReq(r,st)}
+ catch(e){console.error('Gagal update status:',e);toast('Gagal menyimpan: '+(e.message||e));return}
  logAct((st==='Disetujui'?'menyetujui ':st==='Ditolak'?'menolak ':'menyelesaikan ')+REQUEST_TYPE_LABELS[r.type].toLowerCase()+' '+whoName(r));
  toast(['izin_coach','cuti','berhalangan'].includes(r.type)&&st==='Disetujui'?'Disetujui. Kalender coach diperbarui':'Status diperbarui');render()};
+ACT.undurplain=async t=>{
+ const r=store.reqs.find(x=>x.id===t.dataset.v);if(!r)return;
+ try{await applyReq(r,'Disetujui')}
+ catch(e){toast('Gagal menyimpan: '+(e.message||e));return}
+ appState.modal=null;
+ logAct('menyetujui '+REQUEST_TYPE_LABELS[r.type].toLowerCase()+' '+whoName(r)+' (tanpa geser tanggal selesai)');
+ toast('Disetujui tanpa menggeser tanggal selesai');render()};
+ACT.undurya=async t=>{
+ const r=store.reqs.find(x=>x.id===t.dataset.v);if(!r)return;
+ const daftar=undurHitung(r);
+ try{await applyReq(r,'Disetujui')}
+ catch(e){toast('Gagal menyimpan: '+(e.message||e));return}
+ let gagal=0,totSesi=0;
+ for(const x of daftar){
+  totSesi+=x.lost;
+  try{
+   if(isApiMode())await apiSaveClient({id:x.c.id,end:x.endBaru,end_orig:x.c.end_orig||x.endLama});
+   else{x.c.end=x.endBaru;if(!x.c.end_orig)x.c.end_orig=x.endLama}
+  }catch(e){gagal++}
+ }
+ appState.modal=null;
+ logAct('menyetujui '+REQUEST_TYPE_LABELS[r.type].toLowerCase()+' '+whoName(r)+' + menggeser tanggal selesai '+daftar.length+' klien ('+totSesi+' sesi diundur)');
+ toast(gagal?'Disetujui, tapi '+gagal+' klien gagal digeser — periksa menu Klien':'Disetujui. Tanggal selesai '+daftar.length+' klien digeser (+'+totSesi+' sesi)');render()};
 
 export { attList, whoName };
