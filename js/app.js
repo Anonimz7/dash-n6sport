@@ -1,7 +1,7 @@
 /* js/app.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { applyTheme, ensurePage } from './actions.js';
 import { ROLE } from './core/constants.js';
-import { TODAY, num, parseDate } from './core/helpers.js';
+import { TODAY, dIdx, num, parseDate } from './core/helpers.js';
 import { ACT, FORMS, HOOK } from './core/registry.js';
 import { appState, fillTemplate, findClientById, findClientByUid, store } from './core/store.js';
 import { syncBoot, syncListen } from './core/sync.js';
@@ -67,7 +67,7 @@ document.addEventListener('change',e=>{
  const t=e.target;if(!t.dataset)return;
  if(t.hasAttribute('data-cform')){clientFormSync(t);return}
  if(t.hasAttribute('data-tsel')){const w=document.getElementById('ctw');if(w)w.hidden=t.value!=='custom';return}
- if(t.dataset.f){appState[t.dataset.f]=t.hasAttribute('data-n')?+t.value:t.value;render();return}
+ if(t.dataset.f){appState[t.dataset.f]=t.hasAttribute('data-n')?+t.value:t.value;if(t.dataset.f==='adate'){appState.cdate=t.value;appState.pday=dIdx(parseDate(t.value))}render();return}
  if(t.hasAttribute('data-tpl')){
   const form=t.closest('form'),idData=form.dataset.id;
   const tautan=idData.startsWith('sl|')?(store.swLinks||[]).find(x=>slId(x)===idData):null;

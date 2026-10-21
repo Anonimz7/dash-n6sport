@@ -2,7 +2,7 @@
 import { logAct, meId, meUser, scope } from '../core/access.js';
 import { apiDel, apiPatch, apiPost, apiSaveAttendance, apiSaveClient, apiSaveRequest, isApiMode } from '../core/api.js';
 import { COACHES, REQUEST_TYPE_KEYS, REQUEST_TYPE_LABELS, ROLE_USER_IDS } from '../core/constants.js';
-import { liveClients, offOn } from '../core/derived.js';
+import { liveClients, offOn, offSlot } from '../core/derived.js';
 import { TODAY, addD, dIdx, esc, first, fmtD, hhmm, iso, parseDate } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
 import { ACT, FORMS, MODALS, PAGES } from '../core/registry.js';
@@ -18,21 +18,34 @@ function attList(){
  let dk=appState.adate||iso(TODAY);if(parseDate(dk)>TODAY)dk=iso(TODAY);
  store.attSlot=store.attSlot||{};
  const per=cos.map(co=>{
-  const by={};sessionsOn(co,parseDate(dk)).forEach(r=>{(by[r.time]=by[r.time]||[]).push(r.c.name+' ('+((findProgramById(r.c.pid)||{}).name||'-')+')'+(r.titipFrom?' · Titipan dari '+first(getMemberName(r.titipFrom)):r.makeup?' · Sesi pengganti':r.pengganti?' · Sesi pengganti (undur)':''))});
+  const by={};sessionsOn(co,parseDate(dk)).forEach(r=>{(by[r.time]=by[r.time]||[]).push({n:r.c.name+' ('+((findProgramById(r.c.pid)||{}).name||'-')+')',tag:r.titipFrom?'Titipan dari '+first(getMemberName(r.titipFrom)):r.makeup?'Sesi pengganti':r.pengganti?'Sesi pengganti (undur)':null})});
   return{co,slots:Object.keys(by).sort().map(t=>({co,t,names:by[t],rec:store.attSlot[dk+'|'+co+'|'+t]||null,ok:attOpen(dk,t)}))}});
  const all_=[].concat(...per.map(x=>x.slots));
  const done=all_.filter(x=>x.rec).length,open=all_.filter(x=>!x.rec&&x.ok).length,lock=all_.filter(x=>!x.rec&&!x.ok).length;
+ /* Masalah 5: jejak informatif pada hari cuti penuh — sessionsOn memang kosong
+    by design, tetapi sesi yang dialihkan harus tetap terlihat (tampilan saja,
+    tidak masuk hitungan jadwal/KPI di atas). */
+ const jejak=co=>{
+  if(!offOn(co,dk))return[];
+  const di2=dIdx(parseDate(dk));
+  return store.book.filter(b=>b.coach===co&&b.day===di2&&findClientById(b.client)&&!findClientById(b.client).arch&&!offSlot(co,dk,b.time))
+   .filter(b=>{const c=findClientById(b.client);return dk>=c.start&&dk<=getClientEndDate(c)})
+   .map(b=>{const c=findClientById(b.client);const tp=(store.titip||[]).find(t=>t.client===c.id&&t.date===dk);const mk=(store.makeup||[]).filter(t=>t.client===c.id&&t.date>dk).sort((a,z)=>a.date<z.date?-1:1)[0];
+    return{t:b.time,n:c.name,ket:tp?'dialihkan ke '+getMemberName(tp.to)+' (titip)':mk?'diundur — sesi pengganti '+fmtD(parseDate(mk.date))+' pukul '+mk.time:'diundur — sesi pengganti di ekor program'}})
+   .sort((a,z)=>a.t<z.t?-1:1)};
+ const jejakHtml=co=>{const j=jejak(co);return j.length?`<div class="listv"><p class="sub" style="margin:0">Cuti disetujui pada tanggal ini — sesi berikut tidak berlangsung di sini:</p>${j.map(x=>`<div class="li"><div><b>${x.t} · ${esc(x.n)}</b><small>${esc(x.ket)}</small></div></div>`).join('')}</div>`:''};
  const item=x=>{
   const co=x.co,st=x.rec?x.rec.s:null,end=hhmm(attOpenAt(dk,x.t));
   const btns=[['Hadir','Konfirmasi hadir'],['Tidak hadir','Tidak hadir']].map(([v,l])=>`<button class="btn sm ${st===v?'primary':''}" data-act="cattset" data-d="${dk}" data-co="${co}" data-t="${x.t}" data-s="${v}" ${x.ok?'':'disabled'} aria-pressed="${st===v}">${l}</button>`).join('');
   const info=st?pill(st==='Hadir'?'Hadir':'Tidak hadir',st==='Hadir'?'good':'bad'):(x.ok?pill('Menunggu konfirmasi','warn'):pill('Terkunci sampai '+end,'info'));
+  const tags=x.names.filter(e=>e.tag).map(e=>esc(e.n.slice(0,e.n.lastIndexOf(' (')))+' — '+esc(e.tag)).join(' · ');
   const body=appState.attCompact
-   ?`<div style="flex:1;min-width:200px"><b>${x.t} - ${end} WIB</b><small>${all?esc(first(getMemberName(co)))+' · ':''}${esc(locOf(co))} · ${x.names.map(n=>esc(n.slice(0,n.lastIndexOf(' (')))).join(', ')}</small></div>`
-   :`<div style="flex:1;min-width:220px"><small style="color:${x.rec?'var(--good)':'var(--warn)'};font-weight:700">${x.rec?esc(getMemberName(co))+', absensi jadwal ini sudah dikonfirmasi.':(isC?esc(getMemberName(co))+', kamu memiliki jadwal absensi yang harus kamu konfirmasi.':esc(getMemberName(co))+' memiliki jadwal absensi yang harus dikonfirmasi.')}</small><b>Jadwal melatih ${x.t} - ${end} WIB</b><small><b>Coach:</b> ${esc(getMemberName(co))}</small><small><b>Lokasi melatih:</b> ${esc(locOf(co))}</small><small><b>Klien yang dilatih:</b> ${x.names.map(esc).join('; ')}</small><small><b>Absensi bisa diisi:</b> mulai pukul ${end} (setelah jadwal selesai)</small>${x.rec?`<small><b>Status:</b> ${x.rec.s==='Hadir'?'Coach hadir melatih':'Coach tidak hadir'}, dikonfirmasi oleh ${esc(x.rec.by)} pukul ${x.rec.at}</small>`:''}</div>`;
+   ?`<div style="flex:1;min-width:200px"><b>${x.t} - ${end} WIB</b><small>${all?esc(first(getMemberName(co)))+' · ':''}${esc(locOf(co))} · ${x.names.map(e=>esc(e.n.slice(0,e.n.lastIndexOf(' (')))).join(', ')}</small>${tags?`<small style="color:var(--warn);font-weight:700">${tags}</small>`:''}</div>`
+   :`<div style="flex:1;min-width:220px"><small style="color:${x.rec?'var(--good)':'var(--warn)'};font-weight:700">${x.rec?esc(getMemberName(co))+', absensi jadwal ini sudah dikonfirmasi.':(isC?esc(getMemberName(co))+', kamu memiliki jadwal absensi yang harus kamu konfirmasi.':esc(getMemberName(co))+' memiliki jadwal absensi yang harus dikonfirmasi.')}</small><b>Jadwal melatih ${x.t} - ${end} WIB</b><small><b>Coach:</b> ${esc(getMemberName(co))}</small><small><b>Lokasi melatih:</b> ${esc(locOf(co))}</small><small><b>Klien yang dilatih:</b> ${x.names.map(e=>esc(e.n)+(e.tag?' · '+esc(e.tag):'')).join('; ')}</small><small><b>Absensi bisa diisi:</b> mulai pukul ${end} (setelah jadwal selesai)</small>${x.rec?`<small><b>Status:</b> ${x.rec.s==='Hadir'?'Coach hadir melatih':'Coach tidak hadir'}, dikonfirmasi oleh ${esc(x.rec.by)} pukul ${x.rec.at}</small>`:''}</div>`;
   return `<div class="li" style="align-items:flex-start;flex-wrap:wrap;gap:8px">${body}<div class="acts">${info}${btns}</div></div>`};
  const list=all
-  ?per.map(x=>`<div class="listv"><h4 style="margin:6px 0 0;font-size:14px">${esc(getMemberName(x.co))} <span class="sub">· ${esc(locOf(x.co))} · ${x.slots.length} jadwal</span></h4>${x.slots.map(item).join('')||'<p class="sub" style="margin:0">Tidak ada jadwal melatih pada tanggal ini.</p>'}</div>`).join('')
-  :(all_.map(item).join('')||'<section class="card"><p class="sub">Tidak ada jadwal melatih pada tanggal ini.</p></section>');
+  ?per.map(x=>`<div class="listv"><h4 style="margin:6px 0 0;font-size:14px">${esc(getMemberName(x.co))} <span class="sub">· ${esc(locOf(x.co))} · ${x.slots.length} jadwal</span></h4>${x.slots.map(item).join('')||jejakHtml(x.co)||'<p class="sub" style="margin:0">Tidak ada jadwal melatih pada tanggal ini.</p>'}</div>`).join('')
+  :(all_.map(item).join('')||jejakHtml(sel)||'<section class="card"><p class="sub">Tidak ada jadwal melatih pada tanggal ini.</p></section>');
  const picker=isC?'':`<label class="field" style="max-width:260px"><span>Coach</span><select data-f="acoach"><option value="all" ${all?'selected':''}>Semua coach</option>${COACHES.map(c=>`<option value="${c}" ${sel===c?'selected':''}>${esc(getMemberName(c))}</option>`).join('')}</select></label>`;
  return `<div class="toolbar">${picker}<label class="field" style="max-width:200px"><span>Tanggal melatih</span><input type="date" data-f="adate" max="${iso(TODAY)}" value="${dk}"></label><span class="sp"></span><div class="row"><span class="sub" id="lb-cmp">Ringkas keterangan</span><button type="button" class="swt" role="switch" aria-checked="${!!appState.attCompact}" aria-labelledby="lb-cmp" data-act="attcompact"><i></i></button></div></div>
  <div class="kpis">${kpi('Jadwal melatih',all_.length,all?cos.length+' coach':esc(locOf(sel)))}${kpi('Sudah dikonfirmasi',done,'')}${kpi('Siap dikonfirmasi',open,'jadwal sudah lewat')}${kpi('Terkunci',lock,'belum waktunya')}</div>

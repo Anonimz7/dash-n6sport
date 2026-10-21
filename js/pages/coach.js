@@ -130,27 +130,41 @@ PAGES.coach=()=>{
  if(t<=2){
   const c=myCoach('sched'),pat=store.pattern[c]||[],list=appState.role==='coach'?[meId()]:COACHES;
   if(!appState.shareFrom||appState.shareFrom<iso(TODAY))appState.shareFrom=iso(TODAY);
-  if(appState.pday==null)appState.pday=dIdx(TODAY);
-  const di=appState.pday;
+  /* Paket Perbaikan Jadwal (masalah 7): SATU tanggal terpilih bersama untuk
+     Pola mingguan, Kalender 30 hari, dan Daftar Hadir (appState.cdate).
+     pday tetap cermin hari dari tanggal itu (pola & booking berbasis hari). */
+  if(!appState.cdate)appState.cdate=(appState.adate&&appState.adate<=iso(TODAY))?appState.adate:iso(TODAY);
+  appState.pday=dIdx(parseDate(appState.cdate));
+  const di=appState.pday,kDate=appState.cdate,cdObj=parseDate(kDate),monday=addD(cdObj,-di);
   const cellOf=(cc,p)=>{
    const pt=((store.pattern[cc]||[])[di]||[]),times=new Set();
    SLOTS.filter(x=>periodOf(x)===p&&pt.includes(x)).forEach(x=>times.add(x));
    store.book.filter(b=>b.coach===cc&&b.day===di&&periodOf(b.time)===p).forEach(b=>times.add(b.time));
+   /* Masalah 4: kejadian bertanggal pada tanggal terpilih ikut tampil —
+      sesi titipan yang DITERIMA coach ini dan sesi penggantinya. */
+   (store.titip||[]).filter(x=>x.to===cc&&x.date===kDate&&periodOf(x.time)===p).forEach(x=>times.add(x.time));
+   (store.makeup||[]).filter(x=>x.coach===cc&&x.date===kDate&&periodOf(x.time)===p).forEach(x=>times.add(x.time));
+   const offD=offOn(cc,kDate);
    const chips=[...times].sort().map(t=>{const bs=store.book.filter(x=>x.coach===cc&&x.day===di&&x.time===t);
-    if(!bs.length)return `<button class="tc fr" data-act="modal" data-v="slot" data-id="${cc}|${di}|${t}"><span>${t}</span><em>Kosong</em></button>`;
-    return bs.map(b=>{const cli=findClientById(b.client);return `<button class="tc bk" data-act="modal" data-v="slot" data-id="${cc}|${di}|${t}|${b.client}" title="${esc(cli.name)}${b.hold?' (komisi ditahan)':''}"><span>${t}</span><b>${esc(first(cli.name))}</b>${b.hold?'<i>ditahan</i>':''}</button>`}).join('')+`<button class="tc add" data-act="modal" data-v="slot" data-id="${cc}|${di}|${t}" title="Tambah klien lain di jam ${t}" aria-label="Gabung klien lain jam ${t}">+</button>`}).join('');
+    const inChip=(store.titip||[]).filter(x=>x.to===cc&&x.date===kDate&&x.time===t).map(x=>{const cl=findClientById(x.client);return cl?`<span class="tc bk in"><span>${t}</span><b>${esc(first(cl.name))}</b><i>titipan dari ${esc(first(getMemberName(x.from)))}</i></span>`:''}).join('')
+     +(store.makeup||[]).filter(x=>x.coach===cc&&x.date===kDate&&x.time===t&&!bs.some(b=>b.client===x.client)).map(x=>{const cl=findClientById(x.client);return cl?`<span class="tc bk in"><span>${t}</span><b>${esc(first(cl.name))}</b><i>sesi pengganti</i></span>`:''}).join('');
+    if(!bs.length){
+     if(inChip)return inChip;
+     if(offD)return `<span class="tc fr"><span>${t}</span><em>Cuti</em></span>`;
+     return `<button class="tc fr" data-act="modal" data-v="slot" data-id="${cc}|${di}|${t}"><span>${t}</span><em>Kosong</em></button>`}
+    return bs.map(b=>{const cli=findClientById(b.client);const tp=(store.titip||[]).find(x=>x.date===kDate&&x.from===cc&&x.client===b.client&&x.time===t);return `<button class="tc bk" data-act="modal" data-v="slot" data-id="${cc}|${di}|${t}|${b.client}" title="${esc(cli.name)}${b.hold?' (komisi ditahan)':''}"><span>${t}</span><b>${esc(first(cli.name))}</b>${tp?`<i>dititipkan ke ${esc(first(getMemberName(tp.to)))}</i>`:offD?'<i>diundur</i>':(cli.end_orig&&kDate>cli.end_orig)?'<i>sesi pengganti</i>':''}${b.hold?'<i>ditahan</i>':''}</button>`}).join('')+`<button class="tc add" data-act="modal" data-v="slot" data-id="${cc}|${di}|${t}" title="Tambah klien lain di jam ${t}" aria-label="Gabung klien lain jam ${t}">+</button>`+inChip}).join('');
    return `<div class="tcs">${chips}<button class="tc add" data-act="modal" data-v="slot" data-id="${cc}|${di}|p:${p}" aria-label="Tambah sesi ${p} ${esc(getMemberName(cc))}">+ Jam</button></div>`};
   const rowsT=list.map(cc=>{const bkd=store.book.filter(b=>b.coach===cc&&b.day===di).length,free=Math.max(0,((store.pattern[cc]||[])[di]||[]).filter(s=>!store.book.some(b=>b.coach===cc&&b.day===di&&b.time===s)).length);
-   return `<tr><td class="cn"><b>${esc(getMemberName(cc))}</b><small>${esc(locOf(cc))}</small><small>${bkd} terisi · ${free} kosong</small></td>${PERIODS.map(p=>`<td>${cellOf(cc,p)}</td>`).join('')}</tr>`}).join('');
+   return `<tr><td class="cn"><b>${esc(getMemberName(cc))}</b><small>${esc(locOf(cc))}</small><small>${bkd} terisi · ${free} kosong</small>${offOn(cc,kDate)?`<small style="color:var(--bad)">Cuti pada tanggal ini</small>`:''}</td>${PERIODS.map(p=>`<td>${cellOf(cc,p)}</td>`).join('')}</tr>`}).join('');
   const start=dIdx(TODAY);const cells=[];
   for(let i=0;i<start;i++)cells.push('<div class="cd pad"></div>');
   for(let i=0;i<30;i++){cells.push(calCell(c,i));continue;const d=addD(TODAY,i),k=iso(d),dd=dIdx(d);const off=offOn(c,k);const free=off?0:pat[dd].filter(sl=>!offSlot(c,k,sl)&&!store.book.some(b=>b.coach===c&&b.day===dd&&b.time===sl)).length;cells.push(`<div class="cd ${off?'off':free>0?'hi':''} ${i===0?'today':''}"><b>${d.getDate()}</b><span>${off?'Cuti':free+' kosong'}</span></div>`)}
-  const pola=`<section class="card"><header class="ch"><h3>Pola mingguan</h3><span class="sub">Pilih hari. Ketuk jam atau tombol + Jam pada kolom Pagi, Siang, Sore, atau Malam, lalu isi dengan ID klien.</span></header>${renderSegmented('pday',di,DAYS.map((d,i)=>[i,d]))}</section>
+  const pola=`<section class="card"><header class="ch"><h3>Pola mingguan</h3><span class="sub">Pilih hari pada minggu yang tampil — pola tetap mingguan, sedangkan tanda titipan, sesi pengganti, dan cuti mengikuti tanggal terpilih: <b>${DAYSL[di]}, ${fmtD(cdObj)}</b>. Ketuk jam atau tombol + Jam pada kolom Pagi, Siang, Sore, atau Malam, lalu isi dengan ID klien.</span></header><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">${renderSegmented('pday',kDate,DAYS.map((d,i)=>{const dt=addD(monday,i);return[iso(dt),d+' '+dt.getDate()]}))}<span class="sp"></span><button class="btn sm" data-act="pweek" data-v="-7">‹ Seminggu</button><button class="btn sm" data-act="pweek" data-v="0">Hari ini</button><button class="btn sm" data-act="pweek" data-v="7">Seminggu ›</button></div></section>
   <div class="tw"><table class="ptab"><thead><tr><th>Coach</th>${PERIODS.map(p=>`<th>${p}</th>`).join('')}</tr></thead><tbody>${rowsT}</tbody></table></div>`;
   const share=`<section class="card"><header class="ch"><h3>Bagikan jadwal kosong</h3><span class="sub">Pilih coach dan tanggal, lalu unduh JPG untuk dikirim ke klien atau calon klien. Isinya sesi Pagi, Siang, Sore, dan Malam yang masih tersedia.</span></header>
   <div class="toolbar">${coachPicker('sched')}<label class="field" style="max-width:200px"><span>Mulai tanggal</span><input type="date" id="f-sfrom" data-f="shareFrom" min="${iso(TODAY)}" value="${appState.shareFrom}"></label><label class="field" style="max-width:180px"><span>Rentang</span><select data-f="shareDays" data-n>${[7,14,30].map(n=>`<option value="${n}" ${appState.shareDays===n?'selected':''}>${n} hari</option>`).join('')}</select></label><span class="sp"></span><button class="btn" data-act="dljpg">${icon('download',15)} Unduh JPG</button><button class="btn primary" data-act="dlshare">${icon('download',15)} Unduh PDF</button></div>
   </section>`;
-  const kal=`<div class="toolbar">${coachPicker('sched')}</div><section class="card"><header class="ch"><h3>Kalender 30 hari ${esc(first(getMemberName(c)))}</h3><span class="sub">Hijau: ada slot kosong. Merah: cuti atau tidak bisa mengajar. Kuning: pengajuan menunggu persetujuan.</span></header><div class="cal">${DAYS.map(d=>`<div class="h7">${d}</div>`).join('')}${cells.join('')}</div>${offList(c)}</section>`;
+  const kal=`<div class="toolbar">${coachPicker('sched')}</div><section class="card"><header class="ch"><h3>Kalender 30 hari ${esc(first(getMemberName(c)))}</h3><span class="sub">Hijau: ada slot kosong. Merah: cuti atau tidak bisa mengajar. Kuning: pengajuan menunggu persetujuan. Ketuk tanggal untuk membukanya di Pola mingguan.</span></header><div class="cal">${DAYS.map(d=>`<div class="h7">${d}</div>`).join('')}${cells.join('')}</div>${offList(c)}</section>`;
   body=[pola,share,kal][t];
  }
  if(t===3){
@@ -202,7 +216,9 @@ FORMS.slotsave=f=>{
  const moved=nt!==b.time;b.time=nt;if(f.get('hold'))b.hold=true;else delete b.hold;
  logAct((moved?'memindah jam sesi ':'memperbarui sesi ')+findClientById(b.client).name+(b.hold?' (komisi ditahan)':''));appState.modal=null;toast(b.hold?'Komisi sesi ditahan':moved?'Jam sesi diubah ke '+nt:'Perubahan disimpan');render()};
 Object.assign(ACT,{
- pday:t=>{appState.pday=+t.dataset.v;render()},
+ pday:t=>{const v=t.dataset.v;appState.cdate=v;appState.pday=dIdx(parseDate(v));if(v<=iso(TODAY))appState.adate=v;render()},
+ pweek:t=>{const n=+t.dataset.v,v=n===0?iso(TODAY):iso(addD(parseDate(appState.cdate||iso(TODAY)),n));appState.cdate=v;appState.pday=dIdx(parseDate(v));if(v<=iso(TODAY))appState.adate=v;render()},
+ calpick:t=>{const v=t.dataset.v;appState.cdate=v;appState.pday=dIdx(parseDate(v));if(v<=iso(TODAY))appState.adate=v;appState.tab=0;render()},
  slotopen:t=>{const[c,ds,sl]=t.dataset.id.split('|'),d=+ds;store.pattern[c]=store.pattern[c].slice();store.pattern[c][d]=[...store.pattern[c][d],sl].sort();logAct('membuka slot '+DAYSL[d]+' '+sl);render()},
  slotclose:t=>{const[c,ds,sl]=t.dataset.id.split('|'),d=+ds;store.pattern[c]=store.pattern[c].slice();store.pattern[c][d]=store.pattern[c][d].filter(x=>x!==sl);logAct('menutup slot '+DAYSL[d]+' '+sl);appState.modal=null;render()},
  slotdel:async t=>{

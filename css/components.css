@@ -110,7 +110,8 @@ td small{display:block;color:var(--muted);font-size:12px}
 .cell.ov{background:var(--violet-soft);color:var(--violet-ink)}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .cal .h7{font-size:11px;color:var(--muted);text-align:center;font-weight:700}
-.cd{min-height:58px;border-radius:10px;border:1px solid var(--line);padding:5px 6px;display:flex;flex-direction:column;justify-content:space-between;font-size:11.5px;background:var(--surface);min-width:0}
+.cd{min-height:58px;border-radius:10px;border:1px solid var(--line);padding:5px 6px;display:flex;flex-direction:column;justify-content:space-between;font-size:11.5px;background:var(--surface);min-width:0;cursor:pointer}
+.cd.sel{box-shadow:inset 0 0 0 2px var(--accent)}
 .cd b{font-family:var(--f-mono);font-size:13px}
 .cd.off{background:var(--bad-soft);color:var(--bad);border-color:transparent}
 .cd.hi{background:var(--volt-soft);color:var(--volt-ink);border-color:transparent}
@@ -304,6 +305,7 @@ td small{display:block;color:var(--muted);font-size:12px}
 .tc span{font-weight:800;font-variant-numeric:tabular-nums}
 .tc b{font-weight:700}
 .tc i{font-style:normal;font-size:10px;color:var(--warn);font-weight:700}
+.tc.in{cursor:default;border-style:dashed}
 .tc em{font-style:normal;color:var(--good);font-weight:700}
 .tc.bk{border-color:var(--accent);background:var(--surface-2)}
 .tc.fr{border-color:var(--good);background:var(--good-soft)}
