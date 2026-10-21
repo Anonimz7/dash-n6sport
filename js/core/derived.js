@@ -108,6 +108,11 @@ function getCommissionData(days){
  const ses=getSessionAttendance(days);
  const byCoach=COACHES.map(c=>{const sc=ses.filter(x=>x.coach===c),ks=sum(sc.map(x=>x.fee));return{c,kom:ks,komSes:ks,nSes:sc.length}});
  const byProg=activePrograms().map(p=>{const sp=ses.filter(x=>x.pid===p.id);return{p,kom:sum(sp.map(x=>x.fee)),nSes:sp.length}});
+ // Paket Pertemuan: sesi KUMULATIF dari tanggal mulai klien s/d akhir periode
+ // terpilih — dasar progres paket (cumSes / pkgTotal). Dihitung sekali, hanya
+ // bila ada klien berprogram paket pada mode rentang (bulan).
+ const hasPkg=!!(days&&typeof days==='object')&&store.clients.some(cl=>pkgSessions(findProgramById(cl.pid)));
+ const sesCum=hasPkg?getSessionAttendance({a:parseDate(store.clients.map(c=>c.start).filter(Boolean).sort()[0]||iso(days.a)),b:days.b}):null;
  // F1.2: baris per klien — klien aktif selalu tampil (walau belum ada sesi);
  // klien non-aktif (arsip/selesai) tampil bila punya sesi pada periode ini.
  const isRange=!!(days&&typeof days==='object');
@@ -121,7 +126,9 @@ function getCommissionData(days){
   // Fase C: rincian per pelatih AKTUAL — sesi titipan menjadi perolehan coach
   // pengganti, sehingga pembayaran klien bisa dipecah per pelatih.
   const perCoach={};sc.forEach(x=>{const g=perCoach[x.coach]||(perCoach[x.coach]={coach:x.coach,nSes:0,kom:0});g.nSes++;g.kom+=x.fee});
-  return{cl,c:cl.id,coach:cl.coach,pid:cl.pid,nSes:sc.length,nJadwal:isRange?scheduledSessions(cl,days.a,days.b):0,kom:sum(sc.map(x=>x.fee)),fee:(findProgramById(cl.pid)||{}).fee||0,perCoach:Object.values(perCoach)};
+  const pkg=pkgSessions(findProgramById(cl.pid));
+  const cumSes=pkg&&sesCum?Math.min(sesCum.filter(x=>x.cid===cl.id).length,pkg):0;
+  return{cl,c:cl.id,coach:cl.coach,pid:cl.pid,nSes:sc.length,nJadwal:isRange?scheduledSessions(cl,days.a,days.b):0,kom:sum(sc.map(x=>x.fee)),fee:(findProgramById(cl.pid)||{}).fee||0,perCoach:Object.values(perCoach),pkgTotal:pkg,cumSes};
  }).filter(Boolean);
  // Komisi Bulanan Fase A: baris diurutkan terbaru -> terlama (tanggal mulai klien).
  byClient.sort((x,y)=>x.cl.start<y.cl.start?1:x.cl.start>y.cl.start?-1:(x.cl.name<y.cl.name?-1:1));
@@ -134,5 +141,9 @@ const payKey=(clientId,per)=>clientId+'|'+per;
 const payOf=(clientId,per)=>(store.paidByClient||{})[payKey(clientId,per)]||null;
 // Fase C: status bayar per segmen pelatih aktual (client|coach|periode).
 const paySegOf=(clientId,coach,per)=>(store.paidSeg||{})[clientId+'|'+coach+'|'+per]||null;
+// Paket Pertemuan (2026-10-21): unit kanonis "N pertemuan" (atau angka murni)
+// berarti program adalah paket N sesi; bentuk lain (warisan: "16 minggu",
+// "per bulan") -> null dan Komisi memakai penyebut kalender seperti sebelumnya.
+const pkgSessions=p=>{if(!p||p.unit==null)return null;const m=String(p.unit).trim().match(/^(\d+)\s*(pertemuan)?$/i);return m?+m[1]:null};
 
-export { calCell, filterTransactions, freeSlots, getCommissionData, getPendingCorrections, getReportsOf, getSessionAttendance, holdOf, hrZone, inRange, komLbl, komRange, komisiSet, liveClients, monthly, offInfo, offLbl, offList, offOn, offSlot, payDateFor, payKey, payOf, paySegOf, scheduledSessions };
+export { calCell, filterTransactions, freeSlots, getCommissionData, getPendingCorrections, getReportsOf, getSessionAttendance, holdOf, hrZone, inRange, komLbl, komRange, komisiSet, liveClients, monthly, offInfo, offLbl, offList, offOn, offSlot, payDateFor, payKey, payOf, paySegOf, pkgSessions, scheduledSessions };

@@ -1,6 +1,6 @@
 /* js/pages/komisi.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { logAct, meId, money, perm } from '../core/access.js';
-import { getCommissionData, komLbl, komRange, payDateFor, payOf, paySegOf } from '../core/derived.js';
+import { getCommissionData, komLbl, komRange, payDateFor, payOf, paySegOf, pkgSessions } from '../core/derived.js';
 import { MASK, TODAY, esc, first, fmtD, iso, num, parseDate, sum } from '../core/helpers.js';
 import { icon } from '../core/icons.js';
 import { ACT, CONF, FORMS, MODALS, PAGES } from '../core/registry.js';
@@ -38,7 +38,7 @@ PAGES.komisi=()=>{
   return split?`<div style="margin-bottom:8px"><small class="sub" style="display:block">${esc(getMemberName(g.coach))}${g.coach!==x.coach?' (titipan)':''} · ${g.nSes} sesi · ${M(g.kom)}</small>${status}${detail}</div>`:status+detail}).join('');
  const aksi=perm('komisi')==='full'?segs.map(g=>{const sp=paySegOf(x.c,g.coach,per),lunas=sp&&sp.amt>=g.kom,nm=split?' '+esc(first(getMemberName(g.coach))):'';
   return lunas?`<button class="btn sm" data-act="paidcl" data-v="${x.c}|${g.coach}">Batalkan${nm}</button>`:`<button class="btn sm primary" style="white-space:nowrap" data-act="modal" data-v="bayar" data-id="${x.c}|${g.coach}">${sp?'Bayar kekurangan':'Bayar komisi'}${nm}</button>${sp?` <button class="btn sm" data-act="paidcl" data-v="${x.c}|${g.coach}">Batalkan</button>`:''}`}).join(' '):'-';
- return `<tr><td>${esc(getMemberName(x.coach))}</td><td><b>${esc(x.cl.name)}</b></td><td>${esc((findProgramById(x.pid)||{}).name||'-')}</td><td class="n">${x.nSes} / ${x.nJadwal}</td><td class="n"><b>${M(x.kom)}</b></td><td>${payCell}</td>${mine?'':`<td>${aksi}</td>`}</tr>`}).join('')||`<tr><td colspan="${mine?6:7}" class="sub">Belum ada klien aktif.</td></tr>`}</tbody></table></div>${store.paidLegacy&&store.paidLegacy.length?banner(store.paidLegacy.length+' pembayaran lama (era per-coach) belum tertaut ke klien dan tidak menandai klien mana pun.','info'):''}`}
+ return `<tr><td>${esc(getMemberName(x.coach))}</td><td><b>${esc(x.cl.name)}</b></td><td>${esc((findProgramById(x.pid)||{}).name||'-')}</td><td class="n">${x.pkgTotal?x.cumSes+' / '+x.pkgTotal:x.nSes+' / '+x.nJadwal}</td><td class="n"><b>${M(x.kom)}</b></td><td>${payCell}</td>${mine?'':`<td>${aksi}</td>`}</tr>`}).join('')||`<tr><td colspan="${mine?6:7}" class="sub">Belum ada klien aktif.</td></tr>`}</tbody></table></div>${store.paidLegacy&&store.paidLegacy.length?banner(store.paidLegacy.length+' pembayaran lama (era per-coach) belum tertaut ke klien dan tidak menandai klien mana pun.','info'):''}`}
  if(t===2){
   const ed=appState.role==='owner';
   body=`${banner('Komisi per sesi hadir dihitung otomatis: setiap klien yang diabsen Hadir oleh coach menambah komisi coach sebesar nominal di kartu program. Tidak ada komisi penjualan program.','info')}${ed?banner('Harga dan komisi bebas Anda atur. Tekan Edit pada baris program untuk mengubah nama, harga, komisi, dan durasinya di jendela pop up.'):banner('Tambah, ubah, dan hapus program hanya dapat dilakukan oleh Pemilik.')}
@@ -53,15 +53,20 @@ MODALS.prog=m=>{
  return sheet(m.id?'Ubah program':'Tambah program',`<form data-form="prog" class="fg"><input type="hidden" name="id" value="${m.id||''}">
  <label class="field full"><span>Nama program</span><input id="f-pgn" name="name" required value="${esc(p.name)}" placeholder="Contoh: Marathon 16 Minggu"></label>
  <label class="field"><span>Harga (Rp)</span><input id="f-pgp" name="price" type="number" min="0" step="any" required value="${p.price}"></label>
- <label class="field"><span>Durasi</span><input id="f-pgu" name="unit" value="${esc(p.unit||'')}" placeholder="Contoh: 16 minggu, per bulan"></label>
+ <label class="field"><span>Jumlah pertemuan (sesi)</span><input id="f-pgu" name="unit" type="number" min="1" step="1" required value="${pkgSessions(p)||''}" placeholder="Contoh: 8"></label>
+ ${m.id&&p.unit&&!pkgSessions(p)?`<div class="full"><small class="sub">Sebelumnya: ${esc(p.unit)} — semua program kini paket pertemuan; isi jumlah pertemuan program ini.</small></div>`:''}
   <label class="field"><span>Komisi per sesi hadir (Rp)</span><input id="f-pgf" name="fee" type="number" min="0" step="any" required value="${p.fee}"></label>
   <label class="field"><span>Jumlah peserta</span><select name="peserta"><option value="1" ${+p.peserta===2?'':'selected'}>1 orang (individu)</option><option value="2" ${+p.peserta===2?'selected':''}>2 orang (paket, satu pembayaran)</option></select></label>
  <div class="row full"><button class="btn primary" type="submit">Simpan</button><button class="btn" type="button" data-act="close">Batal</button></div></form>`)};
 FORMS.prog=async f=>{
  if(appState.role!=='owner')return;
  const id=f.get('id'),name=f.get('name').trim();if(!name){toast('Nama program wajib diisi');return}
- const data={name,price:num(f.get('price')),unit:f.get('unit').trim(),fee:num(f.get('fee')),peserta:+f.get('peserta')===2?2:1,wk:4,lvl:.7};
- const mm=data.unit.match(/(\d+)\s*(minggu|mgg)/i);data.wk=mm?+mm[1]:4;
+ // Paket Pertemuan (2026-10-21): Durasi = jumlah pertemuan, wajib angka.
+ // Disimpan kanonis "N pertemuan" (tampilan lama langsung terbaca benar);
+ // wk := N sebagai amplop perkiraan tanggal selesai (mulai + N minggu).
+ const nSesi=parseInt(f.get('unit'),10);
+ if(!nSesi||nSesi<1){toast('Jumlah pertemuan wajib diisi (angka minimal 1)');return}
+ const data={name,price:num(f.get('price')),unit:nSesi+' pertemuan',fee:num(f.get('fee')),peserta:+f.get('peserta')===2?2:1,wk:nSesi,lvl:.7};
  let p;
  if(isApiMode()){
    try{p=await apiSaveProgram(id?{...data,id}:data)}
@@ -89,7 +94,7 @@ MODALS.bayar=m=>{
  const pay=paySegOf(cl,g.coach,komLbl()),sudah=pay?pay.amt:0,kurang=Math.max(0,g.kom-sudah),belumSelesai=komRange().b>TODAY;
  const M=v=>money(v,'komisi'),row=(a,b,bold)=>`<tr><td>${a}</td><td class="n">${bold?'<b>'+b+'</b>':b}</td></tr>`;
  return sheet('Pembayaran komisi coach',`<div class="idcard"><b>${esc(x.cl.name)}</b><small>Klien dari coach ${esc(getMemberName(x.coach))}</small><small>Periode ${esc(komLbl())}</small><small>Lokasi: ${esc(locOf(g.coach))}</small></div>
- <div class="tw" style="margin-top:12px"><table><tbody>${row('Program',(findProgramById(x.pid)||{}).name||'-')}${split?row('Pelatih yang dibayar',esc(getMemberName(g.coach))+(g.coach!==x.coach?' (titipan)':'')):''}${row('Sesi hadir',split?g.nSes+' sesi oleh pelatih ini (total klien '+x.nSes+' sesi)':x.nSes+' / '+x.nJadwal+' sesi')}${row('Komisi per sesi hadir',M(x.fee))}${row(split?'Total komisi pelatih ini':'Total komisi',M(g.kom))}${sudah?row('Sudah dibayar',M(sudah)):''}${row('Dibayarkan sekarang',M(kurang),true)}</tbody></table></div>${belumSelesai?`<p class="sub" style="margin-top:10px">Bulan ${esc(komLbl())} belum berakhir — sesi setelah hari ini belum termasuk. Kekurangannya dapat dibayar menyusul; status akan tampil "Sebagian" sampai lunas.</p>`:''}
+ <div class="tw" style="margin-top:12px"><table><tbody>${row('Program',(findProgramById(x.pid)||{}).name||'-')}${split?row('Pelatih yang dibayar',esc(getMemberName(g.coach))+(g.coach!==x.coach?' (titipan)':'')):''}${row('Sesi hadir',x.pkgTotal?x.cumSes+' / '+x.pkgTotal+' sesi (progres paket) · '+(split?g.nSes+' sesi oleh pelatih ini':x.nSes+' sesi bulan ini'):(split?g.nSes+' sesi oleh pelatih ini (total klien '+x.nSes+' sesi)':x.nSes+' / '+x.nJadwal+' sesi'))}${row('Komisi per sesi hadir',M(x.fee))}${row(split?'Total komisi pelatih ini':'Total komisi',M(g.kom))}${sudah?row('Sudah dibayar',M(sudah)):''}${row('Dibayarkan sekarang',M(kurang),true)}</tbody></table></div>${belumSelesai?`<p class="sub" style="margin-top:10px">Bulan ${esc(komLbl())} belum berakhir — sesi setelah hari ini belum termasuk. Kekurangannya dapat dibayar menyusul; status akan tampil "Sebagian" sampai lunas.</p>`:''}
  <form data-form="bayar" class="fg" style="margin-top:12px"><input type="hidden" name="cl" value="${cl}"><input type="hidden" name="coach" value="${g.coach}">
  <label class="field"><span>Tanggal pembayaran</span><input id="f-paydate" name="date" type="date" required value="${iso(TODAY)}" max="${iso(TODAY)}"></label>
  <label class="field"><span>Metode pembayaran</span><select name="method"><option>Transfer bank</option><option>Tunai</option><option>E-wallet</option></select></label>
