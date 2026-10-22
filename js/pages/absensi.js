@@ -61,7 +61,7 @@ PAGES.absensi=()=>{
  return `<div class="stackv"><div class="kpis">${kpi('Menunggu keputusan',all.filter(r=>r.status==='Menunggu').length,'semua jenis')}${kpi('Disetujui',all.filter(r=>r.status==='Disetujui').length,'memengaruhi kalender')}${kpi('Ditolak',all.filter(r=>r.status==='Ditolak').length,'')}</div>
  ${tabsBar(['Daftar Hadir'].concat(REQUEST_TYPE_KEYS.map(k=>REQUEST_TYPE_LABELS[k])))}
  <div class="toolbar"><span class="sub">${list.length} pengajuan</span><span class="sp"></span><button class="btn primary" data-act="modal" data-v="req">${icon('plus',15)} ${type==='masalah'?'Laporkan masalah':'Ajukan '+REQUEST_TYPE_LABELS[type].toLowerCase()}</button></div>
- <div class="listv">${list.sort((a,b)=>b.at-a.at).map(r=>`<div class="li"><div><b>${esc(whoName(r))} ${r.sev?pill(r.sev,r.sev==='Tinggi'?'bad':'warn'):''}</b><small>${r.type==='masalah'?'':fmtD(r.date)+(r.date2&&r.date2!==r.date?' - '+fmtD(r.date2)+' · ':' · ')}${esc(r.detail)}</small></div><div class="acts">${pill(r.status,{Menunggu:'warn',Disetujui:'good',Ditolak:'bad',Selesai:'good'}[r.status])}${!mine&&r.status==='Menunggu'?(r.type==='masalah'?`<button class="btn sm" data-act="reqset" data-v="${r.id}" data-s="Selesai">Tandai selesai</button>`:`<button class="btn sm primary" data-act="reqset" data-v="${r.id}" data-s="Disetujui">Setujui</button><button class="btn sm" data-act="reqset" data-v="${r.id}" data-s="Ditolak">Tolak</button>`):''}${!mine&&r.status==='Disetujui'&&['izin_coach','cuti','berhalangan'].includes(r.type)?`<button class="btn sm" data-act="requndo" data-v="${r.id}">Batalkan persetujuan</button>`:''}</div></div>`).join('')||'<section class="card"><p class="sub">Belum ada pengajuan pada kategori ini.</p></section>'}</div></div>`};
+ <div class="listv">${list.sort((a,b)=>b.at-a.at).map(r=>`<div class="li"><div><b>${esc(whoName(r))} ${r.sev?pill(r.sev,r.sev==='Tinggi'?'bad':'warn'):''}</b><small>${r.type==='masalah'?'':fmtD(r.date)+(r.date2&&r.date2!==r.date?' - '+fmtD(r.date2)+' · ':' · ')}${esc(r.detail)}</small>${!mine&&r.status==='Disetujui'&&['izin_coach','cuti','berhalangan'].includes(r.type)&&titipTerlatih(r).length?'<small>Sesi titipan sudah dilatih pengganti — pembatalan persetujuan dinonaktifkan agar komisi pengganti tidak hilang.</small>':''}</div><div class="acts">${pill(r.status,{Menunggu:'warn',Disetujui:'good',Ditolak:'bad',Selesai:'good'}[r.status])}${!mine&&r.status==='Menunggu'?(r.type==='masalah'?`<button class="btn sm" data-act="reqset" data-v="${r.id}" data-s="Selesai">Tandai selesai</button>`:`<button class="btn sm primary" data-act="reqset" data-v="${r.id}" data-s="Disetujui">Setujui</button><button class="btn sm" data-act="reqset" data-v="${r.id}" data-s="Ditolak">Tolak</button>`):''}${!mine&&r.status==='Disetujui'&&['izin_coach','cuti','berhalangan'].includes(r.type)?undoBtn(r):''}</div></div>`).join('')||'<section class="card"><p class="sub">Belum ada pengajuan pada kategori ini.</p></section>'}</div></div>`};
 MODALS.req=()=>{
  const type=REQUEST_TYPE_KEYS[Math.max(0,Math.min(appState.tab,6)-1)],mine=appState.role==='coach';
  const whoOpts=type==='izin_client'?scope(liveClients()).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join(''):(mine?`<option value="${meId()}">${esc(getMemberName(meId()))}</option>`:COACHES.map(c=>`<option value="${c}">${esc(getMemberName(c))}</option>`).join(''));
@@ -142,6 +142,12 @@ const offSelain=(r,coach,k)=>store.reqs.some(q=>q.id!==r.id&&q.status==='Disetuj
    dipulihkan dengan berjalan mundur sejauh sesi hilangny (menghormati izin
    lain yang masih disetujui). Bila mundur sampai tanggal asal, end_orig
    dibersihkan (tuntas). */
+/* Aturan titip (2026-10-22): sesi titipan yang SUDAH DILATIH coach pengganti
+   (attSlot Hadir pada tanggal+jam titipan) mengunci pembatalan persetujuan —
+   menghapus catatan titip sesudah itu menghilangkan komisi pengganti yang
+   sudah terbit. Daftar tombol, modal, dan eksekusi memakai penjaga yang sama. */
+const titipTerlatih=r=>(store.titip||[]).filter(t=>t.req===r.id&&((store.attSlot||{})[t.date+'|'+t.to+'|'+t.time]||{}).s==='Hadir');
+const undoBtn=r=>titipTerlatih(r).length?`<button class="btn sm" data-act="requndo" data-v="${r.id}" disabled title="Sesi titipan pengajuan ini sudah dilatih coach pengganti — pembatalan akan menghapus komisinya">Batalkan persetujuan</button>`:`<button class="btn sm" data-act="requndo" data-v="${r.id}">Batalkan persetujuan</button>`;
 const pulihHitung=r=>{
  const daftar=undurHitung(r);
  const titipDihapus=(store.titip||[]).filter(t=>t.req===r.id);
@@ -255,6 +261,11 @@ ACT.undurya=async t=>{
 
 MODALS.requndo=m=>{
  const r=store.reqs.find(x=>x.id===m.id);if(!r)return '';
+ const terlatih=titipTerlatih(r);
+ if(terlatih.length)return sheet('Batalkan persetujuan izin?',`<p><b>${esc(whoName(r))}</b> — ${esc(REQUEST_TYPE_LABELS[r.type])} ${fmtD(parseDate(r.date))}${r.date2&&r.date2!==r.date?' s/d '+fmtD(parseDate(r.date2)):''} <b>tidak bisa dibatalkan</b>.</p>
+ <div class="listv">${terlatih.map(t=>{const c=findClientById(t.client);return `<div class="li"><div><b>${esc(c?c.name:'-')}</b><small>sesi titipan ${fmtD(parseDate(t.date))} pukul ${esc(t.time)} sudah dilatih ${esc(getMemberName(t.to))} — komisi pengganti sudah terbit</small></div></div>`}).join('')}</div>
+ <p class="sub" style="margin-top:10px">Membatalkan sekarang akan menghapus catatan titip dan menghilangkan komisi coach pengganti untuk sesi yang sudah dilatih, jadi pembatalan dinonaktifkan.</p>
+ <div class="row" style="margin-top:12px"><button class="btn" data-act="close">Kembali</button></div>`);
  const p=pulihHitung(r);
  return sheet('Batalkan persetujuan izin?',`<p><b>${esc(whoName(r))}</b> — ${esc(REQUEST_TYPE_LABELS[r.type])} ${fmtD(parseDate(r.date))}${r.date2&&r.date2!==r.date?' s/d '+fmtD(parseDate(r.date2)):''} akan dikembalikan ke status <b>Menunggu</b> supaya bisa diputuskan ulang.</p>
  <div class="listv">
@@ -267,6 +278,7 @@ MODALS.requndo=m=>{
 ACT.requndo=t=>{appState.modal={k:'requndo',id:t.dataset.v};render()};
 ACT.requndoya=async t=>{
  const r=store.reqs.find(x=>x.id===t.dataset.v);if(!r)return;
+ if(titipTerlatih(r).length){toast('Tidak bisa dibatalkan: sesi titipan pengajuan ini sudah dilatih coach pengganti.');return}
  const p=pulihHitung(r);
  let gagal=0;
  try{await applyReq(r,'Menunggu')}

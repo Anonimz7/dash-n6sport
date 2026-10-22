@@ -149,6 +149,20 @@ function getCommissionData(days){
   const perCoach={};sc.forEach(x=>{const g=perCoach[x.coach]||(perCoach[x.coach]={coach:x.coach,nSes:0,kom:0});g.nSes++;g.kom+=x.fee});
   const pkg=pkgSessions(findProgramById(cl.pid));
   const cumSes=pkg&&sesCum?Math.min(sesCum.filter(x=>x.cid===cl.id).length,pkg):0;
+  // Catatan titip (2026-10-22): segmen pelatih PENGGANTI membawa hitungan
+  // titipannya sendiri — titipSes (sesi titipan yang ia latih) dari titipN
+  // (sesi yang dititipkan kepadanya untuk klien ini) — BUKAN progres paket
+  // klien. Cakupan titipSes mengikuti kolom progres (kumulatif s/d akhir
+  // periode untuk program paket; periode terpilih untuk program kalender).
+  Object.values(perCoach).forEach(g=>{
+   if(g.coach===cl.coach)return;
+   g.titipSes=(pkg&&sesCum?sesCum:sc).filter(y=>y.cid===cl.id&&y.coach===g.coach&&y.titip).length;
+   const tN=(store.titip||[]).filter(t=>t.client===cl.id&&t.to===g.coach&&(pkg&&isRange?(!cl.start||t.date>=cl.start)&&t.date<=iso(days.b):inRange(t.date,days))).length;
+   g.titipN=Math.max(tN,g.titipSes);
+  });
+  // Klien yang sesi-sesinya dilatih pengganti tetap tampil di grup pemiliknya
+  // sebagai baris progres (komisi pemilik Rp 0 untuk sesi titipan).
+  if(sc.length&&!perCoach[cl.coach])perCoach[cl.coach]={coach:cl.coach,nSes:0,kom:0};
   return{cl,c:cl.id,coach:cl.coach,pid:cl.pid,nSes:sc.length,nJadwal:isRange?scheduledSessions(cl,days.a,days.b):0,kom:sum(sc.map(x=>x.fee)),fee:(findProgramById(cl.pid)||{}).fee||0,perCoach:Object.values(perCoach),pkgTotal:pkg,cumSes};
  }).filter(Boolean);
  // Komisi Bulanan Fase A: baris diurutkan terbaru -> terlama (tanggal mulai klien).

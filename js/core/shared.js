@@ -131,6 +131,27 @@ const attOpenAt=(k,t)=>new Date(sesStart(k,t).getTime()+ATT_MIN*6e4);
 const attOpen=(k,t)=>Date.now()>=attOpenAt(k,t).getTime();
 const ATTENDANCE_TONES={Hadir:'good',Izin:'warn',Alpha:'bad'};
 const attPill=c=>{const r=(store.attCoach[c]||{})[iso(TODAY)];return r&&r.in?pill('Hadir '+r.in,'good'):pill('Belum absen','warn')};
+/* Masalah 8 (Paket Perbaikan 3): rekap absensi harian coach TIDAK disimpan
+   terpisah — diturunkan dari attSlot (catatan per slot dari server) dengan
+   aturan yang sama persis seperti penulisan sesi berjalan di ACT.cattset:
+   ada slot Hadir pada hari itu -> {in: jam slot Hadir pertama, out: akhir
+   slot Hadir terakhir}; slot terkonfirmasi tapi tak ada yang Hadir ->
+   {status:'Alpha'}. Dipakai apiBoot untuk membangun ulang store.attCoach
+   dari data server, menggantikan data contoh seed lokal. */
+function deriveAttCoach(){
+ const per={};
+ Object.keys(store.attSlot||{}).forEach(key=>{
+  const [k,co,t]=key.split('|');if(!k||!co||!t)return;
+  const days=(per[co]=per[co]||{});
+  const day=days[k]||(days[k]=[]);
+  if(store.attSlot[key].s==='Hadir')day.push(t);
+ });
+ Object.values(per).forEach(days=>Object.keys(days).forEach(k=>{
+  const hd=days[k].sort();
+  days[k]=hd.length?{in:hd[0],out:hhmm(attOpenAt(k,hd[hd.length-1]))}:{status:'Alpha'};
+ }));
+ return per;
+}
 store.logs=[];
 function buildSessionLogs(){
  store.logs=[];
@@ -142,4 +163,4 @@ function buildSessionLogs(){
 buildSessionLogs();
 const senderName=w=>w.startsWith('cl')?(findClientById(w)?.name||'Klien'):getMemberName(w);
 
-export { ATTENDANCE_TONES, ATT_MIN, LEVELS, SKILLS, attOpen, attOpenAt, attPill, attRate, buildSessionLogs, clientAttRate, coachLevel, coachScore, compliance, fixOnDate, hasReportOn, linkEntries, locOf, markRead, openSince, planTypeOn, readAt, senderName, sesStart, sessionsOn, skillAvg, skillParts, slId, ubBadge, unreadDm, unreadOf, unreadTotals, upcoming, waktuAwal, waktuPesan };
+export { ATTENDANCE_TONES, ATT_MIN, LEVELS, SKILLS, attOpen, attOpenAt, attPill, attRate, buildSessionLogs, clientAttRate, coachLevel, coachScore, compliance, deriveAttCoach, fixOnDate, hasReportOn, linkEntries, locOf, markRead, openSince, planTypeOn, readAt, senderName, sesStart, sessionsOn, skillAvg, skillParts, slId, ubBadge, unreadDm, unreadOf, unreadTotals, upcoming, waktuAwal, waktuPesan };

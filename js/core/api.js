@@ -1,7 +1,7 @@
 /* js/core/api.js — SATU-SATUNYA modul yang boleh fetch().
    Fase B: baca dari mock API. Ganti API_BASE ke backend asli nanti;
    translasi bentuk API -> bentuk store terpusat di sini. */
-import { buildSessionLogs } from './shared.js';
+import { buildSessionLogs, deriveAttCoach } from './shared.js';
 import { store } from './store.js';
 import { COACHES } from './constants.js';
 
@@ -166,6 +166,10 @@ async function apiBoot() {
     ((Array.isArray(att) ? att : (att && att.data)) || []).forEach(r => {
       store.attSlot[r.date + '|' + r.coach_id + '|' + r.time] = { s: r.status, by: r.by_name, at: r.at };
     });
+    // Masalah 8: rekap absensi harian coach dibangun ulang dari attSlot
+    // server (bukan memori sesi peramban) — pil Beranda, Daftar coach, skor,
+    // dan Laporan Absensi coach jadi sinkron di semua perangkat.
+    store.attCoach = deriveAttCoach();
     // Profil coach dari backend
     ((Array.isArray(cprof) ? cprof : (cprof && cprof.data)) || []).forEach(p => {
       store.prof[p.coach_id] = { rating: p.rating, reviews: p.reviews, since: p.since };
