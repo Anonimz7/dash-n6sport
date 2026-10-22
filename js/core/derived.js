@@ -160,9 +160,17 @@ function getCommissionData(days){
    const tN=(store.titip||[]).filter(t=>t.client===cl.id&&t.to===g.coach&&(pkg&&isRange?(!cl.start||t.date>=cl.start)&&t.date<=iso(days.b):inRange(t.date,days))).length;
    g.titipN=Math.max(tN,g.titipSes);
   });
+  // Tanggal sesi terakhir terhitung per segmen (2026-10-22): cakupannya sama
+  // dengan pecahan yang ditampilkan segmen itu — progres klien (semua pelatih)
+  // untuk segmen pemilik, sesi titipannya sendiri untuk segmen pengganti.
+  const lastOf=arr=>arr.reduce((a,y)=>y.date>a?y.date:a,'');
+  const lastKlien=lastOf(pkg&&sesCum?sesCum.filter(y=>y.cid===cl.id):sc);
+  Object.values(perCoach).forEach(g=>{
+   g.lastSes=g.coach===cl.coach?lastKlien:lastOf((pkg&&sesCum?sesCum:sc).filter(y=>y.cid===cl.id&&y.coach===g.coach&&y.titip));
+  });
   // Klien yang sesi-sesinya dilatih pengganti tetap tampil di grup pemiliknya
   // sebagai baris progres (komisi pemilik Rp 0 untuk sesi titipan).
-  if(sc.length&&!perCoach[cl.coach])perCoach[cl.coach]={coach:cl.coach,nSes:0,kom:0};
+  if(sc.length&&!perCoach[cl.coach])perCoach[cl.coach]={coach:cl.coach,nSes:0,kom:0,lastSes:lastKlien};
   return{cl,c:cl.id,coach:cl.coach,pid:cl.pid,nSes:sc.length,nJadwal:isRange?scheduledSessions(cl,days.a,days.b):0,kom:sum(sc.map(x=>x.fee)),fee:(findProgramById(cl.pid)||{}).fee||0,perCoach:Object.values(perCoach),pkgTotal:pkg,cumSes};
  }).filter(Boolean);
  // Komisi Bulanan Fase A: baris diurutkan terbaru -> terlama (tanggal mulai klien).
