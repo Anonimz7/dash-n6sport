@@ -9,7 +9,7 @@ import { slotPickList, slotPreview } from './pages/coach.js';
 import { clientFormSync } from './pages/klien.js';
 import { slId, planTypeOn } from './core/shared.js';
 import { navigateTo, render, setPath, toast } from './ui/shell.js';
-import { apiBoot, apiLog, isApiMode, hasToken, apiLogin, apiLogout, apiUser } from './core/api.js';
+import { apiBoot, apiLog, apiPortalLoad, isApiMode, hasToken, apiLogin, apiLogout, apiUser } from './core/api.js';
 import { meId, setLogSink } from './core/access.js';
 
 // Handler logout: hapus token, kembali ke layar login
@@ -96,14 +96,27 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&appState.modal){app
    const th=localStorage.getItem('nsr-theme');if(th==='light'||th==='dark'||th==='system')appState.theme=th;
  }catch(e){}
  if(appState.role==='coach'){const mid=meId();appState.sched=mid;appState.cal=mid;appState.share=mid}
- const hm=location.hash.match(/^#c=([A-Za-z0-9-]+)/);
+ const hm=location.hash.match(/^#c=([A-Za-z0-9_-]+)/);
  window.addEventListener('hashchange',()=>{try{location.reload()}catch(e){}});
  const appEl=document.getElementById('app');
  if(appEl)appEl.innerHTML='<p class="sub" style="padding:48px;text-align:center">Memuat data…</p>';
+ // Link portal publik: tanpa sesi login -> langsung dashboard klien
+ // (kredensialnya token acak di hash; uid N6-xxxx tidak berlaku di sini).
+ if(hm && !hasToken()){ bootPortal(hm[1]); return; }
  // Belum login -> tampilkan layar login
  if(!hasToken()){ renderLogin(); return; }
  bootData();
 })();
+
+// Boot portal publik: isi store dari endpoint publik lalu render clientPage.
+function bootPortal(token){
+ appState.pubPortal=token;
+ apiPortalLoad(token).then(c=>{
+  appState.cview=c.id; applyTheme(); render(false);
+ }).catch(()=>{
+  appState.cview='x'; applyTheme(); render(false);
+ });
+}
 
 function bootData(){
  // Muat dari API; gagal -> tampilkan pesan error yang jelas (tanpa fallback data lokal)
@@ -111,8 +124,8 @@ function bootData(){
   if(!fromApi){ renderApiError(); return; }
   syncListen(()=>{try{ensurePage()}catch(e){}const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){a.addEventListener('blur',()=>render(),{once:true})}else{render()}toast('Data diperbarui dari portal lain')});
   store.clients=store.clients.filter(c=>!c.arch||(TODAY-parseDate(c.arch))/864e5<7);
-  const hm2=location.hash.match(/^#c=([A-Za-z0-9-]+)/);
-  if(hm2){const k=findClientByUid(hm2[1]);appState.cview=k?k.id:'x'}
+  const hm2=location.hash.match(/^#c=([A-Za-z0-9_-]+)/);
+  if(hm2){const k=store.clients.find(c=>c.portal_token&&c.portal_token===hm2[1])||findClientByUid(hm2[1]);appState.cview=k?k.id:'x'}
   applyTheme();ensurePage();render(false);
  });
 }

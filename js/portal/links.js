@@ -4,7 +4,7 @@ import { icon } from '../core/icons.js';
 import { findClientById, store } from '../core/store.js';
 
 const getShareLinkFor=(cid,date)=>((store.swLinks||[]).find(x=>x.cid===cid&&x.date===date)||{}).url;
-const clientUrl=c=>location.href.split('#')[0]+'#c='+c.uid;
+const clientUrl=c=>location.href.split('#')[0]+'#c='+(c.portal_token||c.uid);
 const isValidShareUrl=u=>/^https?:\/\/\S+$/i.test(String(u||'').trim());
 const shareLinkAnchor=u=>isValidShareUrl(u)?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer" style="word-break:break-all">${esc(u)}</a>`:(u?esc(u):'<span class="sub">Belum ada</span>');
 function renderShareLinkBlock(r){

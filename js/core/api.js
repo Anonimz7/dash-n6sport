@@ -225,7 +225,7 @@ async function apiBoot() {
 
 export { API_BASE, apiBoot, apiDel, apiGet, apiPatch, apiPost, isApiMode, hasToken, apiLogin, apiLogout, apiUser,
   apiSaveClient, apiSaveTransaction, apiAddMember, apiSaveProgram, apiSendTeamMessage, apiSendDm,
-  apiSendBroadcast, apiSendPortalMessage, apiSubmitCorrection, apiLog, apiSavePattern, apiAddBooking,
+  apiSendBroadcast, apiSendPortalMessage, apiPortalLoad, apiPortalSaveLink, apiSubmitCorrection, apiLog, apiSavePattern, apiAddBooking,
   apiSaveAttendance, apiSaveCoachProfile, apiSaveShareLink, apiSaveRequest, apiSaveTemplate,
   apiUpdateTemplate, apiDeleteTemplate,
   apiPayCommission, apiCancelCommission, apiFixShareLink };
@@ -332,11 +332,33 @@ async function apiSendBroadcast(to, text, n) {
   store.msgs.bc.unshift(o);
   return o;
 }
-// portal publik (tanpa token pun boleh)
-async function apiSendPortalMessage(uid, cid, text) {
-  const m = tMsg(await apiPost('/portal/' + uid + '/messages', { text }));
+// portal publik (kredensial: portal_token acak klien, BUKAN uid)
+async function apiSendPortalMessage(token, cid, text) {
+  const m = tMsg(await apiPost('/portal/' + encodeURIComponent(token) + '/messages', { text }));
   (store.msgs.dm[cid] = store.msgs.dm[cid] || []).push(m);
   return m;
+}
+// Portal publik: muat dashboard klien dari endpoint publik (tanpa sesi login)
+// dan isi store secukupnya untuk clientPage/cdashBody. Lempar error bila
+// token tidak dikenal (pemanggil menampilkan "Link tidak valid").
+async function apiPortalLoad(token) {
+  apiMode = true; // sesi portal tetap mode API (form Pesan & Setor Link harus menembak backend)
+  const d = await apiGet('/portal/' + encodeURIComponent(token));
+  const c = tClient(d.client);
+  store.clients = [c];
+  store.programs = d.program ? [{ unit: '', wk: 0, fee: 0, lvl: 0, peserta: 1, ...d.program }] : [];
+  const uidById = { [c.id]: c.uid };
+  store.reports = (d.reports || []).map(r => tReport(r, uidById));
+  store.swLinks = (d.links || []).map(r => ({
+    cid: r.client_id, date: r.date, url: r.url, id: r.id,
+    fix: r.fix_text ? { by: r.fix_by, text: r.fix_text, at: r.fix_at ? new Date(r.fix_at) : new Date() } : null
+  }));
+  store.msgs = { team: [], dm: { [c.id]: (d.messages || []).map(tMsg) }, bc: [] };
+  store.members = (d.people || []).map(p => ({ id: p.id, name: p.name }));
+  return c;
+}
+async function apiPortalSaveLink(token, date, url) {
+  await apiPost('/portal/' + encodeURIComponent(token) + '/links', { date, url });
 }
 // -> {by, text, at:Date}
 async function apiSubmitCorrection(reportId, text) {

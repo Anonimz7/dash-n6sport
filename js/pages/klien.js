@@ -1,6 +1,6 @@
 /* js/pages/klien.js — diekstrak otomatis dari index.html (fase 4 refactor) */
 import { canAccess, logAct, meId, scope } from '../core/access.js';
-import { apiDel, apiSaveClient, apiSaveShareLink, apiSaveTransaction, apiSendPortalMessage, isApiMode } from '../core/api.js';
+import { apiDel, apiPortalSaveLink, apiPost, apiSaveClient, apiSaveShareLink, apiSaveTransaction, apiSendPortalMessage, isApiMode } from '../core/api.js';
 import { COACHES, CONDC, ROLE_USER_IDS } from '../core/constants.js';
 import { scheduledSessions } from '../core/derived.js';
 import { TODAY, addD, esc, first, fmtD, formatRupiah, hhmm, iso, parseDate, slug } from '../core/helpers.js';
@@ -33,7 +33,7 @@ MODALS.client=m=>{
  const c=m.id?findClientById(m.id):{name:'',pid:activePrograms()[0].id,start:iso(TODAY),pbNow:'',pbTarget:''};
  const programOrDefault=findProgramById(c.pid)||activePrograms()[0],endV=c.end||iso(addD(parseDate(c.start),programOrDefault.wk*7)),coachV=COACHES.includes(c.coach)?c.coach:(appState.role==='coach'?meId():COACHES[0]);
  const pasangan=m.id?partnerOf(c):null,paketSemi=isSemi(programOrDefault),dataPasangan=pasangan||{name:'',pbNow:'',pbTarget:'',note:''};
- const tautanDash=k=>k&&k.uid?`<small class="mono" style="word-break:break-all">${esc(k.uid)} · ${esc(clientUrl(k))} <button type="button" class="btn sm ghost" data-act="clink" data-v="${k.id}" aria-label="Salin link dashboard ${esc(k.name)}">${icon('copy',13)}</button></small>`:'<small>Link dashboard dibuat otomatis setelah disimpan.</small>';
+ const tautanDash=k=>k&&k.uid?`<small class="mono" style="word-break:break-all">${esc(k.uid)} · ${esc(clientUrl(k))} <button type="button" class="btn sm ghost" data-act="clink" data-v="${k.id}" aria-label="Salin link dashboard ${esc(k.name)}">${icon('copy',13)}</button> <button type="button" class="btn sm ghost" data-act="clinkregen" data-v="${k.id}">Generate ulang</button></small>`:'<small>Link dashboard dibuat otomatis setelah disimpan.</small>';
  return sheet(m.id?'Ubah klien':'Tambah klien',`<form data-form="client" class="fg"><input type="hidden" name="id" value="${m.id||''}">
  <label class="field full"><span>Nama coach</span><select name="coach" ${appState.role==='coach'?'disabled':''} required>${COACHES.map(id=>`<option value="${id}" ${id===coachV?'selected':''}>${esc(getMemberName(id))}</option>`).join('')}</select></label>
  <label class="field full"><span>Pilih program</span><select name="pid" data-cform>${activePrograms().map(p=>`<option value="${p.id}" ${p.id===c.pid?'selected':''}>${esc(p.name)}</option>`).join('')}</select></label>
@@ -163,11 +163,13 @@ ACT.dlinvoice=async()=>{
 };
 Object.assign(ACT,{
  clink:t=>{const c=findClientById(t.dataset.v);copyToClipboard(clientUrl(c),'Link dashboard klien tersalin')},
+ clinkregen:t=>{const c=findClientById(t.dataset.v);if(!c)return;appState.modal={k:'confirm',text:'Generate ulang link portal '+c.name+'? Link lama langsung berhenti berfungsi — klien harus diberi link baru.',yes:'clinkregenya',arg:c.id,label:'Generate ulang'};render()},
  archive:t=>{const c=findClientById(t.dataset.v);c.arch=iso(TODAY);logAct('mengarsipkan klien '+c.name);toast(c.name+' dipindah ke arsip');render()},
  restore:t=>{const c=findClientById(t.dataset.v);c.arch=null;logAct('memulihkan klien '+c.name);toast('Klien dipulihkan');render()},
  askdel:t=>{appState.modal={k:'confirm',text:'Hapus permanen '+findClientById(t.dataset.v).name+'? Data klien tidak dapat dikembalikan.',yes:'delcl',arg:t.dataset.v,label:'Hapus permanen'};render()}
 });
 CONF.delcl=async id=>{const c=findClientById(id);if(isApiMode()){try{await apiDel('/clients/'+id)}catch(e){toast('Gagal hapus: '+e.message);return}}store.clients=store.clients.filter(x=>x.id!==id);store.book=store.book.filter(b=>b.client!==id);store.reports=store.reports.filter(r=>r.cid!==id);logAct('menghapus klien '+(c?c.name:id))};
+CONF.clinkregenya=async id=>{const c=findClientById(id);appState.modal=null;try{const r=await apiPost('/clients/'+id+'/portal-token');if(c&&r)c.portal_token=r.portal_token;toast('Link portal baru dibuat untuk '+(c?c.name:id))}catch(e){toast('Gagal generate ulang: '+e.message)}render()};
 MODALS.cdash=m=>{const c=findClientById(m.id);return c?sheet('Dashboard klien',cdashBody(c)):''};
 FORMS.cdash=async f=>{
  const c=findClientById(f.get('cid')),u=(f.get('url')||'').trim(),dt=f.get('date')||'';
@@ -176,7 +178,7 @@ FORMS.cdash=async f=>{
  if(!/^\d{4}-\d\d-\d\d$/.test(dt)||parseDate(dt)>TODAY||dt<c.start){toast('Pilih tanggal latihan dari tanggal mulai program sampai hari ini');return}
  store.swLinks=store.swLinks||[];const i=store.swLinks.findIndex(x=>x.cid===c.id&&x.date===dt),rec={cid:c.id,date:dt,url:u,at:new Date()};
  if(i>=0)store.swLinks[i]=rec;else store.swLinks.push(rec);
- if(isApiMode()){try{await apiSaveShareLink(c.id,dt,u)}catch(e){console.error('Gagal simpan share link:',e)}}
+ if(isApiMode()){try{if(appState.pubPortal)await apiPortalSaveLink(appState.pubPortal,dt,u);else await apiSaveShareLink(c.id,dt,u)}catch(e){console.error('Gagal simpan share link:',e)}}
  if(f.get('reg'))c.sw=u;
  const has=store.reports.some(r=>r.cid===c.id&&r.date===dt&&!r.missed);
  logAct('menerima link hasil latihan '+c.name+' ('+fmtD(dt)+')');
@@ -184,7 +186,7 @@ FORMS.cdash=async f=>{
  appState.modal=appState.cview?null:{k:'cdash',id:c.id};render()};
 FORMS.cdmsg=async f=>{
  const c=findClientById(f.get('cid')),t=(f.get('text')||'').trim();if(!c||!t)return;
- if(isApiMode())await apiSendPortalMessage(c.uid,c.id,t);
+ if(isApiMode())await apiSendPortalMessage(c.portal_token||c.uid,c.id,t);
  else (store.msgs.dm[c.id]=store.msgs.dm[c.id]||[]).push({w:c.id,text:t,t:new Date()});
  logAct('menerima pesan dari klien '+c.name);toast('Pesan terkirim ke tim');appState.focus={id:'f-cdmsg',pos:0};appState.modal=appState.cview?null:{k:'cdash',id:c.id};render()};
 ACT.cdtab=t=>{appState.cdTab=+t.dataset.v;render()};

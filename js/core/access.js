@@ -12,7 +12,7 @@ const moneyJt=(n,m='keuangan')=>perm(m)==='full'?formatJuta(n):MASK;
 const meId=()=>{const u=apiUser();return u?u.id:ROLE_USER_IDS[appState.role]};
 const meUser=()=>store.members.find(m=>m.id===meId());
 const scope=a=>{const mid=meId();return appState.role==='coach'?a.filter(c=>c.coach===mid):a};
-const logAct=text=>{store.log.unshift({t:new Date(),who:meUser().name,text});store.log=store.log.slice(0,30);appState.syncAt=new Date();try{if(logSink)logSink(text)}catch(e){}};
+const logAct=text=>{const me=meUser();if(!me)return;store.log.unshift({t:new Date(),who:me.name,text});store.log=store.log.slice(0,30);appState.syncAt=new Date();try{if(logSink)logSink(text)}catch(e){}};
 let logSink=null;
 const setLogSink=fn=>{logSink=fn};
 
