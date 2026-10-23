@@ -252,6 +252,9 @@ td small{display:block;color:var(--muted);font-size:12px}
   .btn.sm{min-height:34px}
   input,select,textarea{font-size:16px}
   .toolbar input,.toolbar select{flex:1 1 140px;width:100%}
+  /* .field adalah flex kolom: flex-basis 140px di atas terbaca sebagai TINGGI
+     untuk kontrol di dalam .field (kotak raksasa 140px di tab Bagikan jadwal) */
+  .toolbar .field input,.toolbar .field select,.toolbar .field textarea{flex:none}
   .sheet::before{content:"";width:42px;height:4px;border-radius:2px;background:var(--line);align-self:center;margin-bottom:-4px}
   .dt{display:none}
   .mlist{display:flex}
