@@ -8,7 +8,7 @@
 .cpd>div{background:var(--surface-2);border-radius:12px;padding:9px 11px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .cpd small{font-size:11px;color:var(--muted);font-weight:600}
 .cpd b{font-size:14px;font-family:var(--f-mono)}
-.cp{max-width:560px;margin-inline:auto}
+.cp{width:100%;max-width:560px;margin-inline:auto}
 .bub.me{display:block;padding:8px 12px;border-top:0;margin-top:0}
 .cp input,.cp select,.cp textarea{font-size:16px;min-height:46px}
 .cp .btn{min-height:46px}
