@@ -17,7 +17,7 @@ function buildIndicators(){
  const missed=store.reports.filter(r=>r.missed&&inRange(r.date,7)).length,rep7=store.reports.filter(r=>!r.missed&&inRange(r.date,7)).length;
  const absen=COACHES.filter(c=>((store.attCoach[c]||{})[k]||{}).in).length;
  const reqW=store.reqs.filter(r=>r.status==='Menunggu'&&r.type!=='masalah').length,issue=store.reqs.filter(r=>r.status==='Menunggu'&&r.type==='masalah').length;
- const cAtt=Math.round(sum(COACHES.map(c=>clientAttRate(c,30)))/COACHES.length);
+ const cAtt=COACHES.length?Math.round(sum(COACHES.map(c=>clientAttRate(c,30)))/COACHES.length):0;
  /* F1.5: komisi & status bayar dihitung per klien (label periode 30 hari) */
  const klienKom=getCommissionData(30).byClient,kom=sum(klienKom.map(x=>x.kom)),paidN=klienKom.filter(x=>payOf(x.c,'30 hari')).length,unpaidN=klienKom.length-paidN;
  const inn=sum(filterTransactions(30,'in').map(t=>t.amt)),out=sum(filterTransactions(30,'out').map(t=>t.amt)),mo=monthly(),cur=mo[mo.length-1].inc;

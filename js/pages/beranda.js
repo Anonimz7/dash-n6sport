@@ -90,7 +90,7 @@ PAGES.beranda=()=>{
  const reqs=store.reqs.filter(r=>r.type!=='masalah'),done=reqs.filter(r=>r.status!=='Menunggu').length;
  const wkSlots=sum(COACHES.map(c=>sum((store.pattern[c]||[]).map(a=>a.length))));
  const active7=new Set(store.reports.filter(r=>!r.missed&&inRange(r.date,7)).map(r=>r.cid)).size;
- const ops=`<section class="card c4"><header class="ch"><h3>Progress operasional</h3><span class="sub">Minggu ini</span></header>${renderPercentBar([{l:'Koreksi',v:kPct},{l:'Izin diproses',v:Math.round(done/Math.max(1,reqs.length)*100)},{l:'Slot terisi',v:Math.round(store.book.length/wkSlots*100)},{l:'Klien lapor',v:Math.round(active7/Math.max(1,live.length)*100)}])}</section>`;
+ const ops=`<section class="card c4"><header class="ch"><h3>Progress operasional</h3><span class="sub">Minggu ini</span></header>${renderPercentBar([{l:'Koreksi',v:kPct},{l:'Izin diproses',v:Math.round(done/Math.max(1,reqs.length)*100)},{l:'Slot terisi',v:Math.round(store.book.length/Math.max(1,wkSlots)*100)},{l:'Klien lapor',v:Math.round(active7/Math.max(1,live.length)*100)}])}</section>`;
  const inn=sum(filterTransactions(30,'in').map(t=>t.amt)),out=sum(filterTransactions(30,'out').map(t=>t.amt));
  const cash=showFinance?`<section class="card c6"><header class="ch"><h3>Arus keuangan</h3><span class="sub">30 hari terakhir</span></header>${renderHBar([{l:'Pemasukan',v:inn,c:'var(--good)'},{l:'Pengeluaran',v:out,c:'var(--bad)'},{l:'Laba bersih',v:Math.max(0,inn-out),c:'var(--accent)'}],v=>formatJuta(v))}</section>`:locked('Arus keuangan','c6','Data keuangan disembunyikan untuk peran '+ROLE[appState.role]+'.');
  const fr=freeSlots(7).sort((a,b)=>a.d+a.t<b.d+b.t?-1:1);
