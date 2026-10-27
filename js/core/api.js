@@ -37,6 +37,10 @@ function apiUser() {
   try { return JSON.parse(localStorage.getItem('n6r-user') || 'null'); } catch (e) { return null; }
 }
 
+// Sesi kadaluarsa di tengah sesi: 401 dari aksi apa pun -> logout + login ulang.
+// Dijaga sekali saja (boot menembak ~17 request paralel; semuanya 401).
+// Hanya sesi staf (punya token): portal publik klien tidak ikut terlempar.
+let loggingOut = false;
 async function req(method, path, body) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 30000);
@@ -58,6 +62,11 @@ async function req(method, path, body) {
         }
       } else if (j.error && j.error.message) {
         msg = j.error.message;
+      }
+      if (r.status === 401 && apiToken && !loggingOut) {
+        loggingOut = true;
+        apiLogout();
+        try { location.reload(); } catch (e) {}
       }
       throw new Error(msg);
     }
